@@ -1,46 +1,100 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import {
-  signInWithEmail,
-  signUpWithEmail,
-  type AuthState,
-} from "@/lib/actions/auth";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { initializeMemberProfile } from "@/lib/actions/auth";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getSupabaseConfigError } from "@/lib/supabase/config";
+import { createClient } from "@/lib/supabase/client";
 
 type AuthFormProps = {
   mode: "signup" | "login";
   initialError?: string | null;
 };
 
-function SubmitButton({
-  label,
-  pendingLabel,
-}: {
-  label: string;
-  pendingLabel: string;
-}) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? pendingLabel : label}
-    </Button>
-  );
-}
-
 export function AuthForm({ mode, initialError }: AuthFormProps) {
+  const router = useRouter();
   const isSignup = mode === "signup";
-  const action = isSignup ? signUpWithEmail : signInWithEmail;
-  const [state, formAction] = useActionState<AuthState, FormData>(action, {
-    error: initialError ?? undefined,
-  });
+  const [error, setError] = useState<string | null>(initialError ?? null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
+    setIsPending(true);
+
+    const configError = getSupabaseConfigError();
+    if (configError) {
+      setError(configError);
+      setIsPending(false);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    if (!email || !password) {
+      setError("メールアドレスとパスワードを入力してください");
+      setIsPending(false);
+      return;
+    }
+
+    const supabase = createClient();
+
+    if (isSignup) {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setIsPending(false);
+        return;
+      }
+
+      if (data.user && !data.session) {
+        setMessage(
+          "確認メールを送信しました。メール内のリンクをクリックしてからログインしてください。"
+        );
+        setIsPending(false);
+        return;
+      }
+
+      const profileResult = await initializeMemberProfile();
+      if (profileResult?.error) {
+        setError(profileResult.error);
+        setIsPending(false);
+        return;
+      }
+
+      router.refresh();
+      router.push("/onboarding");
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setIsPending(false);
+      return;
+    }
+
+    router.refresh();
+    router.push("/");
+  }
 
   return (
     <AuthFadeIn className="space-y-8">
@@ -66,7 +120,7 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
         <div className="h-px flex-1 bg-white/10" />
       </div>
 
-      <form action={formAction} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-7">
           <div className="space-y-2">
             <Label htmlFor="email">メールアドレス</Label>
@@ -93,15 +147,12 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
           </div>
         </div>
 
-        {state?.error ? <p className="text-[13px] text-red-300">{state.error}</p> : null}
-        {state?.message ? (
-          <p className="text-[13px] text-emerald-300">{state.message}</p>
-        ) : null}
+        {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+        {message ? <p className="text-[13px] text-emerald-300">{message}</p> : null}
 
-        <SubmitButton
-          label={isSignup ? "アカウントを作成" : "ログイン"}
-          pendingLabel="処理中..."
-        />
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? "処理中..." : isSignup ? "アカウントを作成" : "ログイン"}
+        </Button>
       </form>
 
       <div className="text-center">

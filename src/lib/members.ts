@@ -2,15 +2,9 @@ import { members as fallbackMembers } from "@/data/members";
 import { createDefaultMember } from "@/lib/members/defaultMember";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { memberToRow, rowToMember } from "@/lib/supabase/mappers";
 import type { Member } from "@/types/member";
-
-function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
 
 export async function getMembers(): Promise<Member[]> {
   if (!isSupabaseConfigured()) {
