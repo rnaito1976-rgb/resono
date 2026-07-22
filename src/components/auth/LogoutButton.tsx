@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,15 +10,13 @@ type LogoutButtonProps = {
 };
 
 export function LogoutButton({ className }: LogoutButtonProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleSignOut() {
     startTransition(async () => {
       const supabase = createClient();
       await supabase.auth.signOut();
-      router.refresh();
-      router.push("/welcome");
+      window.location.href = "/welcome";
     });
   }
 

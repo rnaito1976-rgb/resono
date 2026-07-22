@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { initializeMemberProfile } from "@/lib/actions/auth";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
@@ -18,7 +17,6 @@ type AuthFormProps = {
 };
 
 export function AuthForm({ mode, initialError }: AuthFormProps) {
-  const router = useRouter();
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
@@ -76,12 +74,11 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
         return;
       }
 
-      router.refresh();
-      router.push("/onboarding");
+      window.location.href = "/onboarding";
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -92,8 +89,13 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
       return;
     }
 
-    router.refresh();
-    router.push("/");
+    if (!data.session) {
+      setError("ログインに失敗しました。メール確認が必要な場合があります。");
+      setIsPending(false);
+      return;
+    }
+
+    window.location.href = "/";
   }
 
   return (

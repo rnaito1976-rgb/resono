@@ -1,12 +1,7 @@
 import Link from "next/link";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-import { Button } from "@/components/ui/button";
+import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
 
-type AppHeaderProps = {
-  user: { id: string } | null;
-};
-
-export function AppHeader({ user }: AppHeaderProps) {
+export function AppHeader() {
   return (
     <header className="sticky top-0 z-10 bg-background/80 px-6 pb-4 pt-8 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
@@ -20,23 +15,7 @@ export function AppHeader({ user }: AppHeaderProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
-          {user ? (
-            <LogoutButton />
-          ) : (
-            <>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="h-9 px-3 text-[13px] text-white/60 hover:text-white"
-              >
-                <Link href="/login">ログイン</Link>
-              </Button>
-              <Button asChild size="sm" className="h-9 px-4 text-[13px]">
-                <Link href="/signup">新規登録</Link>
-              </Button>
-            </>
-          )}
+          <AuthHeaderActions />
         </div>
       </div>
     </header>
