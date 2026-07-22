@@ -1,8 +1,16 @@
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { AuthLogo, AuthShell, AuthTagline } from "@/components/auth/AuthShell";
 import { AuthWelcomeActions } from "@/components/auth/AuthWelcomeActions";
+import { createClient } from "@/lib/supabase/server";
 
-export default function WelcomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function WelcomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <AuthShell variant="welcome">
       <div className="flex flex-1 flex-col">
@@ -20,7 +28,7 @@ export default function WelcomePage() {
             ミュージシャンのための場所
           </p>
 
-          <AuthWelcomeActions />
+          <AuthWelcomeActions initialUser={user} />
         </AuthFadeIn>
       </div>
     </AuthShell>

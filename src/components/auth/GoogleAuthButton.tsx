@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
-import { getSiteUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 type GoogleAuthButtonProps = {
@@ -30,12 +29,15 @@ export function GoogleAuthButton({
     }
 
     const supabase = createClient();
-    const redirectTo = `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
 

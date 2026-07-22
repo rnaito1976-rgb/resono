@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import type { User } from "@supabase/supabase-js";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Button } from "@/components/ui/button";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
-export function AuthHeaderActions() {
-  const { isLoggedIn, isLoading } = useAuthUser();
+type AuthHeaderActionsProps = {
+  initialUser?: User | null;
+};
+
+export function AuthHeaderActions({ initialUser = null }: AuthHeaderActionsProps) {
+  const { isLoggedIn, isLoading } = useAuthUser(initialUser);
 
   if (isLoading) {
     return <div className="h-9 w-20" aria-hidden />;

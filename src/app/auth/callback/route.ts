@@ -18,10 +18,22 @@ function sanitizeNextPath(next: string | null): string {
   return next;
 }
 
+function getRedirectOrigin(request: NextRequest, fallbackOrigin: string): string {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
+
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return fallbackOrigin;
+}
+
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  const next = sanitizeNextPath(searchParams.get("next"));
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get("code");
+  const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
+  const origin = getRedirectOrigin(request, requestUrl.origin);
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=auth`);

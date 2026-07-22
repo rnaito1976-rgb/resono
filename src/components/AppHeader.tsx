@@ -1,7 +1,12 @@
 import Link from "next/link";
+import type { User } from "@supabase/supabase-js";
 import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
 
-export function AppHeader() {
+type AppHeaderProps = {
+  initialUser?: User | null;
+};
+
+export function AppHeader({ initialUser = null }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-background/80 px-6 pb-4 pt-8 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
@@ -15,7 +20,7 @@ export function AppHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
-          <AuthHeaderActions />
+          <AuthHeaderActions initialUser={initialUser} />
         </div>
       </div>
     </header>

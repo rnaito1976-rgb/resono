@@ -4,17 +4,33 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
-export function useAuthUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function useAuthUser(initialUser: User | null = null) {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [isLoading, setIsLoading] = useState(initialUser === null);
 
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    async function syncUser() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        setUser(session.user);
+        setIsLoading(false);
+        return;
+      }
+
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      setUser(currentUser);
       setIsLoading(false);
-    });
+    }
+
+    void syncUser();
 
     const {
       data: { subscription },
@@ -26,5 +42,9 @@ export function useAuthUser() {
     return () => subscription.unsubscribe();
   }, []);
 
-  return { user, isLoading, isLoggedIn: Boolean(user) };
+  return {
+    user,
+    isLoading,
+    isLoggedIn: Boolean(user ?? initialUser),
+  };
 }
