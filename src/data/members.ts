@@ -540,7 +540,7 @@ export const members: Member[] = [
     tags: ["パンク", "DIY", "叫び", "ライブハウス"],
     aiComment: "DIY 精神と、生のエネルギーが全身から溢れるタイプ。",
     photo:
-      "https://images.unsplash.com/photo-1595152770669-496d3465c915?w=800&q=80",
+      "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=800&q=80",
     portrait: {
       bio: "スタジオより、ライブハウスの床。叫びは、生きる証。",
       age: 20,
@@ -616,7 +616,7 @@ export const members: Member[] = [
     tags: ["EDM", "フェス", "DJ", "ビート"],
     aiComment: "フェスの群衆を、一つのビートにまとめるタイプ。",
     photo:
-      "https://images.unsplash.com/photo-1614282323558-f035613f2d4d?w=800&q=80",
+      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
     portrait: {
       bio: "DJ ブースが、自分のステージ。ドロップの瞬間、世界が一つになる。",
       age: 25,
@@ -654,7 +654,7 @@ export const members: Member[] = [
     tags: ["インディー", "詩", "ボーカル", "透明"],
     aiComment: "透明感のある声と、観察者的な視点が印象的な人。",
     photo:
-      "https://images.unsplash.com/photo-1487412720707-5a52be6c93f5?w=800&q=80",
+      "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&q=80",
     portrait: {
       bio: "日常の隙間から、詩とメロディを拾う。小さな発見が、歌の種。",
       age: 24,
@@ -692,7 +692,7 @@ export const members: Member[] = [
     tags: ["ファンク", "グルーヴ", "ベース", "ダンス"],
     aiComment: "グルーヴの塊。一緒にいるだけで、体が勝手に動き出す人。",
     photo:
-      "https://images.unsplash.com/photo-1628157588553-276ee0884230?w=800&q=80",
+      "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=800&q=80",
     portrait: {
       bio: "ファンクの groove は、交渉しない。スラップベースが、全部を語る。",
       age: 29,
@@ -730,7 +730,7 @@ export const members: Member[] = [
     tags: ["アンビエント", "瞑想", "自然", "音響"],
     aiComment: "音の空間を設計する、静かな革命者のような存在。",
     photo:
-      "https://images.unsplash.com/photo-1633332755192-727a05c4013b?w=800&q=80",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
     portrait: {
       bio: "音を「聴く」から「感じる」へ。アンビエントは、内側への地図。",
       age: 28,

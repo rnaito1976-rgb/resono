@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
+import { getMemberById } from "@/lib/members";
 import { MemberDetail } from "@/components/MemberDetail";
-import { getMemberById } from "@/data/members";
 
 type MemberPageProps = {
   params: Promise<{ id: string }>;
@@ -8,7 +8,7 @@ type MemberPageProps = {
 
 export default async function MemberPage({ params }: MemberPageProps) {
   const { id } = await params;
-  const member = getMemberById(id);
+  const member = await getMemberById(id);
 
   if (!member) {
     notFound();

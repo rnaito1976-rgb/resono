@@ -1,7 +1,8 @@
+import { getMembers } from "@/lib/members";
 import { PersonCard } from "@/components/PersonCard";
-import { members } from "@/data/members";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const members = await getMembers();
   return (
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">
       <header className="sticky top-0 z-10 bg-background/80 px-6 pb-4 pt-8 backdrop-blur-xl">
