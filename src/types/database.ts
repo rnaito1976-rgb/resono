@@ -12,6 +12,7 @@ export type Database = {
       members: {
         Row: {
           id: string;
+          user_id: string | null;
           name: string;
           resonance_rate: number;
           tags: string[];
@@ -26,6 +27,7 @@ export type Database = {
         };
         Insert: {
           id: string;
+          user_id?: string | null;
           name: string;
           resonance_rate: number;
           tags?: string[];
@@ -40,6 +42,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          user_id?: string | null;
           name?: string;
           resonance_rate?: number;
           tags?: string[];

@@ -7,6 +7,7 @@ type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
 export function memberToRow(member: Member): MemberInsert {
   return {
     id: member.id,
+    user_id: member.userId ?? null,
     name: member.name,
     resonance_rate: member.resonanceRate,
     tags: member.tags,
@@ -23,6 +24,7 @@ export function memberToRow(member: Member): MemberInsert {
 export function rowToMember(row: MemberRow): Member {
   return {
     id: row.id,
+    userId: row.user_id ?? undefined,
     name: row.name,
     resonanceRate: row.resonance_rate,
     tags: row.tags,

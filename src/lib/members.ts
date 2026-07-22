@@ -1,4 +1,5 @@
 import { members as fallbackMembers } from "@/data/members";
+import { createDefaultMember } from "@/lib/members/defaultMember";
 import { createClient } from "@/lib/supabase/server";
 import { memberToRow, rowToMember } from "@/lib/supabase/mappers";
 import type { Member } from "@/types/member";
@@ -93,5 +94,63 @@ export async function updateMember(
   } catch (error) {
     console.error("[Supabase] updateMember:", error);
     return { success: false, error: "保存に失敗しました" };
+  }
+}
+
+export async function getMemberByUserId(
+  userId: string
+): Promise<Member | undefined> {
+  if (!isSupabaseConfigured()) {
+    return undefined;
+  }
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[Supabase] getMemberByUserId:", error.message);
+      return undefined;
+    }
+
+    return data ? rowToMember(data) : undefined;
+  } catch (error) {
+    console.error("[Supabase] getMemberByUserId:", error);
+    return undefined;
+  }
+}
+
+export async function ensureMemberForUser(
+  userId: string,
+  email?: string | null
+): Promise<Member | null> {
+  const existing = await getMemberByUserId(userId);
+  if (existing) {
+    return existing;
+  }
+
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const member = createDefaultMember(userId, email);
+
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("members").insert(memberToRow(member));
+
+    if (error) {
+      console.error("[Supabase] ensureMemberForUser:", error.message);
+      return null;
+    }
+
+    return member;
+  } catch (error) {
+    console.error("[Supabase] ensureMemberForUser:", error);
+    return null;
   }
 }

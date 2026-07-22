@@ -9,6 +9,7 @@ import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 
 type MemberDetailProps = {
   member: Member;
+  isOwnProfile?: boolean;
 };
 
 function PortraitSlide({ member }: { member: Member }) {
@@ -141,7 +142,7 @@ const SLIDE_COMPONENTS = [
   LookingForSlide,
 ] as const;
 
-export function MemberDetail({ member }: MemberDetailProps) {
+export function MemberDetail({ member, isOwnProfile = false }: MemberDetailProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -190,27 +191,31 @@ export function MemberDetail({ member }: MemberDetailProps) {
             </svg>
           </Link>
           <h1 className="text-sm font-medium tracking-[0.25em] text-white/90">
-            {member.name}
+            {isOwnProfile ? "マイページ" : member.name}
           </h1>
-          <Link
-            href={`/member/${member.id}/edit`}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-            aria-label="プロフィールを編集"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {isOwnProfile ? (
+            <Link
+              href={`/member/${member.id}/edit`}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
+              aria-label="プロフィールを編集"
             >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 18.5 3 19l.5-4L16.5 3.5z" />
-            </svg>
-          </Link>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 18.5 3 19l.5-4L16.5 3.5z" />
+              </svg>
+            </Link>
+          ) : (
+            <div className="h-10 w-10" />
+          )}
         </div>
 
         <nav className="border-b border-white/5">

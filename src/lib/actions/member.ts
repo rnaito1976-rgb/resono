@@ -13,6 +13,7 @@ export async function updateMemberAction(member: Member) {
   }
 
   revalidatePath("/");
+  revalidatePath("/me");
   revalidatePath(`/member/${member.id}`);
   redirect(`/member/${member.id}`);
 }

@@ -12,10 +12,15 @@ export async function signUpWithEmail(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (data.user) {
+    const { ensureMemberForUser } = await import("@/lib/members");
+    await ensureMemberForUser(data.user.id, email);
   }
 
   redirect("/onboarding");

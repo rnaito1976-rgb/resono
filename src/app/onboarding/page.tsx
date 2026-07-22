@@ -42,7 +42,7 @@ export default function OnboardingPage() {
           </div>
 
           <Button asChild size="lg" className="w-full">
-            <Link href="/">はじめる</Link>
+            <Link href="/me">はじめる</Link>
           </Button>
         </AuthFadeIn>
       </div>

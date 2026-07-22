@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MemberEditForm } from "@/components/MemberEditForm";
 import { getMemberById } from "@/lib/members";
+import { createClient } from "@/lib/supabase/server";
 
 type MemberEditPageProps = {
   params: Promise<{ id: string }>;
@@ -8,10 +9,17 @@ type MemberEditPageProps = {
 
 export default async function MemberEditPage({ params }: MemberEditPageProps) {
   const { id } = await params;
-  const member = await getMemberById(id);
+  const [member, supabase] = await Promise.all([getMemberById(id), createClient()]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!member) {
     notFound();
+  }
+
+  if (!user || member.userId !== user.id) {
+    redirect(`/member/${id}`);
   }
 
   return (
