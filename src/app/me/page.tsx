@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { ensureMemberForUser } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function MyPage() {
   const supabase = await createClient();
   const {

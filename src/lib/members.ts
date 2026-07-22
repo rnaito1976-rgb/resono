@@ -1,5 +1,6 @@
 import { members as fallbackMembers } from "@/data/members";
 import { createDefaultMember } from "@/lib/members/defaultMember";
+import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { memberToRow, rowToMember } from "@/lib/supabase/mappers";
 import type { Member } from "@/types/member";
@@ -17,7 +18,7 @@ export async function getMembers(): Promise<Member[]> {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
       .select("*")
@@ -45,7 +46,7 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
       .select("*")
@@ -105,7 +106,7 @@ export async function getMemberByUserId(
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
       .select("*")

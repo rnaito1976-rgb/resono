@@ -3,6 +3,8 @@ import { PersonCard } from "@/components/PersonCard";
 import { getMembers } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [members, supabase] = await Promise.all([getMembers(), createClient()]);
   const {

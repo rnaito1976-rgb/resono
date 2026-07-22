@@ -3,6 +3,8 @@ import { getMemberById } from "@/lib/members";
 import { MemberDetail } from "@/components/MemberDetail";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 type MemberPageProps = {
   params: Promise<{ id: string }>;
 };

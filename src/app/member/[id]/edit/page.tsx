@@ -3,6 +3,8 @@ import { MemberEditForm } from "@/components/MemberEditForm";
 import { getMemberById } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 type MemberEditPageProps = {
   params: Promise<{ id: string }>;
 };
