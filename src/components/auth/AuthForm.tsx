@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { signInWithEmail, signUpWithEmail } from "@/lib/actions/auth";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  type AuthState,
+} from "@/lib/actions/auth";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { Button } from "@/components/ui/button";
@@ -11,25 +16,31 @@ import { Label } from "@/components/ui/label";
 
 type AuthFormProps = {
   mode: "signup" | "login";
+  initialError?: string | null;
 };
 
-export function AuthForm({ mode }: AuthFormProps) {
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+function SubmitButton({
+  label,
+  pendingLabel,
+}: {
+  label: string;
+  pendingLabel: string;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? pendingLabel : label}
+    </Button>
+  );
+}
+
+export function AuthForm({ mode, initialError }: AuthFormProps) {
   const isSignup = mode === "signup";
-
-  function handleSubmit(formData: FormData) {
-    setError(null);
-
-    startTransition(async () => {
-      const action = isSignup ? signUpWithEmail : signInWithEmail;
-      const result = await action(formData);
-
-      if (result?.error) {
-        setError(result.error);
-      }
-    });
-  }
+  const action = isSignup ? signUpWithEmail : signInWithEmail;
+  const [state, formAction] = useActionState<AuthState, FormData>(action, {
+    error: initialError ?? undefined,
+  });
 
   return (
     <AuthFadeIn className="space-y-8">
@@ -55,7 +66,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div className="h-px flex-1 bg-white/10" />
       </div>
 
-      <form action={handleSubmit} className="space-y-8">
+      <form action={formAction} className="space-y-8">
         <div className="space-y-7">
           <div className="space-y-2">
             <Label htmlFor="email">メールアドレス</Label>
@@ -82,11 +93,15 @@ export function AuthForm({ mode }: AuthFormProps) {
           </div>
         </div>
 
-        {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+        {state?.error ? <p className="text-[13px] text-red-300">{state.error}</p> : null}
+        {state?.message ? (
+          <p className="text-[13px] text-emerald-300">{state.message}</p>
+        ) : null}
 
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "処理中..." : isSignup ? "アカウントを作成" : "ログイン"}
-        </Button>
+        <SubmitButton
+          label={isSignup ? "アカウントを作成" : "ログイン"}
+          pendingLabel="処理中..."
+        />
       </form>
 
       <div className="text-center">

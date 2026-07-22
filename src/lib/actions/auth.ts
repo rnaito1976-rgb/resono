@@ -3,7 +3,15 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export async function signUpWithEmail(formData: FormData) {
+export type AuthState = {
+  error?: string;
+  message?: string;
+} | null;
+
+export async function signUpWithEmail(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -18,6 +26,13 @@ export async function signUpWithEmail(formData: FormData) {
     return { error: error.message };
   }
 
+  if (data.user && !data.session) {
+    return {
+      message:
+        "確認メールを送信しました。メール内のリンクをクリックしてからログインしてください。",
+    };
+  }
+
   if (data.user) {
     const { ensureMemberForUser } = await import("@/lib/members");
     await ensureMemberForUser(data.user.id, email);
@@ -26,7 +41,10 @@ export async function signUpWithEmail(formData: FormData) {
   redirect("/onboarding");
 }
 
-export async function signInWithEmail(formData: FormData) {
+export async function signInWithEmail(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getSupabaseConfigError } from "@/lib/supabase/config";
 import { getSiteUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +21,13 @@ export function GoogleAuthButton({
   async function handleGoogleSignIn() {
     setIsLoading(true);
     setError(null);
+
+    const configError = getSupabaseConfigError();
+    if (configError) {
+      setError(configError);
+      setIsLoading(false);
+      return;
+    }
 
     const supabase = createClient();
     const redirectTo = `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
