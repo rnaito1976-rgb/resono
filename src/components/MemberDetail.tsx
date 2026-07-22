@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Member, DETAIL_SECTIONS } from "@/types/member";
+import { ResonateButton } from "@/components/ResonateButton";
 import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 
 type MemberDetailProps = {
@@ -228,18 +229,21 @@ export function MemberDetail({ member }: MemberDetailProps) {
         ))}
       </div>
 
-      <div className="flex justify-center gap-1.5 px-6 py-5">
-        {DETAIL_SECTIONS.map((section, index) => (
-          <button
-            key={section.id}
-            type="button"
-            onClick={() => scrollToIndex(index)}
-            aria-label={section.label}
-            className={`h-1 rounded-full transition-all ${
-              activeIndex === index ? "w-6 bg-white" : "w-1.5 bg-white/25"
-            }`}
-          />
-        ))}
+      <div className="border-t border-white/5 bg-background px-5 pb-8 pt-4">
+        <div className="mb-4 flex justify-center gap-1.5">
+          {DETAIL_SECTIONS.map((section, index) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => scrollToIndex(index)}
+              aria-label={section.label}
+              className={`h-1 rounded-full transition-all ${
+                activeIndex === index ? "w-6 bg-white" : "w-1.5 bg-white/25"
+              }`}
+            />
+          ))}
+        </div>
+        <ResonateButton memberId={member.id} />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ResonateButton } from "@/components/ResonateButton";
 import { Member } from "@/types/member";
 import { ResonanceBadge, TagList } from "@/components/ui";
 
@@ -40,12 +41,15 @@ export function PersonCard({ member }: PersonCardProps) {
           {member.aiComment}
         </blockquote>
 
-        <Link
-          href={`/member/${member.id}`}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-medium tracking-wide text-black transition-opacity active:opacity-70"
-        >
-          もっと知る
-        </Link>
+        <div className="space-y-3">
+          <ResonateButton memberId={member.id} />
+          <Link
+            href={`/member/${member.id}`}
+            className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white transition-opacity active:opacity-70"
+          >
+            もっと知る
+          </Link>
+        </div>
       </div>
     </article>
   );

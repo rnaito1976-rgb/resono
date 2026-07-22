@@ -19,7 +19,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Features
 
-- **トップ画面**: 人物カードを縦スクロールで表示（5人分のダミーデータ）
+- **トップ画面**: 人物カードを縦スクロールで表示（20人分のダミーデータ）
 - **詳細画面**: 横スワイプで5ページ切り替え（Portrait / Music / Fashion / Mood / Looking For）
 
 ## Design
