@@ -16,7 +16,7 @@ export async function getMembers(): Promise<Member[]> {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("members")
       .select("*")
@@ -44,7 +44,7 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("members")
       .select("*")
@@ -78,7 +78,7 @@ export async function updateMember(
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const row = memberToRow(member);
     const { id, ...updates } = row;
 

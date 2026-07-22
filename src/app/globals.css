@@ -3,12 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --radius: 1rem;
+  }
+
   html {
+    @apply min-h-full bg-black text-white;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply min-h-full bg-black font-sans text-white antialiased;
   }
 }
 

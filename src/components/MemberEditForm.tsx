@@ -5,6 +5,7 @@ import Link from "next/link";
 import { updateMemberAction } from "@/lib/actions/member";
 import { joinList, splitList } from "@/lib/form";
 import { FormField, FormInput, FormSection, FormTextarea } from "@/components/FormField";
+import { PhotoUpload } from "@/components/PhotoUpload";
 import type { Member } from "@/types/member";
 
 type MemberEditFormProps = {
@@ -94,12 +95,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               required
             />
           </FormField>
-          <FormField label="写真 URL">
-            <FormInput
-              type="url"
+          <FormField label="プロフィール写真">
+            <PhotoUpload
+              memberId={member.id}
               value={member.photo}
-              onChange={(event) => updateField("photo", event.target.value)}
-              required
+              onChange={(url) => updateField("photo", url)}
             />
           </FormField>
           <FormField label="タグ" hint="カンマ区切り">
