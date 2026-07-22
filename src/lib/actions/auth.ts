@@ -38,3 +38,9 @@ export async function signInWithEmail(formData: FormData) {
 
   redirect("/");
 }
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/welcome");
+}
