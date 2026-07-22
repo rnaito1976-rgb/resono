@@ -2,13 +2,17 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; reason?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, reason } = await searchParams;
   const initialError =
-    error === "auth" ? "ログインに失敗しました。もう一度お試しください。" : null;
+    error === "auth"
+      ? reason
+        ? `ログインに失敗しました: ${reason}`
+        : "ログインに失敗しました。もう一度お試しください。"
+      : null;
 
   return (
     <AuthShell backHref="/welcome">

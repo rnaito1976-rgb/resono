@@ -21,17 +21,7 @@ export function AppHeader({ user }: AppHeaderProps) {
 
         <div className="flex shrink-0 items-center gap-1">
           {user ? (
-            <>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="h-9 px-3 text-[13px] text-white/60 hover:text-white"
-              >
-                <Link href="/me">マイページ</Link>
-              </Button>
-              <LogoutButton />
-            </>
+            <LogoutButton />
           ) : (
             <>
               <Button
