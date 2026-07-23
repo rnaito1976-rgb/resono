@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition, type FormEvent } from "react";
 import {
+  resendConfirmationEmailAction,
   signInWithEmailAction,
   signUpWithEmailAction,
 } from "@/lib/actions/auth";
@@ -27,6 +28,7 @@ export function AuthForm({
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -55,11 +57,17 @@ export function AuthForm({
 
         if (result?.error) {
           setError(result.error);
+          if (result.canResend && result.email) {
+            setPendingEmail(result.email);
+          }
           return;
         }
 
-        if (result?.needsConfirmation && result.message) {
-          setMessage(result.message);
+        if (result?.needsConfirmation) {
+          setPendingEmail(result.email ?? email);
+          if (result.message) {
+            setMessage(result.message);
+          }
         }
 
         return;
@@ -69,6 +77,31 @@ export function AuthForm({
 
       if (result?.error) {
         setError(result.error);
+        if (result.error.includes("確認")) {
+          setPendingEmail(email);
+        }
+      }
+    });
+  }
+
+  function handleResend() {
+    if (!pendingEmail || isPending) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+
+    startTransition(async () => {
+      const result = await resendConfirmationEmailAction(pendingEmail);
+
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (result?.message) {
+        setMessage(result.message);
       }
     });
   }
@@ -126,6 +159,17 @@ export function AuthForm({
 
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
         {message ? <p className="text-[13px] text-white/70">{message}</p> : null}
+
+        {pendingEmail ? (
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isPending}
+            className="text-[13px] text-primary transition-opacity disabled:opacity-50"
+          >
+            確認メールを再送する
+          </button>
+        ) : null}
 
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? "処理中..." : isSignup ? "アカウントを作成" : "ログイン"}

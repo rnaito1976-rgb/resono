@@ -20,10 +20,18 @@ export function getSiteUrl(): string {
     return explicit.replace(/\/$/, "");
   }
 
+  if (process.env.VERCEL_ENV === "production") {
+    return "https://resono-fwdi.vercel.app";
+  }
+
   const vercelUrl = process.env.VERCEL_URL?.trim();
   if (vercelUrl) {
     return `https://${vercelUrl.replace(/\/$/, "")}`;
   }
 
   return "http://localhost:3000";
+}
+
+export function getEmailRedirectUrl(nextPath = "/onboarding"): string {
+  return `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 }
