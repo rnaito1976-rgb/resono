@@ -184,12 +184,12 @@ export function AIDialogueFlow({
           Resono AI
         </p>
         <h1 className="mt-3 text-[28px] font-light tracking-tight text-white">
-          {mode === "onboarding" ? "あなたを知る" : "共鳴を深める"}
+          {mode === "onboarding" ? "短い対話からはじめる" : "もう少し教える"}
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/45">
           {mode === "onboarding"
-            ? "プロフィール入力ではなく、対話からあなたの世界観を見つけます。"
-            : "対話を続けると、共鳴する人との出会いが近づきます。"}
+            ? "3つの質問だけ。あとはAIが世界観を読み取り、利用中に少しずつ精度を高めます。"
+            : "続けて話すほど、共鳴する人との距離感が近づきます。いつでもスキップできます。"}
         </p>
       </div>
 
@@ -251,7 +251,7 @@ export function AIDialogueFlow({
             ? "考えています..."
             : stepIndex === steps.length - 1
               ? mode === "onboarding"
-                ? "共鳴体験をはじめる"
+                ? "Resonoをはじめる"
                 : "ホームへ戻る"
               : "次へ"}
         </Button>

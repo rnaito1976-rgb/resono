@@ -75,9 +75,7 @@ export function OnboardingPhotoPicker({
       />
 
       <p className="text-center text-[13px] leading-relaxed text-white/40">
-        顔がわかる写真だと、
-        <br />
-        世界観の近い人と出会いやすくなります
+        写真は任意です。あとから追加できます。
       </p>
 
       {error ? <p className="text-center text-[13px] text-red-300">{error}</p> : null}

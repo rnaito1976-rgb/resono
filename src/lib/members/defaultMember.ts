@@ -10,7 +10,7 @@ export function createDefaultMember(userId: string, email?: string | null): Memb
     name,
     resonanceRate: 0,
     tags: [],
-    aiComment: "AIとの対話から、あなたの世界観が見えてきます。",
+    aiComment: "AIとの短い対話から、あなたの世界観が見えてきます。",
     photo: DEFAULT_PHOTO_URL,
     portrait: {
       bio: "",
@@ -28,12 +28,6 @@ export function createDefaultMember(userId: string, email?: string | null): Memb
       style: "",
       colors: [],
       brands: [],
-      description: "",
-    },
-    mood: {
-      keywords: [],
-      atmosphere: "",
-      creativeTime: "",
       description: "",
     },
     lookingFor: {

@@ -19,28 +19,6 @@ export const SUGGESTED_ARTISTS = [
   "椎名林檎",
 ] as const;
 
-export const WEEKEND_OPTIONS = [
-  "一人で音楽を聴く",
-  "友達とライブやイベント",
-  "創作や練習に没頭",
-  "自然の中で過ごす",
-  "カフェで読書や思考",
-] as const;
-
-export const DISTANCE_OPTIONS = [
-  "まずは距離を保ちたい",
-  "少人数が落ち着く",
-  "いろんな人と関わりたい",
-  "深い対話を大切にする",
-] as const;
-
-export const FUTURE_OPTIONS = [
-  "自分の表現を深めたい",
-  "共鳴する仲間と出会いたい",
-  "ライブで届けたい",
-  "まだ模索中",
-] as const;
-
 export const VALUE_OPTIONS = [
   "自由",
   "誠実さ",
@@ -54,9 +32,6 @@ export const VALUE_OPTIONS = [
 
 export type DialogueAnswers = {
   artists: string[];
-  weekend: string;
-  distance: string;
-  future: string;
   values: string[];
   photo?: string;
 };
@@ -70,17 +45,17 @@ export type DialogueStep =
       min: number;
     }
   | {
-      id: "weekend" | "distance" | "future";
-      message: string;
-      type: "single";
-      options: readonly string[];
-    }
-  | {
       id: "values" | "venues";
       message: string;
       type: "multi";
       options: readonly string[];
       min: number;
+    }
+  | {
+      id: "weekend";
+      message: string;
+      type: "single";
+      options: readonly string[];
     }
   | {
       id: "photo";
@@ -97,24 +72,6 @@ export const INITIAL_DIALOGUE_STEPS: DialogueStep[] = [
     min: 1,
   },
   {
-    id: "weekend",
-    message: "休日は、どんな時間の過ごし方が多い？",
-    type: "single",
-    options: WEEKEND_OPTIONS,
-  },
-  {
-    id: "distance",
-    message: "人との距離感、どれが近い？",
-    type: "single",
-    options: DISTANCE_OPTIONS,
-  },
-  {
-    id: "future",
-    message: "将来、音楽とどう関わっていたい？",
-    type: "single",
-    options: FUTURE_OPTIONS,
-  },
-  {
     id: "values",
     message: "大切にしている価値観を選んでください。",
     type: "multi",
@@ -123,8 +80,7 @@ export const INITIAL_DIALOGUE_STEPS: DialogueStep[] = [
   },
   {
     id: "photo",
-    message:
-      "あなたの雰囲気が伝わる写真があれば選んでください。なくても大丈夫です。",
+    message: "雰囲気が伝わる写真があれば選べます。なくても大丈夫です。",
     type: "photo",
   },
 ];
@@ -175,7 +131,10 @@ export function buildMemberFromDialogue(
 
   return {
     ...member,
-    photo: answers.photo && answers.photo !== DEFAULT_PHOTO_URL ? answers.photo : member.photo,
+    photo:
+      answers.photo && answers.photo !== DEFAULT_PHOTO_URL
+        ? answers.photo
+        : member.photo,
     tags: Array.from(new Set([...valueTags, ...artistTags])),
     aiComment: buildAiComment(answers),
     portrait: {
@@ -189,19 +148,6 @@ export function buildMemberFromDialogue(
       favoriteArtists: Array.from(
         new Set([...member.music.favoriteArtists, ...answers.artists])
       ),
-      listeningMood: answers.weekend,
-    },
-    mood: {
-      ...member.mood,
-      keywords: Array.from(
-        new Set([answers.weekend, answers.distance, ...member.mood.keywords])
-      ),
-      atmosphere: `${answers.distance}。${answers.weekend}。`,
-      description: answers.future,
-    },
-    lookingFor: {
-      ...member.lookingFor,
-      bandVision: answers.future,
     },
   };
 }
@@ -210,20 +156,23 @@ export function enrichMemberFromDiscover(
   member: Member,
   answers: { media: string[]; tempo: string; venues: string[] }
 ): Member {
+  const extraTags = [
+    ...answers.venues.slice(0, 2),
+    ...(answers.tempo ? [answers.tempo] : []),
+  ];
+
   return {
     ...member,
+    tags: Array.from(new Set([...member.tags, ...extraTags])),
     portrait: {
       ...member.portrait,
       influences: Array.from(
-        new Set([...member.portrait.influences, ...answers.media])
+        new Set([
+          ...member.portrait.influences,
+          ...answers.media,
+          ...(answers.tempo ? [`会話:${answers.tempo}`] : []),
+        ])
       ),
-    },
-    mood: {
-      ...member.mood,
-      keywords: Array.from(
-        new Set([...member.mood.keywords, ...answers.venues])
-      ),
-      atmosphere: answers.tempo,
     },
   };
 }
@@ -236,7 +185,10 @@ function buildAiComment(answers: DialogueAnswers): string {
 }
 
 function buildBio(answers: DialogueAnswers): string {
-  return `${answers.weekend}。${answers.distance}。${answers.future}。`;
+  const artists = answers.artists.slice(0, 2).join("、") || "音楽";
+  const values = answers.values.slice(0, 2).join("・") || "感性";
+
+  return `${artists}あたりの音楽と、${values}を大切にしている。`;
 }
 
 export function mergeDialogueAnswers(
@@ -247,12 +199,6 @@ export function mergeDialogueAnswers(
   switch (stepId) {
     case "artists":
       return { ...current, artists: value as string[] };
-    case "weekend":
-      return { ...current, weekend: value as string };
-    case "distance":
-      return { ...current, distance: value as string };
-    case "future":
-      return { ...current, future: value as string };
     case "values":
       return { ...current, values: value as string[] };
     case "photo":
@@ -265,11 +211,5 @@ export function mergeDialogueAnswers(
 export function isDialogueAnswersComplete(
   answers: Partial<DialogueAnswers>
 ): answers is DialogueAnswers {
-  return Boolean(
-    answers.artists?.length &&
-      answers.weekend &&
-      answers.distance &&
-      answers.future &&
-      answers.values?.length
-  );
+  return Boolean(answers.artists?.length && answers.values?.length);
 }

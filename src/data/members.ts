@@ -27,12 +27,6 @@ export const members: Member[] = [
       brands: ["AURALEE", "Studio Nicholson"],
       description: "余白のあるシルエット。素材の質感を大切にした、静かな存在感。",
     },
-    mood: {
-      keywords: ["内省的", "都市的", "ノスタルジック"],
-      atmosphere: "雨上がりの交差点、ネオンが水面に映る",
-      creativeTime: "23:00 — 02:00",
-      description: "感情を整える時間帯に、言葉と音が自然と重なる。",
-    },
     lookingFor: {
       parts: ["ギター", "ベース", "ドラム"],
       bandVision: "都市の孤独を、温かいグルーヴに変えるバンド",
@@ -64,12 +58,6 @@ export const members: Member[] = [
       colors: ["ブラック", "ホワイト", "グレー"],
       brands: ["Dr. Martens", "Carhartt WIP"],
       description: "機能性と反骨心。シンプルだが、妥協のない佇まい。",
-    },
-    mood: {
-      keywords: ["攻撃的", "直感的", "エネルギッシュ"],
-      atmosphere: "スモークとスポットライト、汗と叫び",
-      creativeTime: "19:00 — 23:00",
-      description: "身体が動き出すとき、アイデアも一緒に走り出す。",
     },
     lookingFor: {
       parts: ["ベース", "ドラム", "シンセ"],
@@ -103,12 +91,6 @@ export const members: Member[] = [
       brands: ["古着", "UNIQLO U"],
       description: "着古した生地の温度。無理のない、自分らしいレイヤー。",
     },
-    mood: {
-      keywords: ["穏やか", "郷愁", "繊細"],
-      atmosphere: "カーテン越しの光、古いアルバムの表紙",
-      creativeTime: "14:00 — 18:00",
-      description: "静かな時間に、小さな感情が音になる。",
-    },
     lookingFor: {
       parts: ["キーボード", "ベース"],
       bandVision: "日常をそのまま、美しい音にするデュオ〜バンド",
@@ -140,12 +122,6 @@ export const members: Member[] = [
       colors: ["ブラック", "チャコール", "ネイビー"],
       brands: ["Arc'teryx", "Nike ACG"],
       description: "動きやすさと機能美。装飾より、シルエットで語る。",
-    },
-    mood: {
-      keywords: ["集中", "分析的", "クール"],
-      atmosphere: "モニターの青い光、静かなスタジオ",
-      creativeTime: "00:00 — 05:00",
-      description: "世界が眠る時間に、最もクリアなアイデアが生まれる。",
     },
     lookingFor: {
       parts: ["VJ", "ライブPA", "ボーカル"],
@@ -179,12 +155,6 @@ export const members: Member[] = [
       brands: ["COMME des GARÇONS", "Yohji Yamamoto"],
       description: "時間を超えた佇まい。舞台衣装のような、物語を纏う服。",
     },
-    mood: {
-      keywords: ["自由", "情熱的", "詩的"],
-      atmosphere: "スモーキーなバー、即興の余韻",
-      creativeTime: "21:00 — 01:00",
-      description: "予定調和を壊す瞬間に、本当の音楽が始まる。",
-    },
     lookingFor: {
       parts: ["サックス", "コントラバス", "ドラム"],
       bandVision: "即興と構成が共存する、新しいジャズの形",
@@ -216,12 +186,6 @@ export const members: Member[] = [
       colors: ["ダークパープル", "グレー", "ブラック"],
       brands: ["古着", "NEIGHBORHOOD"],
       description: "体を包むような服。ステージの光に溶け込むシルエット。",
-    },
-    mood: {
-      keywords: ["夢幻的", "内省的", "浮遊感"],
-      atmosphere: "霧の中のライブハウス、壁に反響する壁音",
-      creativeTime: "22:00 — 01:00",
-      description: "外界が薄れる時間に、最も深い音が生まれる。",
     },
     lookingFor: {
       parts: ["ドラム", "ベース", "シンセ"],
@@ -255,12 +219,6 @@ export const members: Member[] = [
       brands: ["Supreme", "New Balance", "Stüssy"],
       description: "動きやすさと個性。キャップとスニーカーがトレードマーク。",
     },
-    mood: {
-      keywords: ["リアル", "鋭い", "ストイック"],
-      atmosphere: "高架下、コンクリートとグラフィティ",
-      creativeTime: "20:00 — 24:00",
-      description: "一日の終わりに、頭の中の言葉がリリックになる。",
-    },
     lookingFor: {
       parts: ["プロデューサー", "DJ", "シンガー"],
       bandVision: "言葉とビートで、新しい日本語ラップの形を",
@@ -292,12 +250,6 @@ export const members: Member[] = [
       colors: ["バーガンディ", "ゴールド", "ブラック"],
       brands: ["ZARA", "COS", "Vintage"],
       description: "体のラインを活かす、シンプルで大人な装い。",
-    },
-    mood: {
-      keywords: ["官能的", "自信", "深み"],
-      atmosphere: "ジャズラウンジ、赤い照明と氷のグラス",
-      creativeTime: "21:00 — 00:00",
-      description: "夜の静けさの中で、声だけが浮かび上がる。",
     },
     lookingFor: {
       parts: ["キーボード", "ギター", "ベース"],
@@ -331,12 +283,6 @@ export const members: Member[] = [
       brands: ["Iron Heart", "Balenciaga", "Custom"],
       description: "レザーとチェーン。ステージで光を反射するアクセサリー。",
     },
-    mood: {
-      keywords: ["情熱的", "集中", "破壊的"],
-      atmosphere: "スタジオの赤いランプ、アンプの振動",
-      creativeTime: "18:00 — 22:00",
-      description: "技術を磨く時間が、唯一の瞑想。",
-    },
     lookingFor: {
       parts: ["ボーカル", "ドラム", "ベース"],
       bandVision: "テクニカルとエモーションを両立するメタルバンド",
@@ -368,12 +314,6 @@ export const members: Member[] = [
       colors: ["ピンク", "シルバー", "ホワイト"],
       brands: ["Stussy", "NIKE", "韓国ブランド"],
       description: "キラキラとストリートの融合。ステージ衣装は自分でデザイン。",
-    },
-    mood: {
-      keywords: ["明るい", "野心的", "完璧主義"],
-      atmosphere: "練習スタジオの鏡、スマホの自撮りライト",
-      creativeTime: "10:00 — 14:00",
-      description: "体が覚えるまで繰り返す。それが自分の言語。",
     },
     lookingFor: {
       parts: ["ラッパー", "プロデューサー", "ダンサー"],
@@ -407,12 +347,6 @@ export const members: Member[] = [
       brands: ["Patagonia", "Barbour", "Red Wing"],
       description: "旅に耐える服。革靴とデニムが、年月とともに味わいを増す。",
     },
-    mood: {
-      keywords: ["穏やか", "ロマンチック", "放浪"],
-      atmosphere: "海沿いの道、風に揺れる電線",
-      creativeTime: "06:00 — 09:00",
-      description: "朝の光の中で、昨日の夢が歌詞になる。",
-    },
     lookingFor: {
       parts: ["バイオリン", "コーラス", "パーカッション"],
       bandVision: "旅と音楽をセットにした、アコースティックユニット",
@@ -444,12 +378,6 @@ export const members: Member[] = [
       colors: ["アイボリー", "ネイビー", "パール"],
       brands: ["MUJI", "Theory", "Vintage"],
       description: "シンプルで品のある装い。音楽と同じく、余白を大切に。",
-    },
-    mood: {
-      keywords: ["叙情的", "繊細", "知的"],
-      atmosphere: "コンサートホールの練習室、木の香り",
-      creativeTime: "19:00 — 22:00",
-      description: "指先が鍵盤に触れた瞬間、感情が形になる。",
     },
     lookingFor: {
       parts: ["チェロ", "ヴァイオリン", "弦楽アレンジャー"],
@@ -483,12 +411,6 @@ export const members: Member[] = [
       brands: ["Quiksilver", "Patagonia", "Handmade"],
       description: "リゾートとストリートの間。編み込みとビーズがアクセント。",
     },
-    mood: {
-      keywords: ["穏やか", "陽気", "グルーヴ"],
-      atmosphere: "ビーチバー、サンセットと焚き火",
-      creativeTime: "16:00 — 20:00",
-      description: "波の音と一緒に、ベースラインが自然と生まれる。",
-    },
     lookingFor: {
       parts: ["ドラム", "ギター", "ホーン"],
       bandVision: "海と風を感じる、ルーツレゲエバンド",
@@ -520,12 +442,6 @@ export const members: Member[] = [
       colors: ["マゼンタ", "シアン", "シルバー"],
       brands: ["Vintage", "NIKE", "Custom"],
       description: "光る素材と、幾何学的なシルエット。ステージはディスコボール。",
-    },
-    mood: {
-      keywords: ["ノスタルジック", "未来的", "華やか"],
-      atmosphere: "ネオンサイン、雨に濡れたアスファルト",
-      creativeTime: "22:00 — 02:00",
-      description: "夜の街が、シンセパッドの音色に変わる時間。",
     },
     lookingFor: {
       parts: ["ドラムマシン", "ギター", "VJ"],
@@ -559,12 +475,6 @@ export const members: Member[] = [
       brands: ["DIY", "Dr. Martens", "バンドT"],
       description: "自分で描いたロゴ、安全ピンとパッチ。完璧より、リアル。",
     },
-    mood: {
-      keywords: ["反骨", "熱血", "直情"],
-      atmosphere: "ライブハウスのモッシュ、汗とビール",
-      creativeTime: "17:00 — 21:00",
-      description: "怒りも喜びも、全部ギターの1音に込める。",
-    },
     lookingFor: {
       parts: ["ドラム", "ベース"],
       bandVision: "四国発、全国制覇のパンクバンド",
@@ -596,12 +506,6 @@ export const members: Member[] = [
       colors: ["ホワイト", "サンド", "コーラル"],
       brands: ["ZARA", "UNIQLO", "Handmade"],
       description: "リネンとストローハット。風が通る、ゆったりしたシルエット。",
-    },
-    mood: {
-      keywords: ["優雅", "温かい", "異国情緒"],
-      atmosphere: "港のカフェ、帆を張ったヨット",
-      creativeTime: "11:00 — 15:00",
-      description: "陽の光が柔らかい時間帯に、最も美しいコードが見つかる。",
     },
     lookingFor: {
       parts: ["パーカッション", "フルート", "コントラバス"],
@@ -635,12 +539,6 @@ export const members: Member[] = [
       brands: ["NIKE", "Supreme", "Custom"],
       description: "目立つアクセサリーと、動きやすいストリート。LED も愛用。",
     },
-    mood: {
-      keywords: ["外向的", "エネルギッシュ", "祝祭的"],
-      atmosphere: "フェスステージ、レーザーとサウンド",
-      creativeTime: "15:00 — 19:00",
-      description: "人々の熱量が、次のトラックを生む。",
-    },
     lookingFor: {
       parts: ["VJ", "シンガー", "ライブPA"],
       bandVision: "フェスで主役級の、ライブエレクトロニカ",
@@ -672,12 +570,6 @@ export const members: Member[] = [
       colors: ["ラベンダー", "グレー", "ホワイト"],
       brands: ["MUJI", "Vintage", "Handmade"],
       description: "本とコーヒーが似合う、知的で柔らかな装い。",
-    },
-    mood: {
-      keywords: ["観察的", "繊細", "透明"],
-      atmosphere: "古書店、雨音とページをめくる音",
-      creativeTime: "13:00 — 17:00",
-      description: "世界が静かなとき、最も鮮明に見える。",
     },
     lookingFor: {
       parts: ["ギター", "ストリングス", "プロデューサー"],
@@ -711,12 +603,6 @@ export const members: Member[] = [
       brands: ["Vintage", "Levi's", "Custom"],
       description: "アフロと、太いベルト。ダンスフロアが自分の居場所。",
     },
-    mood: {
-      keywords: ["陽気", "グルーヴ", "社交的"],
-      atmosphere: "クラブのダンスフロア、スティールドラムの残響",
-      creativeTime: "20:00 — 24:00",
-      description: "人と音が混ざる夜に、最高のベースラインが生まれる。",
-    },
     lookingFor: {
       parts: ["ドラム", "ギター", "ブラス"],
       bandVision: "会場全体を踊らせる、ファンクバンド",
@@ -748,12 +634,6 @@ export const members: Member[] = [
       colors: ["アースグリーン", "ストーン", "オフホワイト"],
       brands: ["Patagonia", "Snow Peak", "Handmade"],
       description: "自然と調和する服。機能性と、静けさを両立。",
-    },
-    mood: {
-      keywords: ["瞑想的", "自然", "静寂"],
-      atmosphere: "朝霧の森、葉擦れの音",
-      creativeTime: "05:00 — 08:00",
-      description: "世界が目を覚ます前に、最もクリアな音が録れる。",
     },
     lookingFor: {
       parts: ["ヴァイオリン", "音響エンジニア", "ヴィジュアル"],

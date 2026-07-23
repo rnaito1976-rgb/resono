@@ -25,12 +25,6 @@ export type Member = {
     brands: string[];
     description: string;
   };
-  mood: {
-    keywords: string[];
-    atmosphere: string;
-    creativeTime: string;
-    description: string;
-  };
   lookingFor: {
     parts: string[];
     bandVision: string;
@@ -38,7 +32,7 @@ export type Member = {
   };
 };
 
-export type DetailSection = "portrait" | "music" | "fashion" | "mood" | "lookingFor";
+export type DetailSection = "portrait" | "music" | "fashion" | "lookingFor";
 
 export const DETAIL_SECTIONS: {
   id: DetailSection;
@@ -47,6 +41,5 @@ export const DETAIL_SECTIONS: {
   { id: "portrait", label: "Portrait" },
   { id: "music", label: "Music" },
   { id: "fashion", label: "Fashion" },
-  { id: "mood", label: "Mood" },
   { id: "lookingFor", label: "Looking For" },
 ];

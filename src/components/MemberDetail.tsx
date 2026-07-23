@@ -100,27 +100,6 @@ function FashionSlide({ member }: { member: Member }) {
   );
 }
 
-function MoodSlide({ member }: { member: Member }) {
-  return (
-    <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
-      <SectionBlock label="Keywords">
-        <TagList items={member.mood.keywords} variant="primary" />
-      </SectionBlock>
-      <SectionBlock label="Atmosphere">
-        <p className="text-lg font-light italic text-white/80">
-          {member.mood.atmosphere}
-        </p>
-      </SectionBlock>
-      <SectionBlock label="Creative Time">
-        <p className="text-xl font-light tabular-nums">{member.mood.creativeTime}</p>
-      </SectionBlock>
-      <SectionBlock label="Description">
-        <p>{member.mood.description}</p>
-      </SectionBlock>
-    </div>
-  );
-}
-
 function LookingForSlide({ member }: { member: Member }) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
@@ -153,7 +132,6 @@ const SLIDE_COMPONENTS = [
   PortraitSlide,
   MusicSlide,
   FashionSlide,
-  MoodSlide,
   LookingForSlide,
 ] as const;
 

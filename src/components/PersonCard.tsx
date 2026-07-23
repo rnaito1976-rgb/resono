@@ -86,6 +86,14 @@ export function PersonCard({
         {!isAmbient ? (
           <div className="space-y-3">
             {!isOwnCard ? <ResonateButton memberId={member.id} /> : null}
+            {isOwnCard ? (
+              <Link
+                href="/discover"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white/80 transition-opacity active:opacity-70"
+              >
+                もう少し教える
+              </Link>
+            ) : null}
             <Link
               href={`/member/${member.id}`}
               className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white transition-opacity active:opacity-70"

@@ -6,13 +6,7 @@ export function hasCustomPhotoUrl(photo: string): boolean {
 }
 
 export function isOnboardingComplete(member: {
-  portrait: { dialogueCompleted?: boolean; bio?: string };
-  tags: string[];
+  portrait: { dialogueCompleted?: boolean };
 }): boolean {
-  if (member.portrait.dialogueCompleted === true) {
-    return true;
-  }
-
-  // AI対話導入前に作成されたプロフィールも完了扱いにする
-  return Boolean(member.portrait.bio?.trim()) && member.tags.length > 0;
+  return member.portrait.dialogueCompleted === true;
 }

@@ -4,6 +4,13 @@ import type { Member } from "@/types/member";
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
 
+const LEGACY_EMPTY_MOOD = {
+  keywords: [] as string[],
+  atmosphere: "",
+  creativeTime: "",
+  description: "",
+};
+
 export function memberToRow(member: Member): MemberInsert {
   return {
     id: member.id,
@@ -16,7 +23,7 @@ export function memberToRow(member: Member): MemberInsert {
     portrait: member.portrait,
     music: member.music,
     fashion: member.fashion,
-    mood: member.mood,
+    mood: LEGACY_EMPTY_MOOD,
     looking_for: member.lookingFor,
   };
 }
@@ -33,7 +40,6 @@ export function rowToMember(row: MemberRow): Member {
     portrait: row.portrait as Member["portrait"],
     music: row.music as Member["music"],
     fashion: row.fashion as Member["fashion"],
-    mood: row.mood as Member["mood"],
     lookingFor: normalizeLookingFor(row.looking_for),
   };
 }

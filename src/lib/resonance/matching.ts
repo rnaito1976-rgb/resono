@@ -20,10 +20,6 @@ function unionScore(items: string[], weight: number): number {
   return Math.min(weight, items.length * (weight / 3));
 }
 
-function normalizeText(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
 /**
  * AI推定の共鳴度。
  * プロフィールの入力量ではなく、価値観・感性・興味の近さから算出する。
@@ -44,12 +40,8 @@ export function calculateResonanceMatch(
   );
   score += unionScore(intersection(viewer.tags, target.tags), 18);
   score += unionScore(
-    intersection(viewer.mood.keywords, target.mood.keywords),
-    14
-  );
-  score += unionScore(
     intersection(viewer.portrait.influences, target.portrait.influences),
-    10
+    16
   );
 
   const viewerValues = toStringArray(viewer.portrait.influences).filter((item) =>
@@ -59,6 +51,16 @@ export function calculateResonanceMatch(
     item.startsWith("価値観:")
   );
   score += unionScore(intersection(viewerValues, targetValues), 12);
+
+  score += unionScore(
+    intersection(viewer.music.genres, target.music.genres),
+    10
+  );
+
+  score += unionScore(
+    intersection(viewer.fashion.brands, target.fashion.brands),
+    8
+  );
 
   const viewerParts = toStringArray(viewer.lookingFor.parts);
   const targetInstruments = toStringArray(target.music.instruments);
@@ -74,17 +76,6 @@ export function calculateResonanceMatch(
     if (partMatch) {
       score += 8;
     }
-  }
-
-  const viewerAtmosphere = normalizeText(viewer.mood.atmosphere);
-  const targetAtmosphere = normalizeText(target.mood.atmosphere);
-
-  if (viewerAtmosphere && targetAtmosphere) {
-    const sharedWords = intersection(
-      viewerAtmosphere.split(/\s+/),
-      targetAtmosphere.split(/\s+/)
-    );
-    score += Math.min(6, sharedWords.length * 2);
   }
 
   const hashSeed = `${viewer.id}:${target.id}`.split("").reduce(
@@ -127,7 +118,11 @@ function collectCommonPoints(viewer: Member, target: Member): string[] {
   points.push(...intersection(viewer.music.genres, target.music.genres));
   points.push(...intersection(viewer.fashion.brands, target.fashion.brands));
   points.push(...intersection(viewer.tags, target.tags));
-  points.push(...intersection(viewer.mood.keywords, target.mood.keywords));
+  points.push(
+    ...intersection(viewer.portrait.influences, target.portrait.influences).map(
+      (item) => item.replace(/^価値観:/, "")
+    )
+  );
 
   return [...new Set(points)].slice(0, 4);
 }
@@ -137,12 +132,11 @@ function buildAiResonanceComment(
   target: Member,
   commonPoints: string[]
 ): string {
-  const sharedMood = intersection(viewer.mood.keywords, target.mood.keywords);
-  if (sharedMood.length >= 2) {
-    return `「${sharedMood[0]}」と「${sharedMood[1]}」を大切にする感性が重なっています。`;
+  const sharedTags = intersection(viewer.tags, target.tags);
+  if (sharedTags.length >= 2) {
+    return `「${sharedTags[0]}」と「${sharedTags[1]}」を大切にする感性が重なっています。`;
   }
 
-  const sharedTags = intersection(viewer.tags, target.tags);
   if (sharedTags.length) {
     return `「${sharedTags[0]}」という世界観の温度感が近いようです。`;
   }
@@ -215,9 +209,9 @@ export function buildConversationStarters(
   }
 
   const fallbacks = [
-    "休日はどんな過ごし方をすることが多いですか？",
     "最近、世界観が近いと感じたアーティストや作品はありますか？",
     "音楽以外で、感性が近いと感じるものはありますか？",
+    "どんな空気感の場所で過ごすことが多いですか？",
   ];
 
   for (const fallback of fallbacks) {
@@ -246,9 +240,12 @@ function buildMatchReason(viewer: Member, target: Member): string {
     return `「${sharedTags[0]}」という感性が重なる`;
   }
 
-  const sharedMood = intersection(viewer.mood.keywords, target.mood.keywords);
-  if (sharedMood.length) {
-    return `休日や過ごし方のリズムが似ている`;
+  const sharedInfluences = intersection(
+    viewer.portrait.influences,
+    target.portrait.influences
+  );
+  if (sharedInfluences.length) {
+    return `大切にしている価値観が近い`;
   }
 
   return "価値観の温度感が近い";
