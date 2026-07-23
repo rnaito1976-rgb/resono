@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
+import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { ensureMemberForUser, getMemberByUserId, updateMember } from "@/lib/members";
 import {
   buildMemberFromDialogue,
@@ -57,10 +60,59 @@ export async function completeDialogueOnboardingAction(
   }
 }
 
+export async function saveFrequencyColorAction(color: FrequencyColorHex) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "ログインが必要です" };
+    }
+
+    if (!isValidFrequencyColor(color)) {
+      return { error: "無効なカラーです" };
+    }
+
+    const member = await getMemberByUserId(user.id);
+    if (!member || !member.portrait.dialogueCompleted) {
+      return { error: "先にオンボーディングの対話を完了してください" };
+    }
+
+    const result = await saveFrequencyColorForUser(user.id, color);
+    if (!result.success) {
+      return { error: result.error ?? "保存に失敗しました" };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/onboarding");
+    revalidatePath("/discover");
+    revalidatePath("/messages");
+
+    return { success: true };
+  } catch (error) {
+    console.error("[saveFrequencyColorAction]", error);
+    return { error: "保存中に問題が発生しました。もう一度お試しください。" };
+  }
+}
+
+export async function completeOnboardingWithFrequencyAction(
+  answers: DialogueAnswers,
+  color: FrequencyColorHex
+) {
+  const dialogueResult = await completeDialogueOnboardingAction(answers);
+  if (dialogueResult.error) {
+    return dialogueResult;
+  }
+
+  return saveFrequencyColorAction(color);
+}
+
 export async function completeDiscoverDialogueAction(input: {
-  media: string[];
+  artists: string[];
   tempo: string;
-  venues: string[];
+  values: string[];
 }) {
   const supabase = await createClient();
   const {

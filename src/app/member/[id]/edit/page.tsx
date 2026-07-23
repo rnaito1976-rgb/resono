@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { MemberEditForm } from "@/components/MemberEditForm";
 import { getMemberById } from "@/lib/members";
+import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function MemberEditPage({ params }: MemberEditPageProps) {
     notFound();
   }
 
-  if (!user || member.userId !== user.id) {
+  if (!user || !isMemberOwnedByUser(member, user.id)) {
     redirect(`/member/${id}`);
   }
 

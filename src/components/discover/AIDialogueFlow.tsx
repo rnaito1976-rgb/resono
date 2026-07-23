@@ -4,8 +4,10 @@ import { useMemo, useState, useTransition } from "react";
 import {
   completeDialogueOnboardingAction,
   completeDiscoverDialogueAction,
+  saveFrequencyColorAction,
 } from "@/lib/actions/onboarding";
-import { DEFAULT_PHOTO_URL } from "@/lib/onboarding/status";
+import { FrequencyColorPicker } from "@/components/frequency-color/FrequencyColorPicker";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import {
   DISCOVER_DIALOGUE_STEPS,
   INITIAL_DIALOGUE_STEPS,
@@ -14,38 +16,42 @@ import {
   type DialogueAnswers,
   type DialogueStep,
 } from "@/lib/resonance/dialogue";
-import { OnboardingPhotoPicker } from "@/components/onboarding/OnboardingPhotoPicker";
 import { ChipGrid } from "@/components/onboarding/SelectableChip";
+import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { Button } from "@/components/ui/button";
 
 type AIDialogueFlowProps = {
   memberId: string;
   mode: "onboarding" | "discover";
-  initialPhoto?: string;
+  initialPhase?: "dialogue" | "frequency";
 };
 
+type OnboardingPhase = "dialogue" | "frequency";
+
 type DiscoverAnswers = {
-  media: string[];
+  artists: string[];
   tempo: string;
-  venues: string[];
+  values: string[];
 };
 
 export function AIDialogueFlow({
   memberId,
   mode,
-  initialPhoto = DEFAULT_PHOTO_URL,
+  initialPhase = "dialogue",
 }: AIDialogueFlowProps) {
   const steps = mode === "onboarding" ? INITIAL_DIALOGUE_STEPS : DISCOVER_DIALOGUE_STEPS;
+  const [phase, setPhase] = useState<OnboardingPhase>(
+    mode === "onboarding" ? initialPhase : "dialogue"
+  );
   const [stepIndex, setStepIndex] = useState(0);
-  const [answers, setAnswers] = useState<Partial<DialogueAnswers>>({
-    photo: initialPhoto,
-  });
+  const [answers, setAnswers] = useState<Partial<DialogueAnswers>>({});
   const [discoverAnswers, setDiscoverAnswers] = useState<DiscoverAnswers>({
-    media: [],
+    artists: [],
     tempo: "",
-    venues: [],
+    values: [],
   });
   const [selection, setSelection] = useState<string[]>([]);
+  const [textValue, setTextValue] = useState("");
   const [customArtist, setCustomArtist] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -53,17 +59,25 @@ export function AIDialogueFlow({
   const step = steps[stepIndex];
   const history = useMemo(() => steps.slice(0, stepIndex), [stepIndex, steps]);
 
-  function toggleSelection(value: string, type: "single" | "multi") {
-    if (type === "single") {
+  function toggleSelection(value: string, stepDef: DialogueStep) {
+    if (stepDef.type === "single") {
       setSelection([value]);
       return;
     }
 
-    setSelection((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value]
-    );
+    if (stepDef.type === "multi") {
+      setSelection((current) => {
+        if (current.includes(value)) {
+          return current.filter((item) => item !== value);
+        }
+
+        if (stepDef.max && current.length >= stepDef.max) {
+          return current;
+        }
+
+        return [...current, value];
+      });
+    }
   }
 
   function addCustomArtist() {
@@ -72,17 +86,28 @@ export function AIDialogueFlow({
       return;
     }
 
-    setSelection((current) => [...current, trimmed]);
+    setSelection((current) => {
+      if (step?.type === "multi" && step.max && current.length >= step.max) {
+        return current;
+      }
+      return [...current, trimmed];
+    });
     setCustomArtist("");
   }
 
   function canProceed(currentStep: DialogueStep): boolean {
-    if (currentStep.type === "photo") {
-      return true;
+    if (currentStep.type === "text") {
+      return textValue.trim().length >= 1;
     }
 
     if (currentStep.type === "single") {
       return selection.length === 1;
+    }
+
+    if (currentStep.max) {
+      return (
+        selection.length >= currentStep.min && selection.length <= currentStep.max
+      );
     }
 
     return selection.length >= currentStep.min;
@@ -101,37 +126,31 @@ export function AIDialogueFlow({
     }
 
     let value: string | string[] = selection;
-    if (step.type === "photo") {
-      value = answers.photo ?? initialPhoto;
+    if (step.type === "text") {
+      value = textValue.trim();
     }
 
     const nextAnswers = mergeDialogueAnswers(answers, step.id, value);
     setAnswers(nextAnswers);
     setSelection([]);
+    setTextValue("");
     setCustomArtist("");
 
     if (stepIndex === steps.length - 1) {
+      if (!isDialogueAnswersComplete(nextAnswers)) {
+        setError("対話が完了していません");
+        return;
+      }
+
       startTransition(async () => {
-        const payload = {
-          ...nextAnswers,
-          instruments: nextAnswers.instruments ?? [],
-          photo: nextAnswers.photo ?? initialPhoto,
-        };
-
-        if (!isDialogueAnswersComplete(payload)) {
-          setError("対話が完了していません");
-          return;
-        }
-
-        const result = await completeDialogueOnboardingAction(payload);
+        const result = await completeDialogueOnboardingAction(nextAnswers);
         if (result?.error) {
           setError(result.error);
           return;
         }
 
-        if (result?.success) {
-          window.location.href = "/";
-        }
+        setAnswers(nextAnswers);
+        setPhase("frequency");
       });
       return;
     }
@@ -142,12 +161,12 @@ export function AIDialogueFlow({
   function handleDiscoverNext() {
     const nextDiscover = { ...discoverAnswers };
 
-    if (stepIndex === 0) {
-      nextDiscover.media = selection;
-    } else if (stepIndex === 1) {
+    if (step?.id === "artists") {
+      nextDiscover.artists = selection;
+    } else if (step?.id === "weekend") {
       nextDiscover.tempo = selection[0] ?? "";
-    } else if (stepIndex === 2) {
-      nextDiscover.venues = selection;
+    } else if (step?.id === "values") {
+      nextDiscover.values = selection;
     }
 
     setDiscoverAnswers(nextDiscover);
@@ -156,11 +175,7 @@ export function AIDialogueFlow({
 
     if (stepIndex === steps.length - 1) {
       startTransition(async () => {
-        const result = await completeDiscoverDialogueAction({
-          media: nextDiscover.media,
-          tempo: nextDiscover.tempo,
-          venues: nextDiscover.venues,
-        });
+        const result = await completeDiscoverDialogueAction(nextDiscover);
 
         if (result?.error) {
           setError(result.error);
@@ -172,6 +187,22 @@ export function AIDialogueFlow({
     }
 
     setStepIndex((current) => current + 1);
+  }
+
+  if (mode === "onboarding" && phase === "frequency") {
+    return (
+      <FrequencyColorPicker
+        onConfirm={async (color: FrequencyColorHex) => {
+          const result = await saveFrequencyColorAction(color);
+          if (result?.error) {
+            return { error: result.error };
+          }
+
+          window.location.href = "/";
+        }}
+        submitLabel="Resonoをはじめる"
+      />
+    );
   }
 
   if (!step) {
@@ -189,8 +220,8 @@ export function AIDialogueFlow({
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/45">
           {mode === "onboarding"
-            ? "3つの質問だけ。あとはAIが世界観を読み取り、利用中に少しずつ精度を高めます。"
-            : "続けて話すほど、共鳴する人との距離感が近づきます。いつでもスキップできます。"}
+            ? "ニックネームとパート、ジャンル、5つの質問だけ。あとはAIがあなたの音楽的な輪郭を読み取ります。"
+            : "続けて話すほど、一緒に音楽を続けられそうな人との距離感が近づきます。"}
         </p>
       </div>
 
@@ -201,23 +232,24 @@ export function AIDialogueFlow({
 
         <DialogueTurn message={step.message} active />
 
-        {step.type === "photo" ? (
-          <OnboardingPhotoPicker
-            memberId={memberId}
-            value={answers.photo ?? initialPhoto}
-            onChange={(url) => setAnswers((current) => ({ ...current, photo: url }))}
-          />
+        {step.type === "text" ? (
+          <div className="pl-8">
+            <input
+              value={textValue}
+              onChange={(event) => setTextValue(event.target.value)}
+              placeholder={step.placeholder}
+              className="h-12 w-full rounded-full border border-white/10 bg-white/[0.04] px-5 text-[15px] text-white outline-none placeholder:text-white/30 focus:border-white/25"
+            />
+          </div>
         ) : (
           <div className="space-y-5 pl-8">
             <ChipGrid
               items={step.options}
               selected={selection}
-              onToggle={(value) =>
-                toggleSelection(value, step.type === "single" ? "single" : "multi")
-              }
+              onToggle={(value) => toggleSelection(value, step)}
             />
 
-            {step.id === "artists" && mode === "onboarding" ? (
+            {step.id === "artists" && mode === "discover" ? (
               <div className="flex gap-2">
                 <input
                   value={customArtist}
@@ -236,6 +268,12 @@ export function AIDialogueFlow({
                 </Button>
               </div>
             ) : null}
+
+            {step.id === "genres" ? (
+              <p className="text-[13px] text-white/40">
+                {selection.length} / 5 選択中（3つ以上）
+              </p>
+            ) : null}
           </div>
         )}
       </div>
@@ -249,7 +287,12 @@ export function AIDialogueFlow({
           onClick={handleNext}
         >
           {isPending
-            ? "考えています..."
+            ? (
+              <span className="inline-flex items-center gap-2">
+                <FrequencySpinner size={16} />
+                考えています...
+              </span>
+            )
             : stepIndex === steps.length - 1
               ? mode === "onboarding"
                 ? "Resonoをはじめる"

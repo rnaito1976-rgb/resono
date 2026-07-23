@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
+import { getViewerFrequencyColor } from "@/lib/frequency-color/server";
 import "./globals.css";
 
 const inter = Inter({
@@ -13,17 +15,21 @@ export const metadata: Metadata = {
   description: "世界観で共鳴する仲間と出会う",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const frequencyColor = await getViewerFrequencyColor();
+
   return (
     <html lang="ja" className="dark">
       <body
-        className={`${inter.variable} min-h-dvh bg-black font-sans text-white antialiased`}
+        className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
-        {children}
+        <FrequencyColorProvider color={frequencyColor}>
+          {children}
+        </FrequencyColorProvider>
       </body>
     </html>
   );

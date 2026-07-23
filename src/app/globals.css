@@ -5,31 +5,34 @@
 /*
  * Resono Design Principles
  * mobile-first · spacious · minimal · experience over forms
- * resonance-first · one screen one purpose · black + brand green · quiet motion
+ * resonance-first · Frequency Color accents · quiet motion
  */
 
 @layer base {
   :root {
     --radius: 1rem;
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --primary: 141 76% 48%;
-    --primary-foreground: 0 0% 0%;
-    --accent: 141 76% 48%;
-    --accent-foreground: 0 0% 0%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --primary: 166 82% 66%;
+    --primary-foreground: 0 0% 4%;
+    --accent: 166 82% 66%;
+    --accent-foreground: 0 0% 4%;
     --muted: 0 0% 42%;
-    --subtle: 0 0% 7%;
+    --subtle: 0 0% 8%;
     --border: 0 0% 100% / 0.08;
-    --ring: 141 76% 48%;
+    --ring: 166 82% 66%;
+    --frequency-color: #5ef2c8;
+    --frequency-color-soft: rgba(94, 242, 200, 0.12);
+    --frequency-color-muted: rgba(94, 242, 200, 0.4);
   }
 
   html {
-    @apply min-h-full bg-black text-white;
+    @apply min-h-full bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply min-h-full bg-black font-sans text-white antialiased;
+    @apply min-h-full bg-background font-sans text-foreground antialiased;
   }
 }
 

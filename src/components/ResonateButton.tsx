@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { useResonance } from "@/hooks/useResonance";
 
 type ResonateButtonProps = {
@@ -42,13 +43,18 @@ export function ResonateButton({ memberId, className = "" }: ResonateButtonProps
       onClick={toggle}
       disabled={isPending}
       aria-pressed={mounted ? isResonated : undefined}
-      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-quiet active:opacity-85 ${
+      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-quiet active:opacity-85 disabled:opacity-60 ${
         mounted && isResonated
-          ? "border border-primary/40 bg-primary/10 text-primary"
+          ? "border border-primary/40 bg-[var(--frequency-color-soft)] text-primary"
           : "bg-primary text-primary-foreground"
       } ${className}`}
     >
-      {mounted && isResonated ? (
+      {isPending ? (
+        <>
+          <FrequencySpinner size={16} />
+          処理中...
+        </>
+      ) : mounted && isResonated ? (
         <>
           <svg
             width="16"

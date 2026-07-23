@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { PersonCard } from "@/components/PersonCard";
 import { getMemberByUserId, getMembers } from "@/lib/members";
+import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { isOnboardingComplete } from "@/lib/onboarding/status";
-import { calculateResonanceMatch } from "@/lib/resonance/matching";
+import { buildResonanceReason } from "@/lib/resonance/matching";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +21,26 @@ export default async function HomePage() {
     redirect("/onboarding");
   }
 
-  const feedMembers = currentMember
-    ? members.filter((member) => member.id !== currentMember.id)
-    : members;
+  const feedMembers = members.filter((member) => {
+    if (currentMember && member.id === currentMember.id) {
+      return false;
+    }
+
+    if (user && isMemberOwnedByUser(member, user.id)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const rankedFeed = currentMember
+    ? [...feedMembers]
+        .map((member) => ({
+          member,
+          reason: buildResonanceReason(currentMember, member),
+        }))
+        .sort((a, b) => b.reason.score - a.reason.score)
+    : feedMembers.map((member) => ({ member, reason: undefined }));
 
   return (
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">
@@ -33,15 +51,11 @@ export default async function HomePage() {
           <PersonCard member={currentMember} isOwnCard priority />
         ) : null}
 
-        {feedMembers.map((member) => (
+        {rankedFeed.map(({ member, reason }) => (
           <PersonCard
             key={member.id}
             member={member}
-            resonanceScore={
-              currentMember
-                ? calculateResonanceMatch(currentMember, member)
-                : member.resonanceRate
-            }
+            resonanceReason={reason}
           />
         ))}
       </div>

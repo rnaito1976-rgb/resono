@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMemberById, getMemberByUserId } from "@/lib/members";
-import { calculateResonanceMatch } from "@/lib/resonance/matching";
+import { isMemberOwnedByUser } from "@/lib/members/ownership";
+import { buildResonanceReason } from "@/lib/resonance/matching";
 import { MemberDetail } from "@/components/MemberDetail";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,17 +22,19 @@ export default async function MemberPage({ params }: MemberPageProps) {
     notFound();
   }
 
-  const isOwnProfile = Boolean(user && member.userId === user.id);
+  const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
   const viewer = user ? await getMemberByUserId(user.id) : undefined;
-  const resonanceScore =
-    viewer && !isOwnProfile ? calculateResonanceMatch(viewer, member) : undefined;
+  const resonanceReason =
+    viewer && !isOwnProfile && viewer.id !== member.id
+      ? buildResonanceReason(viewer, member)
+      : undefined;
 
   return (
     <main className="mx-auto max-w-mobile bg-background">
       <MemberDetail
         member={member}
         isOwnProfile={isOwnProfile}
-        resonanceScore={resonanceScore}
+        resonanceReason={resonanceReason}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
       />
     </main>

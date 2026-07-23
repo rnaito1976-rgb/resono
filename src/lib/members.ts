@@ -1,10 +1,30 @@
 import { members as fallbackMembers } from "@/data/members";
+import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import { createDefaultMember } from "@/lib/members/defaultMember";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { memberToRow, rowToMember } from "@/lib/supabase/mappers";
 import type { Member } from "@/types/member";
+
+async function attachFrequencyColors(members: Member[]): Promise<Member[]> {
+  const userIds = members
+    .map((member) => member.userId)
+    .filter((userId): userId is string => Boolean(userId));
+
+  if (userIds.length === 0) {
+    return members;
+  }
+
+  const colorMap = await getFrequencyColorsByUserIds(userIds);
+
+  return members.map((member) => ({
+    ...member,
+    frequencyColor: member.userId
+      ? colorMap.get(member.userId)
+      : member.frequencyColor,
+  }));
+}
 
 export async function getMembers(): Promise<Member[]> {
   if (!isSupabaseConfigured()) {
@@ -27,7 +47,7 @@ export async function getMembers(): Promise<Member[]> {
       return fallbackMembers;
     }
 
-    return data.map(rowToMember);
+    return attachFrequencyColors(data.map(rowToMember));
   } catch (error) {
     console.error("[Supabase] getMembers:", error);
     return fallbackMembers;
@@ -56,7 +76,9 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
       return fallbackMembers.find((member) => member.id === id);
     }
 
-    return rowToMember(data);
+    const member = rowToMember(data);
+    const [withColor] = await attachFrequencyColors([member]);
+    return withColor;
   } catch (error) {
     console.error("[Supabase] getMemberById:", error);
     return fallbackMembers.find((member) => member.id === id);
@@ -110,7 +132,7 @@ async function linkMemberToUser(
       return undefined;
     }
 
-    return data ? rowToMember(data) : undefined;
+    return data ? (await attachFrequencyColors([rowToMember(data)]))[0] : undefined;
   } catch (error) {
     console.error("[Supabase] linkMemberToUser:", error);
     return undefined;
@@ -137,7 +159,7 @@ export async function getMemberByUserId(
     }
 
     if (byUserId) {
-      return rowToMember(byUserId);
+      return (await attachFrequencyColors([rowToMember(byUserId)]))[0];
     }
 
     const { data: byId, error: idError } = await supabase
@@ -158,10 +180,11 @@ export async function getMemberByUserId(
     const member = rowToMember(byId);
     if (!member.userId) {
       const linked = await linkMemberToUser(member.id, userId);
-      return linked ?? { ...member, userId };
+      const resolved = linked ?? { ...member, userId };
+      return (await attachFrequencyColors([resolved]))[0];
     }
 
-    return member;
+    return (await attachFrequencyColors([member]))[0];
   } catch (error) {
     console.error("[Supabase] getMemberByUserId:", error);
     return undefined;

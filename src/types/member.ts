@@ -2,6 +2,7 @@ export type Member = {
   id: string;
   userId?: string;
   name: string;
+  frequencyColor?: string;
   resonanceRate: number;
   tags: string[];
   aiComment: string;
@@ -32,14 +33,13 @@ export type Member = {
   };
 };
 
-export type DetailSection = "portrait" | "music" | "fashion" | "lookingFor";
+export type DetailSection = "portrait" | "music" | "lookingFor";
 
 export const DETAIL_SECTIONS: {
   id: DetailSection;
   label: string;
 }[] = [
-  { id: "portrait", label: "Portrait" },
+  { id: "portrait", label: "About" },
   { id: "music", label: "Music" },
-  { id: "fashion", label: "Fashion" },
-  { id: "lookingFor", label: "Looking For" },
+  { id: "lookingFor", label: "Band" },
 ];

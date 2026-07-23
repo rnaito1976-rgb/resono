@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { AIDialogueFlow } from "@/components/discover/AIDialogueFlow";
 import { ensureMemberForUser } from "@/lib/members";
-import { DEFAULT_PHOTO_URL, isOnboardingComplete } from "@/lib/onboarding/status";
+import {
+  isOnboardingComplete,
+  needsFrequencyColorSelection,
+} from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +29,9 @@ export default async function OnboardingPage() {
     <AIDialogueFlow
       mode="onboarding"
       memberId={member?.id ?? user.id}
-      initialPhoto={member?.photo ?? DEFAULT_PHOTO_URL}
+      initialPhase={
+        member && needsFrequencyColorSelection(member) ? "frequency" : "dialogue"
+      }
     />
   );
 }

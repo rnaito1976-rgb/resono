@@ -5,8 +5,24 @@ export function hasCustomPhotoUrl(photo: string): boolean {
   return Boolean(photo && !photo.includes("photo-1534528741775"));
 }
 
-export function isOnboardingComplete(member: {
+export function isDialogueOnboardingComplete(member: {
   portrait: { dialogueCompleted?: boolean };
 }): boolean {
   return member.portrait.dialogueCompleted === true;
+}
+
+export function isOnboardingComplete(member: {
+  portrait: { dialogueCompleted?: boolean };
+  frequencyColor?: string;
+}): boolean {
+  return (
+    isDialogueOnboardingComplete(member) && Boolean(member.frequencyColor)
+  );
+}
+
+export function needsFrequencyColorSelection(member: {
+  portrait: { dialogueCompleted?: boolean };
+  frequencyColor?: string;
+}): boolean {
+  return isDialogueOnboardingComplete(member) && !member.frequencyColor;
 }

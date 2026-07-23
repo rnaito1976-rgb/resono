@@ -5,75 +5,74 @@ import Image from "next/image";
 import Link from "next/link";
 import { Member, DETAIL_SECTIONS } from "@/types/member";
 import { ResonateButton } from "@/components/ResonateButton";
+import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
+import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import type { ResonanceReason } from "@/lib/resonance/matching";
 import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 
 type MemberDetailProps = {
   member: Member;
   isOwnProfile?: boolean;
-  resonanceScore?: number;
+  resonanceReason?: ResonanceReason;
   showResonateButton?: boolean;
 };
 
 function PortraitSlide({
   member,
-  resonanceScore,
+  resonanceReason,
   isOwnProfile = false,
 }: {
   member: Member;
-  resonanceScore?: number;
+  resonanceReason?: ResonanceReason;
   isOwnProfile?: boolean;
 }) {
   const playingParts = member.music.instruments.filter(Boolean);
+  const ringColor = member.frequencyColor as FrequencyColorHex | undefined;
 
   return (
     <div className="flex h-full flex-col px-6 pb-8 pt-4">
-      <div className="relative mb-8 aspect-[3/4] w-full overflow-hidden rounded-3xl">
-        <Image
-          src={member.photo}
-          alt={member.name}
-          fill
-          className="object-cover"
-          sizes="390px"
-        />
-      </div>
+      <ProfilePhotoRing color={ringColor} className="mb-8 rounded-3xl">
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl">
+          <Image
+            src={member.photo}
+            alt={member.name}
+            fill
+            className="object-cover"
+            sizes="390px"
+          />
+        </div>
+      </ProfilePhotoRing>
       <div className="space-y-8">
         <div>
           {playingParts.length > 0 ? (
             <p className="mb-2 text-[13px] font-medium tracking-wide text-white/70">
               {playingParts.join(" · ")}
             </p>
-          ) : isOwnProfile ? (
-            <Link
-              href={`/member/${member.id}/edit`}
-              className="mb-2 inline-block text-[13px] tracking-wide text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
-            >
-              演奏パートを追加
-            </Link>
           ) : null}
           <h2 className="mb-2 text-3xl font-light tracking-tight">{member.name}</h2>
-          {resonanceScore != null && !isOwnProfile ? (
-            <div>
-              <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
-                共鳴度
-              </p>
-              <ResonanceBadge rate={resonanceScore} size="lg" />
+          {resonanceReason && !isOwnProfile ? (
+            <div className="space-y-4">
+              <div>
+                <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
+                  共鳴度
+                </p>
+                <ResonanceBadge rate={resonanceReason.score} size="lg" />
+              </div>
+              <ResonanceReasonBullets reason={resonanceReason} />
             </div>
           ) : null}
         </div>
         <SectionBlock label="About">
           <p>{member.portrait.bio}</p>
         </SectionBlock>
-        {member.portrait.location || member.portrait.age ? (
+        {member.portrait.location ? (
           <SectionBlock label="Location">
-            <p>
-              {[member.portrait.location, member.portrait.age ? `${member.portrait.age}歳` : ""]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+            <p>{member.portrait.location}</p>
           </SectionBlock>
         ) : null}
         <SectionBlock label="Influences">
-          <TagList items={member.portrait.influences} />
+          <TagList items={member.portrait.influences.map((item) => item.split(":")[1] ?? item)} />
         </SectionBlock>
       </div>
     </div>
@@ -96,64 +95,50 @@ function MusicSlide({ member }: { member: Member }) {
   );
 }
 
-function FashionSlide({ member }: { member: Member }) {
-  return (
-    <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
-      <SectionBlock label="Style">
-        <p className="text-xl font-light">{member.fashion.style}</p>
-      </SectionBlock>
-      <SectionBlock label="Colors">
-        <TagList items={member.fashion.colors} />
-      </SectionBlock>
-      <SectionBlock label="Brands">
-        <TagList items={member.fashion.brands} />
-      </SectionBlock>
-      <SectionBlock label="Description">
-        <p>{member.fashion.description}</p>
-      </SectionBlock>
-    </div>
-  );
-}
-
 function LookingForSlide({ member }: { member: Member }) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
       <SectionBlock label="募集パート">
         <div className="space-y-3">
-          {member.lookingFor.parts.map((part) => (
-            <div
-              key={part}
-              className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
-            >
-              <span className="text-base font-medium">{part}</span>
-              <span className="text-xs uppercase tracking-[0.15em] text-primary">
-                Open
-              </span>
-            </div>
-          ))}
+          {member.lookingFor.parts.length > 0 ? (
+            member.lookingFor.parts.map((part) => (
+              <div
+                key={part}
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
+              >
+                <span className="text-base font-medium">{part}</span>
+                <span className="text-xs uppercase tracking-[0.15em] text-primary">
+                  Open
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="text-[15px] leading-relaxed text-white/50">
+              まだ募集パートは設定されていません。
+            </p>
+          )}
         </div>
       </SectionBlock>
-      <SectionBlock label="Band Vision">
-        <p>{member.lookingFor.bandVision}</p>
-      </SectionBlock>
-      <SectionBlock label="Commitment">
-        <p>{member.lookingFor.commitment}</p>
-      </SectionBlock>
+      {member.lookingFor.bandVision ? (
+        <SectionBlock label="Band Vision">
+          <p>{member.lookingFor.bandVision}</p>
+        </SectionBlock>
+      ) : null}
+      {member.lookingFor.commitment ? (
+        <SectionBlock label="Activity">
+          <p>{member.lookingFor.commitment}</p>
+        </SectionBlock>
+      ) : null}
     </div>
   );
 }
 
-const SLIDE_COMPONENTS = [
-  PortraitSlide,
-  MusicSlide,
-  FashionSlide,
-  LookingForSlide,
-] as const;
+const SLIDE_COMPONENTS = [PortraitSlide, MusicSlide, LookingForSlide] as const;
 
 export function MemberDetail({
   member,
   isOwnProfile = false,
-  resonanceScore,
+  resonanceReason,
   showResonateButton = false,
 }: MemberDetailProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -208,23 +193,10 @@ export function MemberDetail({
           </h1>
           {isOwnProfile ? (
             <Link
-              href={`/member/${member.id}/edit`}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-              aria-label="プロフィールを編集"
+              href="/discover"
+              className="flex h-10 items-center justify-center rounded-full px-3 text-[13px] text-primary transition-colors active:bg-white/10"
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 18.5 3 19l.5-4L16.5 3.5z" />
-              </svg>
+              AIと話す
             </Link>
           ) : (
             <div className="h-10 w-10" />
@@ -263,7 +235,7 @@ export function MemberDetail({
             {index === 0 ? (
               <PortraitSlide
                 member={member}
-                resonanceScore={resonanceScore}
+                resonanceReason={resonanceReason}
                 isOwnProfile={isOwnProfile}
               />
             ) : (

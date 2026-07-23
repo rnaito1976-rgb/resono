@@ -1,14 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ResonateButton } from "@/components/ResonateButton";
+import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
+import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
 import { getPlayingParts } from "@/lib/resonance/dialogue";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import type { ResonanceReason } from "@/lib/resonance/matching";
 import { Member } from "@/types/member";
 import { ResonanceBadge, TagList } from "@/components/ui";
 
 type PersonCardProps = {
   member: Member;
   variant?: "default" | "ambient";
-  resonanceScore?: number;
+  resonanceReason?: ResonanceReason;
   isOwnCard?: boolean;
   priority?: boolean;
 };
@@ -21,45 +25,40 @@ function getOpenParts(member: Member): string[] {
 export function PersonCard({
   member,
   variant = "default",
-  resonanceScore,
+  resonanceReason,
   isOwnCard = false,
   priority = false,
 }: PersonCardProps) {
   const isAmbient = variant === "ambient";
-  const score = resonanceScore ?? member.resonanceRate;
+  const score = resonanceReason?.score;
   const openParts = getOpenParts(member);
   const playingParts = getPlayingParts(member);
+  const ringColor = member.frequencyColor as FrequencyColorHex | undefined;
 
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
-      <div className="relative aspect-[4/5] w-full">
-        <Image
-          src={member.photo}
-          alt={member.name}
-          fill
-          className="object-cover"
-          sizes="390px"
-          priority={priority || (!isAmbient && member.id === "1")}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+      <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
+        <div className="relative aspect-[4/5] w-full">
+          <Image
+            src={member.photo}
+            alt={member.name}
+            fill
+            className="object-cover"
+            sizes="390px"
+            priority={priority || (!isAmbient && member.id === "1")}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-end justify-between gap-4">
             <div className="min-w-0">
               {playingParts.length > 0 ? (
                 <p className="mb-1.5 text-[13px] font-medium tracking-wide text-white/75">
                   {playingParts.join(" · ")}
                 </p>
-              ) : isOwnCard ? (
-                <Link
-                  href={`/member/${member.id}/edit`}
-                  className="mb-1.5 inline-block text-[13px] tracking-wide text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
-                >
-                  演奏パートを追加
-                </Link>
               ) : null}
               <h2 className="text-[28px] font-light tracking-tight">{member.name}</h2>
             </div>
-            {!isOwnCard ? (
+            {!isOwnCard && score != null ? (
               <div className="shrink-0 text-right">
                 <p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/50">
                   共鳴度
@@ -69,7 +68,8 @@ export function PersonCard({
             ) : null}
           </div>
         </div>
-      </div>
+        </div>
+      </ProfilePhotoRing>
 
       <div className="space-y-6 px-6 pb-8 pt-6">
         {openParts.length > 0 ? (
@@ -93,6 +93,10 @@ export function PersonCard({
           </div>
         ) : null}
 
+        {!isOwnCard && resonanceReason ? (
+          <ResonanceReasonBullets reason={resonanceReason} compact />
+        ) : null}
+
         <TagList items={member.tags} />
 
         <blockquote className="border-l border-white/20 pl-4 text-[15px] leading-relaxed text-white/75">
@@ -107,7 +111,7 @@ export function PersonCard({
                 href="/discover"
                 className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
               >
-                もう少し教える
+                AIと少し話す
               </Link>
             ) : null}
             <Link

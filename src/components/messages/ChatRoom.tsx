@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
+import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { createClient } from "@/lib/supabase/client";
 import {
   markConversationReadAction,
@@ -16,7 +17,7 @@ import {
   MessageBubble,
   formatMessageTimestamp,
 } from "@/components/messages/MessageBubble";
-import { ResonanceReasonHeader } from "@/components/messages/ResonanceReasonHeader";
+import { ResonanceReasonHeader } from "@/components/ResonanceReasonBullets";
 
 type ChatRoomProps = {
   conversationId: string;
@@ -205,7 +206,11 @@ export function ChatRoom({
             aria-label="送信"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-35"
           >
-            <ArrowUp className="h-5 w-5" />
+            {isPending ? (
+              <FrequencySpinner size={18} />
+            ) : (
+              <ArrowUp className="h-5 w-5" />
+            )}
           </button>
         </form>
       </div>

@@ -16,7 +16,7 @@ export function SelectableChip({ label, selected, onToggle }: SelectableChipProp
       className={cn(
         "rounded-full border px-4 py-2.5 text-[15px] transition-quiet active:opacity-85",
         selected
-          ? "border-primary/50 bg-primary/12 text-white"
+          ? "border-primary/50 bg-[var(--frequency-color-soft)] text-white"
           : "border-white/8 bg-white/[0.02] text-white/70 hover:border-white/15 hover:bg-white/[0.04]"
       )}
     >

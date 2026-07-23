@@ -70,7 +70,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
-          入力は任意です。AIとの短い対話や、利用中の追加情報から共鳴度は少しずつ高まります。
+          名前や写真だけ変更できます。音楽的な輪郭はAIとの短い対話で深まります。
         </p>
 
         {error ? (

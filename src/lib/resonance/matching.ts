@@ -20,9 +20,40 @@ function unionScore(items: string[], weight: number): number {
   return Math.min(weight, items.length * (weight / 3));
 }
 
+function getInfluencesByPrefix(member: Member, prefix: string): string[] {
+  return toStringArray(member.portrait.influences)
+    .filter((item) => item.startsWith(`${prefix}:`))
+    .map((item) => item.slice(prefix.length + 1));
+}
+
+function formatInfluencePoint(influence: string): string | null {
+  const [prefix, ...rest] = influence.split(":");
+  const value = rest.join(":").trim();
+  if (!value) {
+    return null;
+  }
+
+  switch (prefix) {
+    case "バンド":
+      return value;
+    case "活動":
+      return `ライブは${value}が理想`;
+    case "スタイル":
+      return value;
+    case "大切":
+      return value;
+    case "メンバー":
+      return `${value}なメンバーと長く続けられそう`;
+    case "会話":
+      return `会話は${value}が心地いい`;
+    default:
+      return value;
+  }
+}
+
 /**
  * AI推定の共鳴度。
- * プロフィールの入力量ではなく、価値観・感性・興味の近さから算出する。
+ * プロフィールの入力量ではなく、音楽的・人間的な相性から算出する。
  */
 export function calculateResonanceMatch(
   viewer: Member,
@@ -32,33 +63,35 @@ export function calculateResonanceMatch(
     return 100;
   }
 
-  let score = 38;
+  let score = 36;
 
   score += unionScore(
     intersection(viewer.music.favoriteArtists, target.music.favoriteArtists),
-    22
+    18
   );
-  score += unionScore(intersection(viewer.tags, target.tags), 18);
+  score += unionScore(intersection(viewer.music.genres, target.music.genres), 20);
   score += unionScore(
-    intersection(viewer.portrait.influences, target.portrait.influences),
-    16
+    intersection(getInfluencesByPrefix(viewer, "スタイル"), getInfluencesByPrefix(target, "スタイル")),
+    14
   );
-
-  const viewerValues = toStringArray(viewer.portrait.influences).filter((item) =>
-    item.startsWith("価値観:")
-  );
-  const targetValues = toStringArray(target.portrait.influences).filter((item) =>
-    item.startsWith("価値観:")
-  );
-  score += unionScore(intersection(viewerValues, targetValues), 12);
-
   score += unionScore(
-    intersection(viewer.music.genres, target.music.genres),
+    intersection(getInfluencesByPrefix(viewer, "活動"), getInfluencesByPrefix(target, "活動")),
+    12
+  );
+  score += unionScore(
+    intersection(getInfluencesByPrefix(viewer, "大切"), getInfluencesByPrefix(target, "大切")),
+    12
+  );
+  score += unionScore(
+    intersection(getInfluencesByPrefix(viewer, "メンバー"), getInfluencesByPrefix(target, "メンバー")),
     10
   );
-
   score += unionScore(
-    intersection(viewer.fashion.brands, target.fashion.brands),
+    intersection(getInfluencesByPrefix(viewer, "バンド"), getInfluencesByPrefix(target, "バンド")),
+    10
+  );
+  score += unionScore(
+    intersection(getInfluencesByPrefix(viewer, "会話"), getInfluencesByPrefix(target, "会話")),
     8
   );
 
@@ -78,29 +111,15 @@ export function calculateResonanceMatch(
     }
   }
 
-  const hashSeed = `${viewer.id}:${target.id}`.split("").reduce(
-    (sum, char) => sum + char.charCodeAt(0),
-    0
-  );
-  score += hashSeed % 7;
+  if (
+    viewer.portrait.location &&
+    target.portrait.location &&
+    viewer.portrait.location === target.portrait.location
+  ) {
+    score += 6;
+  }
 
   return Math.min(99, Math.max(41, Math.round(score)));
-}
-
-export function getTopResonanceMatches(
-  viewer: Member,
-  candidates: Member[],
-  limit = 3
-) {
-  return candidates
-    .filter((member) => member.id !== viewer.id)
-    .map((member) => ({
-      member,
-      score: calculateResonanceMatch(viewer, member),
-      reason: buildMatchReason(viewer, member),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
 }
 
 export type ResonanceReason = {
@@ -112,17 +131,50 @@ export type ResonanceReason = {
 function collectCommonPoints(viewer: Member, target: Member): string[] {
   const points: string[] = [];
 
-  points.push(
-    ...intersection(viewer.music.favoriteArtists, target.music.favoriteArtists)
-  );
-  points.push(...intersection(viewer.music.genres, target.music.genres));
-  points.push(...intersection(viewer.fashion.brands, target.fashion.brands));
-  points.push(...intersection(viewer.tags, target.tags));
-  points.push(
-    ...intersection(viewer.portrait.influences, target.portrait.influences).map(
-      (item) => item.replace(/^価値観:/, "")
+  for (const genre of intersection(viewer.music.genres, target.music.genres)) {
+    points.push(`${genre}への熱量が近い`);
+  }
+
+  for (const influence of intersection(
+    viewer.portrait.influences,
+    target.portrait.influences
+  )) {
+    const formatted = formatInfluencePoint(influence);
+    if (formatted) {
+      points.push(formatted);
+    }
+  }
+
+  for (const artist of intersection(
+    viewer.music.favoriteArtists,
+    target.music.favoriteArtists
+  ).slice(0, 1)) {
+    points.push(`${artist}あたりの音楽性が近い`);
+  }
+
+  if (
+    viewer.portrait.location &&
+    target.portrait.location &&
+    viewer.portrait.location === target.portrait.location
+  ) {
+    points.push(`活動エリアが${viewer.portrait.location}で近い`);
+  }
+
+  const viewerParts = toStringArray(viewer.lookingFor.parts);
+  const targetInstruments = toStringArray(target.music.instruments);
+  if (
+    viewerParts.length &&
+    targetInstruments.length &&
+    viewerParts.some((part) =>
+      targetInstruments.some(
+        (instrument) =>
+          instrument.toLowerCase().includes(part.toLowerCase()) ||
+          part.toLowerCase().includes(instrument.toLowerCase())
+      )
     )
-  );
+  ) {
+    points.push("募集パートと演奏パートが合う");
+  }
 
   return [...new Set(points)].slice(0, 4);
 }
@@ -132,32 +184,32 @@ function buildAiResonanceComment(
   target: Member,
   commonPoints: string[]
 ): string {
-  const sharedTags = intersection(viewer.tags, target.tags);
-  if (sharedTags.length >= 2) {
-    return `「${sharedTags[0]}」と「${sharedTags[1]}」を大切にする感性が重なっています。`;
+  const sharedGenres = intersection(viewer.music.genres, target.music.genres);
+  if (sharedGenres.length >= 2) {
+    return `${sharedGenres[0]}と${sharedGenres[1]}への向き合い方が近く、一緒にバンド活動を続けられそうです。`;
   }
 
-  if (sharedTags.length) {
-    return `「${sharedTags[0]}」という世界観の温度感が近いようです。`;
+  if (sharedGenres.length) {
+    return `${sharedGenres[0]}への熱量が近く、無理のない距離感でバンド活動を始められそうです。`;
   }
 
-  const sharedArtists = intersection(
-    viewer.music.favoriteArtists,
-    target.music.favoriteArtists
+  const sharedStyle = intersection(
+    getInfluencesByPrefix(viewer, "スタイル"),
+    getInfluencesByPrefix(target, "スタイル")
   );
-  if (sharedArtists.length) {
-    return `${sharedArtists[0]} あたりの音楽性から、静かな余白を大切にする世界観が共通しています。`;
+  if (sharedStyle.length) {
+    return `${sharedStyle[0]}という活動スタイルが重なり、長く続けやすい相性です。`;
   }
 
   if (commonPoints.length >= 2) {
-    return `「${commonPoints[0]}」と「${commonPoints[1]}」に触れる感性が、自然な会話のきっかけになりそうです。`;
+    return `${commonPoints[0]}。${commonPoints[1]}。音楽を続ける相性が良さそうです。`;
   }
 
   if (commonPoints.length === 1) {
-    return `「${commonPoints[0]}」を通じて、価値観のリズムが近いと感じます。`;
+    return `${commonPoints[0]}。バンド活動のリズムが自然に合いそうです。`;
   }
 
-  return "価値観のリズムが近く、無理のない距離感で話を始められそうです。";
+  return "音楽への向き合い方が近く、一緒に続けられそうな距離感です。";
 }
 
 export function buildResonanceReason(
@@ -183,8 +235,10 @@ export function buildConversationStarters(
     target.music.favoriteArtists
   );
   const sharedGenres = intersection(viewer.music.genres, target.music.genres);
-  const sharedBrands = intersection(viewer.fashion.brands, target.fashion.brands);
-  const sharedTags = intersection(viewer.tags, target.tags);
+  const sharedStyle = intersection(
+    getInfluencesByPrefix(viewer, "スタイル"),
+    getInfluencesByPrefix(target, "スタイル")
+  );
 
   if (sharedArtists.length) {
     starters.push(
@@ -193,25 +247,17 @@ export function buildConversationStarters(
   }
 
   if (sharedGenres.length) {
-    starters.push(
-      `${sharedGenres[0]}系の音楽、どんなシチュエーションで聴いていますか？`
-    );
+    starters.push(`${sharedGenres[0]}系の音楽、どんなバンドをやってみたいですか？`);
   }
 
-  if (sharedBrands.length) {
-    starters.push(
-      `${sharedBrands[0]}が好きとのことですが、きっかけを教えてください。`
-    );
-  }
-
-  if (sharedTags.length && starters.length < 3) {
-    starters.push(`「${sharedTags[0]}」というタグ、どんな意味を込めていますか？`);
+  if (sharedStyle.length) {
+    starters.push(`${sharedStyle[0]}、どんな活動から始めたいですか？`);
   }
 
   const fallbacks = [
-    "最近、世界観が近いと感じたアーティストや作品はありますか？",
-    "音楽以外で、感性が近いと感じるものはありますか？",
-    "どんな空気感の場所で過ごすことが多いですか？",
+    "どんなバンドをやってみたいですか？",
+    "ライブはどのくらいの頻度でやりたいですか？",
+    "バンドで一番大切にしたいことは何ですか？",
   ];
 
   for (const fallback of fallbacks) {
@@ -224,29 +270,4 @@ export function buildConversationStarters(
   }
 
   return starters.slice(0, 3);
-}
-
-function buildMatchReason(viewer: Member, target: Member): string {
-  const sharedArtists = intersection(
-    viewer.music.favoriteArtists,
-    target.music.favoriteArtists
-  );
-  if (sharedArtists.length) {
-    return `${sharedArtists[0]} あたりの音楽性が近い`;
-  }
-
-  const sharedTags = intersection(viewer.tags, target.tags);
-  if (sharedTags.length) {
-    return `「${sharedTags[0]}」という感性が重なる`;
-  }
-
-  const sharedInfluences = intersection(
-    viewer.portrait.influences,
-    target.portrait.influences
-  );
-  if (sharedInfluences.length) {
-    return `大切にしている価値観が近い`;
-  }
-
-  return "価値観の温度感が近い";
 }
