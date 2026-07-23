@@ -42,10 +42,6 @@ export function PersonCard({
   const ringColor = isOwnCard
     ? undefined
     : (member.frequencyColor as FrequencyColorHex | undefined);
-  const cardClassName = isOwnCard
-    ? "overflow-hidden bg-subtle"
-    : "overflow-hidden rounded-[28px] bg-subtle";
-  const photoWrapClassName = isOwnCard ? "relative overflow-hidden" : "rounded-[28px]";
   const highlightedParts = new Set(
     recommendation?.recruitmentLabel === "sought-by-target"
       ? (recommendation.highlightedParts ?? [])
@@ -56,8 +52,8 @@ export function PersonCard({
     : undefined;
 
   return (
-    <article className={cardClassName}>
-      <ProfilePhotoRing color={ringColor} className={photoWrapClassName}>
+    <article className="overflow-hidden rounded-[28px] bg-subtle">
+      <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
         <div className="relative aspect-[4/5] w-full">
           <Image
             src={member.photo}
