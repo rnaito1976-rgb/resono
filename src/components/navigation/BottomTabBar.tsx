@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 
@@ -14,14 +14,21 @@ const TABS = [
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { count } = useUnreadCount();
+
+  function handleTabClick(href: string) {
+    if (pathname !== href) {
+      router.refresh();
+    }
+  }
 
   return (
     <nav
       aria-label="Main navigation"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
     >
-      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-background/85 px-2 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-background/85 px-4 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
         {TABS.map(({ href, label, icon: Icon, ...rest }) => {
           const active =
             href === "/"
@@ -35,6 +42,7 @@ export function BottomTabBar() {
               href={href}
               aria-label={label}
               aria-current={active ? "page" : undefined}
+              onClick={() => handleTabClick(href)}
               className="relative flex h-11 w-11 items-center justify-center rounded-full transition-quiet active:scale-95"
             >
               <span

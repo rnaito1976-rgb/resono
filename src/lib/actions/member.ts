@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -56,8 +55,11 @@ export async function updateMemberAction(member: Member) {
     return { error: result.error ?? "保存に失敗しました" };
   }
 
+  revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/member/${member.id}`);
-  redirect(`/member/${member.id}`);
+  revalidatePath(`/member/${member.id}/edit`);
+
+  return { success: true };
 }

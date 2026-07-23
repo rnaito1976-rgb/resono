@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import {
   updateFrequencyColorAction,
@@ -20,6 +21,7 @@ type MemberEditFormProps = {
 };
 
 export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
+  const router = useRouter();
   const [member, setMember] = useState(initialMember);
   const initialFrequencyColor = initialMember.frequencyColor as
     | FrequencyColorHex
@@ -71,7 +73,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
       const result = await updateMemberAction(member);
       if (result?.error) {
         setError(result.error);
+        return;
       }
+
+      router.refresh();
+      router.push(`/member/${member.id}`);
     });
   }
 

@@ -56,6 +56,7 @@ export function PersonCard({
       <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
         <div className="relative aspect-[4/5] w-full">
           <Image
+            key={member.photo}
             src={member.photo}
             alt={member.name}
             fill
