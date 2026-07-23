@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import { UserRound } from "lucide-react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { MessagesNavLink } from "@/components/messages/MessagesNavLink";
 import { Button } from "@/components/ui/button";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -22,14 +20,6 @@ export function AuthHeaderActions({ initialUser = null }: AuthHeaderActionsProps
   if (isLoggedIn) {
     return (
       <div className="flex items-center gap-1">
-        <MessagesNavLink />
-        <Link
-          href="/me"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/5 hover:text-white active:bg-white/10"
-          aria-label="マイページ"
-        >
-          <UserRound className="h-5 w-5" />
-        </Link>
         <LogoutButton />
       </div>
     );

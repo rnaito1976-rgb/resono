@@ -162,6 +162,117 @@ export type Database = {
         };
         Relationships: [];
       };
+      bands: {
+        Row: {
+          id: string;
+          name: string;
+          accent_color: string | null;
+          activity_status: string;
+          created_by_member_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          accent_color?: string | null;
+          activity_status?: string;
+          created_by_member_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          accent_color?: string | null;
+          activity_status?: string;
+          created_by_member_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      band_members: {
+        Row: {
+          band_id: string;
+          member_id: string;
+          joined_at: string;
+        };
+        Insert: {
+          band_id: string;
+          member_id: string;
+          joined_at?: string;
+        };
+        Update: {
+          band_id?: string;
+          member_id?: string;
+          joined_at?: string;
+        };
+        Relationships: [];
+      };
+      band_timeline_events: {
+        Row: {
+          id: string;
+          band_id: string;
+          kind: string;
+          title: string;
+          body: string | null;
+          occurred_at: string;
+          activity_id: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          band_id: string;
+          kind: string;
+          title: string;
+          body?: string | null;
+          occurred_at?: string;
+          activity_id?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          band_id?: string;
+          kind?: string;
+          title?: string;
+          body?: string | null;
+          occurred_at?: string;
+          activity_id?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
+      band_activities: {
+        Row: {
+          id: string;
+          band_id: string;
+          author_member_id: string;
+          kind: string;
+          title: string | null;
+          body: string | null;
+          media_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          band_id: string;
+          author_member_id: string;
+          kind: string;
+          title?: string | null;
+          body?: string | null;
+          media_url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          band_id?: string;
+          author_member_id?: string;
+          kind?: string;
+          title?: string | null;
+          body?: string | null;
+          media_url?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
