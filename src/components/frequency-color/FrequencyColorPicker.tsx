@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
-import { FREQUENCY_COLOR_PALETTE } from "@/lib/frequency-color/palette";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
@@ -74,34 +74,11 @@ export function FrequencyColorPicker({
           />
         </div>
 
-        <div className="grid grid-cols-4 gap-4 sm:grid-cols-8">
-          {FREQUENCY_COLOR_PALETTE.map((swatch) => {
-            const isSelected = selected === swatch.hex;
-
-            return (
-              <button
-                key={swatch.id}
-                type="button"
-                aria-label={swatch.label}
-                aria-pressed={isSelected}
-                onClick={() => setSelected(swatch.hex)}
-                className="group flex flex-col items-center gap-2 transition-quiet active:scale-95"
-              >
-                <span
-                  className={`relative h-12 w-12 rounded-full transition-quiet ${
-                    isSelected ? "scale-110" : "group-hover:scale-105"
-                  }`}
-                  style={{
-                    backgroundColor: swatch.hex,
-                    boxShadow: isSelected
-                      ? `0 0 0 2px ${swatch.hex}, 0 0 0 4px ${withAlpha(swatch.hex, 0.25)}`
-                      : `inset 0 0 0 1px ${withAlpha(swatch.hex, 0.35)}`,
-                  }}
-                />
-              </button>
-            );
-          })}
-        </div>
+        <FrequencyColorSwatchGrid
+          selected={selected}
+          onSelect={setSelected}
+          columns={4}
+        />
       </div>
 
       <div className="mt-10 space-y-3 border-t border-white/8 pt-6">

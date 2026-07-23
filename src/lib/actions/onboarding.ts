@@ -86,9 +86,16 @@ export async function saveFrequencyColorAction(color: FrequencyColorHex) {
     }
 
     revalidatePath("/");
+    revalidatePath("/me");
     revalidatePath("/onboarding");
     revalidatePath("/discover");
     revalidatePath("/messages");
+    revalidatePath("/bands");
+
+    if (member.id) {
+      revalidatePath(`/member/${member.id}`);
+      revalidatePath(`/member/${member.id}/edit`);
+    }
 
     return { success: true };
   } catch (error) {

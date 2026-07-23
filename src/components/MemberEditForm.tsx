@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { updateMemberAction } from "@/lib/actions/member";
+import { useEffect, useState, useTransition } from "react";
+import {
+  updateFrequencyColorAction,
+  updateMemberAction,
+} from "@/lib/actions/member";
+import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import { withAlpha } from "@/lib/frequency-color/utils";
 import { joinList, splitList } from "@/lib/form";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
+import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import type { Member } from "@/types/member";
 
@@ -14,8 +21,20 @@ type MemberEditFormProps = {
 
 export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   const [member, setMember] = useState(initialMember);
+  const initialFrequencyColor = initialMember.frequencyColor as
+    | FrequencyColorHex
+    | undefined;
+  const [frequencyColor, setFrequencyColor] = useState<
+    FrequencyColorHex | undefined
+  >(initialFrequencyColor);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (frequencyColor) {
+      applyFrequencyColorVariables(document.documentElement, frequencyColor);
+    }
+  }, [frequencyColor]);
 
   function updateField<T extends keyof Member>(key: T, value: Member[T]) {
     setMember((current) => ({ ...current, [key]: value }));
@@ -38,6 +57,17 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
     setError(null);
 
     startTransition(async () => {
+      if (
+        frequencyColor &&
+        frequencyColor !== initialFrequencyColor
+      ) {
+        const colorResult = await updateFrequencyColorAction(frequencyColor);
+        if (colorResult?.error) {
+          setError(colorResult.error);
+          return;
+        }
+      }
+
       const result = await updateMemberAction(member);
       if (result?.error) {
         setError(result.error);
@@ -70,7 +100,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
-          名前や写真だけ変更できます。音楽的な輪郭はAIとの短い対話で深まります。
+          名前や写真、Frequency Colorを変更できます。音楽的な輪郭はAIとの短い対話で深まります。
         </p>
 
         {error ? (
@@ -100,6 +130,35 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               value={member.photo}
               onChange={(url) => updateField("photo", url)}
             />
+          </FormField>
+        </FormSection>
+
+        <FormSection title="Frequency Color">
+          <FormField
+            label="あなたのサインカラー"
+            hint="プロフィールやResono全体に静かに反映されます"
+          >
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-5">
+              <div className="mb-5 flex items-center gap-4">
+                <div
+                  className="h-12 w-12 rounded-full transition-quiet"
+                  style={{
+                    backgroundColor: frequencyColor ?? "rgba(255,255,255,0.08)",
+                    boxShadow: frequencyColor
+                      ? `0 0 0 1px ${withAlpha(frequencyColor, 0.35)}, 0 0 24px ${withAlpha(frequencyColor, 0.22)}`
+                      : undefined,
+                  }}
+                />
+                <p className="text-[14px] leading-relaxed text-white/55">
+                  オンボーディングで選んだ色を、いつでも変更できます。
+                </p>
+              </div>
+              <FrequencyColorSwatchGrid
+                selected={frequencyColor}
+                onSelect={setFrequencyColor}
+                columns={8}
+              />
+            </div>
           </FormField>
         </FormSection>
 
