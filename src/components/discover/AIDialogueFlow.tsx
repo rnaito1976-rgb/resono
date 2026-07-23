@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import {
   completeDialogueOnboardingAction,
@@ -205,12 +206,41 @@ export function AIDialogueFlow({
     );
   }
 
+  const backHref = mode === "discover" ? `/member/${memberId}` : "/";
+
   if (!step) {
     return null;
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-12">
+    <div
+      className={`mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 ${
+        mode === "discover" ? "pt-6" : "pt-12"
+      }`}
+    >
+      {mode === "discover" ? (
+        <header className="mb-6 flex items-center">
+          <Link
+            href={backHref}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
+            aria-label="戻る"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Link>
+        </header>
+      ) : null}
+
       <div className="mb-8">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
           Resono AI

@@ -8,7 +8,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ initialUser = null }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 bg-background/80 px-6 pb-5 pt-10 backdrop-blur-xl">
+    <header className="sticky top-0 z-10 bg-background/85 px-6 pb-5 pt-10 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/">

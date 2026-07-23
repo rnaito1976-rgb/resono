@@ -192,12 +192,33 @@ export function MemberDetail({
             {isOwnProfile ? "マイページ" : member.name}
           </h1>
           {isOwnProfile ? (
-            <Link
-              href="/discover"
-              className="flex h-10 items-center justify-center rounded-full px-3 text-[13px] text-primary transition-colors active:bg-white/10"
-            >
-              AIと話す
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/member/${member.id}/edit`}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
+                aria-label="プロフィールを編集"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 18.5 3 19l.5-4L16.5 3.5z" />
+                </svg>
+              </Link>
+              <Link
+                href="/discover"
+                className="flex h-10 items-center justify-center rounded-full px-3 text-[13px] text-primary transition-colors active:bg-white/10"
+              >
+                AIと話す
+              </Link>
+            </div>
           ) : (
             <div className="h-10 w-10" />
           )}
@@ -260,6 +281,22 @@ export function MemberDetail({
           ))}
         </div>
         {showResonateButton ? <ResonateButton memberId={member.id} /> : null}
+        {isOwnProfile ? (
+          <div className="space-y-3">
+            <Link
+              href="/discover"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
+            >
+              AIと少し話す
+            </Link>
+            <Link
+              href={`/member/${member.id}/edit`}
+              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+            >
+              プロフィールを編集
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );

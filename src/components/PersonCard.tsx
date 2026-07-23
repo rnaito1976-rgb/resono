@@ -63,7 +63,11 @@ export function PersonCard({
             sizes="390px"
             priority={priority || (!isAmbient && member.id === "1")}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div
+            className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${
+              isOwnCard ? "from-black/85" : "from-black/80"
+            }`}
+          />
           {recruitmentLabel ? (
             <div className="absolute left-5 top-5 max-w-[70%]">
               <span className="inline-flex rounded-full border border-primary/30 bg-black/45 px-3 py-1.5 text-[12px] font-medium leading-snug text-primary backdrop-blur-md">
