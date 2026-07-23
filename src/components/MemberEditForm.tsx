@@ -9,7 +9,7 @@ import {
 import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
-import { joinList, splitList } from "@/lib/form";
+import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -41,7 +41,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   }
 
   function updateNested<
-    K extends "music" | "lookingFor",
+    K extends "music" | "lookingFor" | "portrait",
   >(section: K, key: keyof Member[K], value: Member[K][keyof Member[K]]) {
     setMember((current) => ({
       ...current,
@@ -100,7 +100,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
-          名前や写真、Frequency Colorを変更できます。音楽的な輪郭はAIとの短い対話で深まります。
+          名前や写真、Frequency Color、Influencesを変更できます。音楽的な輪郭はAIとの短い対話で深まります。
         </p>
 
         {error ? (
@@ -168,6 +168,17 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               value={joinList(member.music.favoriteArtists)}
               onChange={(event) =>
                 updateNested("music", "favoriteArtists", splitList(event.target.value))
+              }
+            />
+          </FormField>
+          <FormField
+            label="Influences"
+            hint="カンマ区切り・任意（例: 竹内まりや, Cornelius, 羊文学）"
+          >
+            <FormInput
+              value={formatInfluencesForEdit(member.portrait.influences)}
+              onChange={(event) =>
+                updateNested("portrait", "influences", splitList(event.target.value))
               }
             />
           </FormField>
