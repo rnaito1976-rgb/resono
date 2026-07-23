@@ -114,6 +114,7 @@ export function AIDialogueFlow({
       startTransition(async () => {
         const payload = {
           ...nextAnswers,
+          instruments: nextAnswers.instruments ?? [],
           photo: nextAnswers.photo ?? initialPhoto,
         };
 

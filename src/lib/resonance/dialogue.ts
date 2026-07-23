@@ -30,9 +30,21 @@ export const VALUE_OPTIONS = [
   "ユーモア",
 ] as const;
 
+export const PLAYING_PART_OPTIONS = [
+  "ボーカル",
+  "ギター",
+  "ベース",
+  "ドラム",
+  "キーボード",
+  "シンセ",
+  "DJ",
+  "管楽器",
+] as const;
+
 export type DialogueAnswers = {
   artists: string[];
   values: string[];
+  instruments: string[];
   photo?: string;
 };
 
@@ -45,7 +57,7 @@ export type DialogueStep =
       min: number;
     }
   | {
-      id: "values" | "venues";
+      id: "values" | "venues" | "instruments";
       message: string;
       type: "multi";
       options: readonly string[];
@@ -77,6 +89,13 @@ export const INITIAL_DIALOGUE_STEPS: DialogueStep[] = [
     type: "multi",
     options: VALUE_OPTIONS,
     min: 1,
+  },
+  {
+    id: "instruments",
+    message: "演奏するパートは？（任意・複数選択可）",
+    type: "multi",
+    options: PLAYING_PART_OPTIONS,
+    min: 0,
   },
   {
     id: "photo",
@@ -148,6 +167,9 @@ export function buildMemberFromDialogue(
       favoriteArtists: Array.from(
         new Set([...member.music.favoriteArtists, ...answers.artists])
       ),
+      instruments: Array.from(
+        new Set([...member.music.instruments, ...answers.instruments])
+      ),
     },
   };
 }
@@ -201,6 +223,8 @@ export function mergeDialogueAnswers(
       return { ...current, artists: value as string[] };
     case "values":
       return { ...current, values: value as string[] };
+    case "instruments":
+      return { ...current, instruments: value as string[] };
     case "photo":
       return { ...current, photo: value as string };
     default:
@@ -212,4 +236,9 @@ export function isDialogueAnswersComplete(
   answers: Partial<DialogueAnswers>
 ): answers is DialogueAnswers {
   return Boolean(answers.artists?.length && answers.values?.length);
+}
+
+export function getPlayingParts(member: Member): string[] {
+  const instruments = member.music?.instruments;
+  return Array.isArray(instruments) ? instruments.filter(Boolean) : [];
 }

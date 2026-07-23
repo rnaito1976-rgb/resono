@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ResonateButton } from "@/components/ResonateButton";
+import { getPlayingParts } from "@/lib/resonance/dialogue";
 import { Member } from "@/types/member";
 import { ResonanceBadge, TagList } from "@/components/ui";
 
@@ -27,6 +28,7 @@ export function PersonCard({
   const isAmbient = variant === "ambient";
   const score = resonanceScore ?? member.resonanceRate;
   const openParts = getOpenParts(member);
+  const playingParts = getPlayingParts(member);
 
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
@@ -42,9 +44,23 @@ export function PersonCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-end justify-between gap-4">
-            <h2 className="text-[28px] font-light tracking-tight">{member.name}</h2>
+            <div className="min-w-0">
+              {playingParts.length > 0 ? (
+                <p className="mb-1.5 text-[13px] font-medium tracking-wide text-white/75">
+                  {playingParts.join(" · ")}
+                </p>
+              ) : isOwnCard ? (
+                <Link
+                  href={`/member/${member.id}/edit`}
+                  className="mb-1.5 inline-block text-[13px] tracking-wide text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
+                >
+                  演奏パートを追加
+                </Link>
+              ) : null}
+              <h2 className="text-[28px] font-light tracking-tight">{member.name}</h2>
+            </div>
             {!isOwnCard ? (
-              <div className="text-right">
+              <div className="shrink-0 text-right">
                 <p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/50">
                   共鳴度
                 </p>

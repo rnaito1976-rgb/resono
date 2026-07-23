@@ -17,10 +17,14 @@ type MemberDetailProps = {
 function PortraitSlide({
   member,
   resonanceScore,
+  isOwnProfile = false,
 }: {
   member: Member;
   resonanceScore?: number;
+  isOwnProfile?: boolean;
 }) {
+  const playingParts = member.music.instruments.filter(Boolean);
+
   return (
     <div className="flex h-full flex-col px-6 pb-8 pt-4">
       <div className="relative mb-8 aspect-[3/4] w-full overflow-hidden rounded-3xl">
@@ -34,8 +38,20 @@ function PortraitSlide({
       </div>
       <div className="space-y-8">
         <div>
+          {playingParts.length > 0 ? (
+            <p className="mb-2 text-[13px] font-medium tracking-wide text-white/70">
+              {playingParts.join(" · ")}
+            </p>
+          ) : isOwnProfile ? (
+            <Link
+              href={`/member/${member.id}/edit`}
+              className="mb-2 inline-block text-[13px] tracking-wide text-white/45 underline-offset-2 hover:text-white/70 hover:underline"
+            >
+              演奏パートを追加
+            </Link>
+          ) : null}
           <h2 className="mb-2 text-3xl font-light tracking-tight">{member.name}</h2>
-          {resonanceScore != null ? (
+          {resonanceScore != null && !isOwnProfile ? (
             <div>
               <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
                 共鳴度
@@ -245,7 +261,11 @@ export function MemberDetail({
             className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
           >
             {index === 0 ? (
-              <PortraitSlide member={member} resonanceScore={resonanceScore} />
+              <PortraitSlide
+                member={member}
+                resonanceScore={resonanceScore}
+                isOwnProfile={isOwnProfile}
+              />
             ) : (
               <SlideComponent member={member} />
             )}

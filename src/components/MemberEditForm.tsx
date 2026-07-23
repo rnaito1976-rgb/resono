@@ -86,6 +86,14 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               onChange={(event) => updateField("name", event.target.value)}
             />
           </FormField>
+          <FormField label="演奏パート" hint="カンマ区切り・任意（例: ギター, ボーカル）">
+            <FormInput
+              value={joinList(member.music.instruments)}
+              onChange={(event) =>
+                updateNested("music", "instruments", splitList(event.target.value))
+              }
+            />
+          </FormField>
           <FormField label="プロフィール写真" hint="任意">
             <PhotoUpload
               memberId={member.id}
@@ -101,14 +109,6 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               value={joinList(member.music.favoriteArtists)}
               onChange={(event) =>
                 updateNested("music", "favoriteArtists", splitList(event.target.value))
-              }
-            />
-          </FormField>
-          <FormField label="楽器" hint="カンマ区切り・任意">
-            <FormInput
-              value={joinList(member.music.instruments)}
-              onChange={(event) =>
-                updateNested("music", "instruments", splitList(event.target.value))
               }
             />
           </FormField>
