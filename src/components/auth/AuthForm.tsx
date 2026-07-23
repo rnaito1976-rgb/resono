@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { initializeMemberProfile } from "@/lib/actions/auth";
+import { useState, useTransition, type FormEvent } from "react";
+import {
+  signInWithEmailAction,
+  signUpWithEmailAction,
+} from "@/lib/actions/auth";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/client";
 
 type AuthFormProps = {
   mode: "signup" | "login";
@@ -25,18 +27,16 @@ export function AuthForm({
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setMessage(null);
-    setIsPending(true);
 
     const configError = getSupabaseConfigError();
     if (configError) {
       setError(configError);
-      setIsPending(false);
       return;
     }
 
@@ -46,62 +46,31 @@ export function AuthForm({
 
     if (!email || !password) {
       setError("メールアドレスとパスワードを入力してください");
-      setIsPending(false);
       return;
     }
 
-    const supabase = createClient();
+    startTransition(async () => {
+      if (isSignup) {
+        const result = await signUpWithEmailAction(email, password);
 
-    if (isSignup) {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
 
-      if (signUpError) {
-        setError(signUpError.message);
-        setIsPending(false);
+        if (result?.needsConfirmation && result.message) {
+          setMessage(result.message);
+        }
+
         return;
       }
 
-      if (data.user && !data.session) {
-        setMessage(
-          "確認メールを送信しました。メール内のリンクをクリックしてからログインしてください。"
-        );
-        setIsPending(false);
-        return;
+      const result = await signInWithEmailAction(email, password, nextPath);
+
+      if (result?.error) {
+        setError(result.error);
       }
-
-      const profileResult = await initializeMemberProfile();
-      if (profileResult?.error) {
-        setError(profileResult.error);
-        setIsPending(false);
-        return;
-      }
-
-      window.location.href = "/onboarding";
-      return;
-    }
-
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
     });
-
-    if (signInError) {
-      setError(signInError.message);
-      setIsPending(false);
-      return;
-    }
-
-    if (!data.session) {
-      setError("ログインに失敗しました。メール確認が必要な場合があります。");
-      setIsPending(false);
-      return;
-    }
-
-    window.location.href = nextPath;
-    return;
   }
 
   return (

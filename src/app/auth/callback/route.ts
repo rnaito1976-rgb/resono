@@ -26,9 +26,15 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
   const origin = getRedirectOrigin(request, requestUrl.origin);
+  const authError =
+    requestUrl.searchParams.get("error_description") ??
+    requestUrl.searchParams.get("error");
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth`);
+    const reason = authError
+      ? encodeURIComponent(authError)
+      : "missing_code";
+    return NextResponse.redirect(`${origin}/login?error=auth&reason=${reason}`);
   }
 
   const { supabase, applyCookies } = createRouteHandlerClient(request);
