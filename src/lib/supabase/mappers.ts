@@ -34,6 +34,18 @@ export function rowToMember(row: MemberRow): Member {
     music: row.music as Member["music"],
     fashion: row.fashion as Member["fashion"],
     mood: row.mood as Member["mood"],
-    lookingFor: row.looking_for as Member["lookingFor"],
+    lookingFor: normalizeLookingFor(row.looking_for),
+  };
+}
+
+function normalizeLookingFor(raw: unknown): Member["lookingFor"] {
+  const value = (raw ?? {}) as Partial<Member["lookingFor"]>;
+
+  return {
+    parts: Array.isArray(value.parts)
+      ? value.parts.filter((part): part is string => typeof part === "string")
+      : [],
+    bandVision: typeof value.bandVision === "string" ? value.bandVision : "",
+    commitment: typeof value.commitment === "string" ? value.commitment : "",
   };
 }

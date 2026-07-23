@@ -12,6 +12,11 @@ type PersonCardProps = {
   priority?: boolean;
 };
 
+function getOpenParts(member: Member): string[] {
+  const parts = member.lookingFor?.parts;
+  return Array.isArray(parts) ? parts.filter(Boolean) : [];
+}
+
 export function PersonCard({
   member,
   variant = "default",
@@ -21,6 +26,8 @@ export function PersonCard({
 }: PersonCardProps) {
   const isAmbient = variant === "ambient";
   const score = resonanceScore ?? member.resonanceRate;
+  const openParts = getOpenParts(member);
+
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
       <div className="relative aspect-[4/5] w-full">
@@ -49,6 +56,27 @@ export function PersonCard({
       </div>
 
       <div className="space-y-5 px-6 pb-6 pt-5">
+        {openParts.length > 0 ? (
+          <div className="space-y-2.5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/50">
+              募集パート
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {openParts.map((part) => (
+                <span
+                  key={part}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[13px] text-white/90"
+                >
+                  {part}
+                  <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-primary">
+                    Open
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <TagList items={member.tags} />
 
         <blockquote className="border-l border-white/20 pl-4 text-[15px] leading-relaxed text-white/75">
