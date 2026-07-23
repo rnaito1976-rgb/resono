@@ -71,7 +71,7 @@ export function PersonCard({
         </div>
       </div>
 
-      <div className="space-y-5 px-6 pb-6 pt-5">
+      <div className="space-y-6 px-6 pb-8 pt-6">
         {openParts.length > 0 ? (
           <div className="space-y-2.5">
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/50">
@@ -81,7 +81,7 @@ export function PersonCard({
               {openParts.map((part) => (
                 <span
                   key={part}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[13px] text-white/90"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] text-white/90"
                 >
                   {part}
                   <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-primary">
@@ -105,14 +105,14 @@ export function PersonCard({
             {isOwnCard ? (
               <Link
                 href="/discover"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white/80 transition-opacity active:opacity-70"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
               >
                 もう少し教える
               </Link>
             ) : null}
             <Link
               href={`/member/${member.id}`}
-              className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white transition-opacity active:opacity-70"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
             >
               {isOwnCard ? "マイページ" : "もっと知る"}
             </Link>

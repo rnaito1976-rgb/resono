@@ -2,19 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Resono Design Principles
+ * mobile-first · spacious · minimal · experience over forms
+ * resonance-first · one screen one purpose · black + brand green · quiet motion
+ */
+
 @layer base {
   :root {
     --radius: 1rem;
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
+    --primary: 141 76% 48%;
     --primary-foreground: 0 0% 0%;
-    --accent: 0 0% 100%;
+    --accent: 141 76% 48%;
     --accent-foreground: 0 0% 0%;
-    --muted: 0 0% 45%;
-    --subtle: 0 0% 15%;
-    --border: 0 0% 100% / 0.12;
-    --ring: 0 0% 100%;
+    --muted: 0 0% 42%;
+    --subtle: 0 0% 7%;
+    --border: 0 0% 100% / 0.08;
+    --ring: 141 76% 48%;
   }
 
   html {
@@ -37,9 +43,17 @@
     display: none;
   }
 
+  .transition-quiet {
+    @apply transition-all duration-300 ease-out;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-welcome-scroll {
       animation: none;
+    }
+
+    .transition-quiet {
+      transition: none;
     }
   }
 }

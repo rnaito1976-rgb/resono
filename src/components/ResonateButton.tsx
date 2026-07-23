@@ -16,7 +16,7 @@ export function ResonateButton({ memberId, className = "" }: ResonateButtonProps
     return (
       <Link
         href={`/messages/${conversationId}`}
-        className={`flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary bg-primary/10 text-[15px] font-medium tracking-wide text-primary transition-all active:scale-[0.98] ${className}`}
+        className={`flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 text-[15px] font-medium tracking-wide text-primary transition-quiet active:opacity-85 ${className}`}
       >
         <svg
           width="16"
@@ -42,9 +42,9 @@ export function ResonateButton({ memberId, className = "" }: ResonateButtonProps
       onClick={toggle}
       disabled={isPending}
       aria-pressed={mounted ? isResonated : undefined}
-      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-all active:scale-[0.98] disabled:opacity-60 ${
+      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-quiet active:opacity-85 ${
         mounted && isResonated
-          ? "border border-primary bg-primary/10 text-primary"
+          ? "border border-primary/40 bg-primary/10 text-primary"
           : "bg-primary text-primary-foreground"
       } ${className}`}
     >

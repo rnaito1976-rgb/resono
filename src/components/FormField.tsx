@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 const fieldClassName =
-  "w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/25";
+  "w-full rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5 text-[15px] text-white outline-none transition-quiet placeholder:text-white/30 focus:border-primary/35 focus:ring-1 focus:ring-primary/15";
 
 type FormSectionProps = {
   title: string;

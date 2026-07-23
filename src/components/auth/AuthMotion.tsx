@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [0.25, 0.1, 0.25, 1] as const;
 
 type AuthMotionProps = {
   children: ReactNode;
@@ -12,11 +12,13 @@ type AuthMotionProps = {
 };
 
 export function AuthMotion({ children, delay = 0, className }: AuthMotionProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease }}
+      transition={{ duration: 0.55, delay, ease }}
       className={className}
     >
       {children}
@@ -25,11 +27,13 @@ export function AuthMotion({ children, delay = 0, className }: AuthMotionProps) 
 }
 
 export function AuthFadeIn({ children, className }: { children: ReactNode; className?: string }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease }}
+      transition={{ duration: 0.5, ease }}
       className={className}
     >
       {children}

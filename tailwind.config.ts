@@ -36,6 +36,13 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionDuration: {
+        quiet: "300ms",
+        slower: "500ms",
+      },
+      transitionTimingFunction: {
+        quiet: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+      },
       keyframes: {
         "welcome-scroll": {
           "0%": { transform: "translateY(0)" },

@@ -14,10 +14,10 @@ export function SelectableChip({ label, selected, onToggle }: SelectableChipProp
       type="button"
       onClick={onToggle}
       className={cn(
-        "rounded-full border px-4 py-2.5 text-[15px] transition-all active:scale-[0.98]",
+        "rounded-full border px-4 py-2.5 text-[15px] transition-quiet active:opacity-85",
         selected
-          ? "border-primary bg-primary/15 text-white"
-          : "border-white/12 bg-white/[0.03] text-white/75 hover:border-white/25 hover:bg-white/[0.06]"
+          ? "border-primary/50 bg-primary/12 text-white"
+          : "border-white/8 bg-white/[0.02] text-white/70 hover:border-white/15 hover:bg-white/[0.04]"
       )}
     >
       {label}

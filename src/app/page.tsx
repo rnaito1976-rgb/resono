@@ -28,7 +28,7 @@ export default async function HomePage() {
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">
       <AppHeader initialUser={user} />
 
-      <div className="flex flex-col gap-10 px-5 pb-16 pt-4">
+      <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
         {currentMember ? (
           <PersonCard member={currentMember} isOwnCard priority />
         ) : null}
