@@ -14,7 +14,7 @@ export default function GlobalError({ reset }: GlobalErrorProps) {
           <button
             type="button"
             onClick={reset}
-            className="rounded-full bg-[#1ed760] px-6 py-3 text-sm font-medium text-black"
+            className="rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"
           >
             再試行
           </button>

@@ -53,9 +53,14 @@ export function AuthLogo({ className }: { className?: string }) {
   );
 }
 
-export function AuthTagline() {
+export function AuthTagline({ className }: { className?: string }) {
   return (
-    <p className="mt-4 text-[15px] font-light tracking-[0.1em] text-white/65">
+    <p
+      className={cn(
+        "mt-4 text-[15px] font-light tracking-[0.1em] text-white/65",
+        className
+      )}
+    >
       Find your frequency.
     </p>
   );

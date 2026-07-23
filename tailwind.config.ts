@@ -9,17 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#000000",
-        foreground: "#ffffff",
-        muted: "#737373",
-        subtle: "#262626",
-        accent: "#1ed760",
-        border: "rgba(255, 255, 255, 0.12)",
-        input: "rgba(255, 255, 255, 0.12)",
-        ring: "#1ed760",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        muted: "hsl(var(--muted))",
+        subtle: "hsl(var(--subtle))",
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--border))",
+        ring: "hsl(var(--ring))",
         primary: {
-          DEFAULT: "#1ed760",
-          foreground: "#000000",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
       },
       fontFamily: {
@@ -32,6 +35,15 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "welcome-scroll": {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(-50%)" },
+        },
+      },
+      animation: {
+        "welcome-scroll": "welcome-scroll 90s linear infinite",
       },
     },
   },

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useResonance } from "@/hooks/useResonance";
 
 type ResonateButtonProps = {
@@ -8,17 +9,43 @@ type ResonateButtonProps = {
 };
 
 export function ResonateButton({ memberId, className = "" }: ResonateButtonProps) {
-  const { isResonated, toggle, mounted } = useResonance(memberId);
+  const { isResonated, isMutual, conversationId, toggle, mounted, isPending } =
+    useResonance(memberId);
+
+  if (mounted && isMutual && conversationId) {
+    return (
+      <Link
+        href={`/messages/${conversationId}`}
+        className={`flex h-12 w-full items-center justify-center gap-2 rounded-full border border-primary bg-primary/10 text-[15px] font-medium tracking-wide text-primary transition-all active:scale-[0.98] ${className}`}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        メッセージを送る
+      </Link>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={toggle}
+      disabled={isPending}
       aria-pressed={mounted ? isResonated : undefined}
-      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-all active:scale-[0.98] ${
+      className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-all active:scale-[0.98] disabled:opacity-60 ${
         mounted && isResonated
-          ? "border border-accent bg-accent/10 text-accent"
-          : "bg-accent text-black"
+          ? "border border-primary bg-primary/10 text-primary"
+          : "bg-primary text-primary-foreground"
       } ${className}`}
     >
       {mounted && isResonated ? (

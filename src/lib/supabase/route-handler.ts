@@ -1,5 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 
 type CookieToSet = {
@@ -8,19 +8,34 @@ type CookieToSet = {
   options: CookieOptions;
 };
 
-export async function createRouteHandlerClient() {
-  const cookieStore = await cookies();
+type RouteHandlerSupabaseClient = {
+  supabase: ReturnType<typeof createServerClient>;
+  applyCookies: (response: NextResponse) => NextResponse;
+};
 
-  return createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+export function createRouteHandlerClient(
+  request: NextRequest
+): RouteHandlerSupabaseClient {
+  const cookiesToSet: CookieToSet[] = [];
+
+  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        return request.cookies.getAll();
       },
-      setAll(cookiesToSet: CookieToSet[]) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+      setAll(cookies: CookieToSet[]) {
+        cookiesToSet.push(...cookies);
       },
     },
   });
+
+  return {
+    supabase,
+    applyCookies(response: NextResponse) {
+      cookiesToSet.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options);
+      });
+      return response;
+    },
+  };
 }

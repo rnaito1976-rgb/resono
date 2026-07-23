@@ -10,9 +10,17 @@ import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 type MemberDetailProps = {
   member: Member;
   isOwnProfile?: boolean;
+  resonanceScore?: number;
+  showResonateButton?: boolean;
 };
 
-function PortraitSlide({ member }: { member: Member }) {
+function PortraitSlide({
+  member,
+  resonanceScore,
+}: {
+  member: Member;
+  resonanceScore?: number;
+}) {
   return (
     <div className="flex h-full flex-col px-6 pb-8 pt-4">
       <div className="relative mb-8 aspect-[3/4] w-full overflow-hidden rounded-3xl">
@@ -27,7 +35,14 @@ function PortraitSlide({ member }: { member: Member }) {
       <div className="space-y-8">
         <div>
           <h2 className="mb-2 text-3xl font-light tracking-tight">{member.name}</h2>
-          <ResonanceBadge rate={member.resonanceRate} size="lg" />
+          {resonanceScore != null ? (
+            <div>
+              <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
+                共鳴度
+              </p>
+              <ResonanceBadge rate={resonanceScore} size="lg" />
+            </div>
+          ) : null}
         </div>
         <SectionBlock label="About">
           <p>{member.portrait.bio}</p>
@@ -49,7 +64,7 @@ function MusicSlide({ member }: { member: Member }) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
       <SectionBlock label="Genres">
-        <TagList items={member.music.genres} variant="accent" />
+        <TagList items={member.music.genres} variant="primary" />
       </SectionBlock>
       <SectionBlock label="Favorite Artists">
         <TagList items={member.music.favoriteArtists} />
@@ -89,7 +104,7 @@ function MoodSlide({ member }: { member: Member }) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
       <SectionBlock label="Keywords">
-        <TagList items={member.mood.keywords} variant="accent" />
+        <TagList items={member.mood.keywords} variant="primary" />
       </SectionBlock>
       <SectionBlock label="Atmosphere">
         <p className="text-lg font-light italic text-white/80">
@@ -117,7 +132,7 @@ function LookingForSlide({ member }: { member: Member }) {
               className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
             >
               <span className="text-base font-medium">{part}</span>
-              <span className="text-xs uppercase tracking-[0.15em] text-accent">
+              <span className="text-xs uppercase tracking-[0.15em] text-primary">
                 Open
               </span>
             </div>
@@ -142,7 +157,12 @@ const SLIDE_COMPONENTS = [
   LookingForSlide,
 ] as const;
 
-export function MemberDetail({ member, isOwnProfile = false }: MemberDetailProps) {
+export function MemberDetail({
+  member,
+  isOwnProfile = false,
+  resonanceScore,
+  showResonateButton = false,
+}: MemberDetailProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -247,7 +267,11 @@ export function MemberDetail({ member, isOwnProfile = false }: MemberDetailProps
             key={DETAIL_SECTIONS[index].id}
             className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
           >
-            <SlideComponent member={member} />
+            {index === 0 ? (
+              <PortraitSlide member={member} resonanceScore={resonanceScore} />
+            ) : (
+              <SlideComponent member={member} />
+            )}
           </section>
         ))}
       </div>
@@ -266,7 +290,7 @@ export function MemberDetail({ member, isOwnProfile = false }: MemberDetailProps
             />
           ))}
         </div>
-        <ResonateButton memberId={member.id} />
+        {showResonateButton ? <ResonateButton memberId={member.id} /> : null}
       </div>
     </div>
   );

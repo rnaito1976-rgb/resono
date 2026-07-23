@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 type TagListProps = {
   items: string[];
-  variant?: "default" | "accent";
+  variant?: "default" | "primary";
 };
 
 export function TagList({ items, variant = "default" }: TagListProps) {
@@ -12,8 +12,8 @@ export function TagList({ items, variant = "default" }: TagListProps) {
         <span
           key={item}
           className={
-            variant === "accent"
-              ? "rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs tracking-wide text-accent"
+            variant === "primary"
+              ? "rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs tracking-wide text-primary"
               : "rounded-full border border-white/10 px-3 py-1 text-xs tracking-wide text-white/70"
           }
         >
@@ -60,8 +60,8 @@ export function ResonanceBadge({ rate, size = "sm" }: ResonanceBadgeProps) {
       <span
         className={
           size === "lg"
-            ? "text-sm font-medium text-accent"
-            : "text-xs font-medium text-accent"
+            ? "text-sm font-medium text-primary"
+            : "text-xs font-medium text-primary"
         }
       >
         %

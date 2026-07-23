@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ensureMemberForUser } from "@/lib/members";
+import { isOnboardingComplete } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,10 @@ export default async function MyPage() {
   const member = await ensureMemberForUser(user.id, user.email);
 
   if (!member) {
+    redirect("/onboarding");
+  }
+
+  if (!isOnboardingComplete(member)) {
     redirect("/onboarding");
   }
 

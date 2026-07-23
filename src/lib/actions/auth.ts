@@ -19,7 +19,7 @@ export async function initializeMemberProfile() {
   if (!member) {
     return {
       error:
-        "プロフィールの作成に失敗しました。Supabase のマイグレーション 004 を実行してください。",
+        "プロフィールの作成に失敗しました。時間をおいて再度お試しください。",
     };
   }
 

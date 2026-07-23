@@ -139,7 +139,7 @@ export async function ensureMemberForUser(
     const { error } = await supabase.from("members").insert(memberToRow(member));
 
     if (error) {
-      console.error("[Supabase] ensureMemberForUser:", error.message);
+      console.error("[Supabase] ensureMemberForUser:", error.message, error.code);
       return null;
     }
 

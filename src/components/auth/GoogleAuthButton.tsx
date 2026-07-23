@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { getSupabaseConfigError } from "@/lib/supabase/config";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 type GoogleAuthButtonProps = {
@@ -14,53 +12,15 @@ export function GoogleAuthButton({
   label,
   nextPath = "/",
 }: GoogleAuthButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleGoogleSignIn() {
-    setIsLoading(true);
-    setError(null);
-
-    const configError = getSupabaseConfigError();
-    if (configError) {
-      setError(configError);
-      setIsLoading(false);
-      return;
-    }
-
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        queryParams: {
-          prompt: "select_account",
-        },
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setIsLoading(false);
-    }
-  }
+  const href = `/auth/oauth/google?next=${encodeURIComponent(nextPath)}`;
 
   return (
-    <div className="space-y-2">
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        disabled={isLoading}
-        onClick={handleGoogleSignIn}
-      >
+    <Button type="button" variant="outline" className="w-full" asChild>
+      <Link href={href}>
         <GoogleIcon />
-        {isLoading ? "接続中..." : label}
-      </Button>
-      {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
-    </div>
+        {label}
+      </Link>
+    </Button>
   );
 }
 

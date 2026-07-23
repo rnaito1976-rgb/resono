@@ -1,7 +1,5 @@
 import type { Member } from "@/types/member";
-
-const DEFAULT_PHOTO =
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80";
+import { DEFAULT_PHOTO_URL } from "@/lib/onboarding/status";
 
 export function createDefaultMember(userId: string, email?: string | null): Member {
   const name = email?.split("@")[0] ?? "New Member";
@@ -10,10 +8,10 @@ export function createDefaultMember(userId: string, email?: string | null): Memb
     id: userId,
     userId,
     name,
-    resonanceRate: 50,
+    resonanceRate: 0,
     tags: [],
-    aiComment: "プロフィールを整えて、共鳴する人を見つけましょう。",
-    photo: DEFAULT_PHOTO,
+    aiComment: "AIとの対話から、あなたの世界観が見えてきます。",
+    photo: DEFAULT_PHOTO_URL,
     portrait: {
       bio: "",
       age: 0,

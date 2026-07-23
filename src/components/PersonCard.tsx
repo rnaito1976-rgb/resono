@@ -6,9 +6,21 @@ import { ResonanceBadge, TagList } from "@/components/ui";
 
 type PersonCardProps = {
   member: Member;
+  variant?: "default" | "ambient";
+  resonanceScore?: number;
+  isOwnCard?: boolean;
+  priority?: boolean;
 };
 
-export function PersonCard({ member }: PersonCardProps) {
+export function PersonCard({
+  member,
+  variant = "default",
+  resonanceScore,
+  isOwnCard = false,
+  priority = false,
+}: PersonCardProps) {
+  const isAmbient = variant === "ambient";
+  const score = resonanceScore ?? member.resonanceRate;
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
       <div className="relative aspect-[4/5] w-full">
@@ -18,18 +30,20 @@ export function PersonCard({ member }: PersonCardProps) {
           fill
           className="object-cover"
           sizes="390px"
-          priority={member.id === "1"}
+          priority={priority || (!isAmbient && member.id === "1")}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-end justify-between gap-4">
             <h2 className="text-[28px] font-light tracking-tight">{member.name}</h2>
-            <div className="text-right">
-              <p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/50">
-                共鳴率
-              </p>
-              <ResonanceBadge rate={member.resonanceRate} />
-            </div>
+            {!isOwnCard ? (
+              <div className="text-right">
+                <p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/50">
+                  共鳴度
+                </p>
+                <ResonanceBadge rate={score} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -41,15 +55,17 @@ export function PersonCard({ member }: PersonCardProps) {
           {member.aiComment}
         </blockquote>
 
-        <div className="space-y-3">
-          <ResonateButton memberId={member.id} />
-          <Link
-            href={`/member/${member.id}`}
-            className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white transition-opacity active:opacity-70"
-          >
-            もっと知る
-          </Link>
-        </div>
+        {!isAmbient ? (
+          <div className="space-y-3">
+            {!isOwnCard ? <ResonateButton memberId={member.id} /> : null}
+            <Link
+              href={`/member/${member.id}`}
+              className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium tracking-wide text-white transition-opacity active:opacity-70"
+            >
+              {isOwnCard ? "マイページ" : "もっと知る"}
+            </Link>
+          </div>
+        ) : null}
       </div>
     </article>
   );

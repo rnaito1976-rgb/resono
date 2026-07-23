@@ -20,7 +20,7 @@ export default function Error({ error, reset }: ErrorProps) {
         <button
           type="button"
           onClick={reset}
-          className="rounded-full bg-accent px-6 py-3 text-sm font-medium text-black"
+          className="rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"
         >
           再試行
         </button>

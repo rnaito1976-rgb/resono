@@ -61,7 +61,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <button
             type="submit"
             disabled={isPending}
-            className="text-[15px] font-medium text-accent transition-opacity disabled:opacity-40"
+            className="text-[15px] font-medium text-primary transition-opacity disabled:opacity-40"
           >
             {isPending ? "保存中..." : "保存"}
           </button>
@@ -76,23 +76,10 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         ) : null}
 
         <FormSection title="Basic">
-          <FormField label="名前">
+          <FormField label="名前" hint="後から設定できます">
             <FormInput
               value={member.name}
               onChange={(event) => updateField("name", event.target.value)}
-              required
-            />
-          </FormField>
-          <FormField label="共鳴率" hint="0〜100">
-            <FormInput
-              type="number"
-              min={0}
-              max={100}
-              value={member.resonanceRate}
-              onChange={(event) =>
-                updateField("resonanceRate", Number(event.target.value))
-              }
-              required
             />
           </FormField>
           <FormField label="プロフィール写真">
@@ -298,7 +285,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-accent text-[15px] font-medium text-black transition-opacity disabled:opacity-40"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-opacity disabled:opacity-40"
         >
           {isPending ? "保存中..." : "変更を保存"}
         </button>

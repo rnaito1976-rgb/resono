@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Resono",
-  description: "世界観で共鳴するバンドメンバーと出会う",
+  description: "世界観で共鳴する仲間と出会う",
 };
 
 export default function RootLayout({

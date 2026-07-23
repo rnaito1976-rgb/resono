@@ -150,7 +150,7 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
         </div>
 
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
-        {message ? <p className="text-[13px] text-emerald-300">{message}</p> : null}
+        {message ? <p className="text-[13px] text-white/70">{message}</p> : null}
 
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? "処理中..." : isSignup ? "アカウントを作成" : "ログイン"}
@@ -163,7 +163,7 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
         </p>
         <Link
           href={isSignup ? "/login" : "/signup"}
-          className="mt-2 inline-block text-[15px] font-medium text-accent"
+          className="mt-2 inline-block text-[15px] font-medium text-primary"
         >
           {isSignup ? "ログイン" : "新規登録"}
         </Link>

@@ -11,6 +11,7 @@ export type Member = {
     age: number;
     location: string;
     influences: string[];
+    dialogueCompleted?: boolean;
   };
   music: {
     genres: string[];
