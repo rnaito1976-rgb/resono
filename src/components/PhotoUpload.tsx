@@ -72,6 +72,10 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
         {isUploading ? "アップロード中..." : "写真を選ぶ"}
       </button>
 
+      <p className="text-center text-[12px] text-white/40">
+        推奨サイズ: 1200×1500px（4:5）・5MB以下
+      </p>
+
       <FormField label="または URL を入力">
         <input
           type="url"
