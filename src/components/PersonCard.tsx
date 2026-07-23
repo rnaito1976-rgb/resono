@@ -39,7 +39,13 @@ export function PersonCard({
   const score = resonanceReason?.score;
   const openParts = getOpenParts(member);
   const playingParts = getPlayingParts(member);
-  const ringColor = member.frequencyColor as FrequencyColorHex | undefined;
+  const ringColor = isOwnCard
+    ? undefined
+    : (member.frequencyColor as FrequencyColorHex | undefined);
+  const cardClassName = isOwnCard
+    ? "overflow-hidden bg-subtle"
+    : "overflow-hidden rounded-[28px] bg-subtle";
+  const photoWrapClassName = isOwnCard ? "relative overflow-hidden" : "rounded-[28px]";
   const highlightedParts = new Set(
     recommendation?.recruitmentLabel === "sought-by-target"
       ? (recommendation.highlightedParts ?? [])
@@ -50,8 +56,8 @@ export function PersonCard({
     : undefined;
 
   return (
-    <article className="overflow-hidden rounded-[28px] bg-subtle">
-      <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
+    <article className={cardClassName}>
+      <ProfilePhotoRing color={ringColor} className={photoWrapClassName}>
         <div className="relative aspect-[4/5] w-full">
           <Image
             src={member.photo}
