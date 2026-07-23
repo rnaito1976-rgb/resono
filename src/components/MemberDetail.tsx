@@ -47,11 +47,15 @@ function PortraitSlide({
         <SectionBlock label="About">
           <p>{member.portrait.bio}</p>
         </SectionBlock>
-        <SectionBlock label="Location">
-          <p>
-            {member.portrait.location} · {member.portrait.age}歳
-          </p>
-        </SectionBlock>
+        {member.portrait.location || member.portrait.age ? (
+          <SectionBlock label="Location">
+            <p>
+              {[member.portrait.location, member.portrait.age ? `${member.portrait.age}歳` : ""]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </SectionBlock>
+        ) : null}
         <SectionBlock label="Influences">
           <TagList items={member.portrait.influences} />
         </SectionBlock>
@@ -71,11 +75,6 @@ function MusicSlide({ member }: { member: Member }) {
       </SectionBlock>
       <SectionBlock label="Instruments">
         <TagList items={member.music.instruments} />
-      </SectionBlock>
-      <SectionBlock label="Listening Mood">
-        <p className="text-lg font-light italic text-white/80">
-          「{member.music.listeningMood}」
-        </p>
       </SectionBlock>
     </div>
   );

@@ -78,7 +78,6 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
           value={value}
           onChange={(event) => onChange(event.target.value)}
           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/25"
-          required
         />
       </FormField>
 
