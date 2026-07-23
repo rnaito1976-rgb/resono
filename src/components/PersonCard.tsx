@@ -40,7 +40,11 @@ export function PersonCard({
   const openParts = getOpenParts(member);
   const playingParts = getPlayingParts(member);
   const ringColor = member.frequencyColor as FrequencyColorHex | undefined;
-  const highlightedParts = new Set(recommendation?.highlightedParts ?? []);
+  const highlightedParts = new Set(
+    recommendation?.recruitmentLabel === "sought-by-target"
+      ? (recommendation.highlightedParts ?? [])
+      : []
+  );
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;

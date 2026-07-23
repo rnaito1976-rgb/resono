@@ -20,9 +20,7 @@ export const RECOMMENDATION_EXTENSION_WEIGHTS: RecommendationExtensionWeights = 
   // videoAnalysis: 8,
 };
 
-export type RecruitmentMatchLabel =
-  | "sought-by-target"
-  | "recruitment-match";
+export type RecruitmentMatchLabel = "sought-by-target";
 
 export type RecommendationBreakdown = Record<string, number>;
 
@@ -121,12 +119,7 @@ function scoreLookingFor(
   if (recruitmentMatch.length > 0) {
     return {
       lookingForFactor: 0.85,
-      recruitmentLabel: "recruitment-match",
-      highlightedParts: targetLooking.length
-        ? targetLooking
-        : targetInstruments.filter((part) =>
-            recruitmentMatch.some((match) => partsMatch(part, match))
-          ),
+      highlightedParts: targetLooking,
     };
   }
 
@@ -152,18 +145,12 @@ function scoreActivity(viewer: Member, target: Member): number {
 }
 
 function scoreFashion(viewer: Member, target: Member): number {
-  const viewerSignals = [
-    ...toStringArray(viewer.fashion.brands),
-    ...toStringArray(viewer.fashion.colors),
-    viewer.fashion.style,
-  ].filter(Boolean);
-  const targetSignals = [
-    ...toStringArray(target.fashion.brands),
-    ...toStringArray(target.fashion.colors),
-    target.fashion.style,
-  ].filter(Boolean);
-
-  return overlapRatio(viewerSignals, targetSignals, 2, 0.08);
+  return overlapRatio(
+    toStringArray(viewer.fashion.brands),
+    toStringArray(target.fashion.brands),
+    2,
+    0.08
+  );
 }
 
 function scoreAiProfile(viewer: Member, target: Member): number {
@@ -273,12 +260,7 @@ export function rankRecommendations(
 }
 
 export function getRecruitmentMatchLabelText(
-  label: RecruitmentMatchLabel
+  _label: RecruitmentMatchLabel
 ): string {
-  switch (label) {
-    case "sought-by-target":
-      return "あなたが探されているメンバーです";
-    case "recruitment-match":
-      return "募集条件が一致しています";
-  }
+  return "あなたが探されているメンバーです";
 }
