@@ -92,6 +92,31 @@ export async function updateMember(
   }
 }
 
+async function linkMemberToUser(
+  memberId: string,
+  userId: string
+): Promise<Member | undefined> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("members")
+      .update({ user_id: userId })
+      .eq("id", memberId)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[Supabase] linkMemberToUser:", error.message);
+      return undefined;
+    }
+
+    return data ? rowToMember(data) : undefined;
+  } catch (error) {
+    console.error("[Supabase] linkMemberToUser:", error);
+    return undefined;
+  }
+}
+
 export async function getMemberByUserId(
   userId: string
 ): Promise<Member | undefined> {
@@ -101,18 +126,42 @@ export async function getMemberByUserId(
 
   try {
     const supabase = createAnonClient();
-    const { data, error } = await supabase
+    const { data: byUserId, error: userIdError } = await supabase
       .from("members")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error) {
-      console.error("[Supabase] getMemberByUserId:", error.message);
+    if (userIdError) {
+      console.error("[Supabase] getMemberByUserId:", userIdError.message);
+    }
+
+    if (byUserId) {
+      return rowToMember(byUserId);
+    }
+
+    const { data: byId, error: idError } = await supabase
+      .from("members")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (idError) {
+      console.error("[Supabase] getMemberByUserId by id:", idError.message);
       return undefined;
     }
 
-    return data ? rowToMember(data) : undefined;
+    if (!byId) {
+      return undefined;
+    }
+
+    const member = rowToMember(byId);
+    if (!member.userId) {
+      const linked = await linkMemberToUser(member.id, userId);
+      return linked ?? { ...member, userId };
+    }
+
+    return member;
   } catch (error) {
     console.error("[Supabase] getMemberByUserId:", error);
     return undefined;
@@ -125,6 +174,11 @@ export async function ensureMemberForUser(
 ): Promise<Member | null> {
   const existing = await getMemberByUserId(userId);
   if (existing) {
+    if (!existing.userId) {
+      const linked = await linkMemberToUser(existing.id, userId);
+      return linked ?? { ...existing, userId };
+    }
+
     return existing;
   }
 
@@ -137,6 +191,18 @@ export async function ensureMemberForUser(
   try {
     const supabase = await createClient();
     const { error } = await supabase.from("members").insert(memberToRow(member));
+
+    if (error?.code === "23505") {
+      const duplicate = await getMemberById(userId);
+      if (duplicate) {
+        if (!duplicate.userId) {
+          const linked = await linkMemberToUser(duplicate.id, userId);
+          return linked ?? { ...duplicate, userId };
+        }
+
+        return duplicate;
+      }
+    }
 
     if (error) {
       console.error("[Supabase] ensureMemberForUser:", error.message, error.code);

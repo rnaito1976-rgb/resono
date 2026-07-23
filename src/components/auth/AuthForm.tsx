@@ -14,9 +14,14 @@ import { createClient } from "@/lib/supabase/client";
 type AuthFormProps = {
   mode: "signup" | "login";
   initialError?: string | null;
+  nextPath?: string;
 };
 
-export function AuthForm({ mode, initialError }: AuthFormProps) {
+export function AuthForm({
+  mode,
+  initialError,
+  nextPath = "/",
+}: AuthFormProps) {
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
@@ -95,7 +100,8 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
       return;
     }
 
-    window.location.href = "/";
+    window.location.href = nextPath;
+    return;
   }
 
   return (
@@ -113,7 +119,7 @@ export function AuthForm({ mode, initialError }: AuthFormProps) {
 
       <GoogleAuthButton
         label={isSignup ? "Googleで始める" : "Googleでログイン"}
-        nextPath={isSignup ? "/onboarding" : "/"}
+        nextPath={isSignup ? "/onboarding" : nextPath}
       />
 
       <div className="flex items-center gap-4">
