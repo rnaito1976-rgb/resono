@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import Link from "next/link";
 import { ArrowUp } from "lucide-react";
+import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -130,36 +130,12 @@ export function ChatRoom({
 
   return (
     <div className="mx-auto flex h-dvh max-w-mobile flex-col bg-background">
-      <header className="px-5 pb-4 pt-6">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/messages"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-            aria-label="戻る"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-              Messages
-            </p>
-            <h1 className="truncate text-[22px] font-light tracking-tight">
-              {partnerName}
-            </h1>
-          </div>
-        </div>
-      </header>
+      <AppPageHeader
+        backHref="/messages"
+        backLabel="メッセージ一覧に戻る"
+        eyebrow="Messages"
+        title={partnerName}
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
         <ResonanceReasonHeader reason={reason} />
@@ -177,7 +153,7 @@ export function ChatRoom({
         </div>
       </div>
 
-      <div className="border-t border-white/10 bg-background/90 px-5 pb-8 pt-4 backdrop-blur-xl">
+      <div className="bg-background/90 px-5 pb-8 pt-4 backdrop-blur-xl">
         {showStarters ? (
           <ConversationStarters
             starters={starters}

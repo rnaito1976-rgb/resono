@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { createBandAction } from "@/lib/actions/bands";
 import type { MutualResonateMember } from "@/types/band";
 import { Button } from "@/components/ui/button";
@@ -53,36 +54,18 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-mobile bg-background px-5 pb-10 pt-6">
-      <header className="mb-8 flex items-center">
-        <Link
-          href="/bands"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-          aria-label="戻る"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </Link>
-      </header>
+    <div className="mx-auto min-h-dvh max-w-mobile bg-background px-5 pb-10">
+      <AppPageHeader
+        backHref="/bands"
+        backLabel="Band一覧に戻る"
+        eyebrow="Bands"
+        title={step === "members" ? "Bandを作成" : "Band名を決める"}
+      />
 
       {step === "members" ? (
         <div className="space-y-8">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-              New Band
-            </p>
-            <h1 className="mt-3 text-[28px] font-light tracking-tight">Bandを作成</h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-white/45">
+            <p className="text-[15px] leading-relaxed text-white/45">
               共鳴済みメンバーから、一緒に活動を育てる仲間を選んでください。
             </p>
           </div>
@@ -162,11 +145,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
       ) : (
         <div className="space-y-8">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-              Band Name
-            </p>
-            <h1 className="mt-3 text-[28px] font-light tracking-tight">Band名を決める</h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-white/45">
+            <p className="text-[15px] leading-relaxed text-white/45">
               {selectedMembers.map((item) => item.member.name).join("、")}
               {selectedMembers.length > 0 ? " と。" : ""}
             </p>

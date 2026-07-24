@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AppSubNav } from "@/components/navigation/AppSubNav";
+import { PageBackLink } from "@/components/navigation/PageBackLink";
 import { createBandActivityAction } from "@/lib/actions/bands";
 import {
   buildBandGradientStyle,
@@ -45,24 +47,7 @@ export function BandPageClient({ detail }: BandPageClientProps) {
     <div className="mx-auto min-h-dvh max-w-mobile bg-background pb-10">
       <div className="relative overflow-hidden px-5 pb-8 pt-6" style={gradientStyle}>
         <header className="mb-10 flex items-center">
-          <Link
-            href="/bands"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 text-white/85 backdrop-blur-md transition-colors active:bg-black/30"
-            aria-label="戻る"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
+          <PageBackLink href="/bands" label="Band一覧に戻る" />
         </header>
 
         <div className="space-y-5">
@@ -86,24 +71,13 @@ export function BandPageClient({ detail }: BandPageClientProps) {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-10 border-b border-white/8 bg-background/90 backdrop-blur-xl">
-        <div className="flex overflow-x-auto scrollbar-hide px-2">
-          {TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setTab(item.id)}
-              className={`shrink-0 px-4 py-4 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors ${
-                tab === item.id
-                  ? "border-b-2 border-primary text-white"
-                  : "text-white/40"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl">
+        <AppSubNav
+          items={TABS}
+          activeIndex={TABS.findIndex((item) => item.id === tab)}
+          onSelect={(index) => setTab(TABS[index].id)}
+        />
+      </div>
 
       <div className="px-5 pt-8">
         {tab === "timeline" ? (
