@@ -4,6 +4,7 @@ import { memo, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ResonateButton } from "@/components/ResonateButton";
+import { Button } from "@/components/ui/button";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
 import { useProfileSheetOptional } from "@/providers/ProfileSheetProvider";
@@ -181,35 +182,27 @@ function PersonCardComponent({
               />
             ) : null}
             {isOwnCard ? (
-              <Link
-                href="/discover"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
-              >
-                Discover a Story
-              </Link>
+              <Button asChild variant="outline" className="w-full tracking-wide">
+                <Link href="/discover">Discover a Story</Link>
+              </Button>
             ) : null}
             {isOwnCard ? (
-              <Link
-                href="/me"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
-              >
-                マイページ
-              </Link>
+              <Button asChild variant="outline" className="w-full tracking-wide">
+                <Link href="/me">マイページ</Link>
+              </Button>
             ) : profileSheet ? (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="w-full tracking-wide"
                 onClick={() => profileSheet.openProfile(member.id)}
-                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
               >
                 もっと知る
-              </button>
+              </Button>
             ) : (
-              <Link
-                href={`/member/${member.id}`}
-                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
-              >
-                もっと知る
-              </Link>
+              <Button asChild variant="outline" className="w-full tracking-wide">
+                <Link href={`/member/${member.id}`}>もっと知る</Link>
+              </Button>
             )}
           </div>
         ) : null}

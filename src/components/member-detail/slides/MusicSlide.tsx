@@ -18,7 +18,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
         )}
       </SectionBlock>
       <SectionBlock label="Genres">
-        <TagList items={member.music.genres} variant="primary" />
+        <TagList items={member.music.genres} />
       </SectionBlock>
       <SectionBlock label="Favorite">
         <TagList items={member.music.favoriteArtists} />

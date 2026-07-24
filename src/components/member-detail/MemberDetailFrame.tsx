@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DETAIL_SECTIONS } from "@/types/member";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
@@ -199,12 +200,9 @@ export function MemberDetailFrame({
           <ResonateButton memberId={member.id} initialStatus={resonanceStatus} />
         ) : null}
         {isOwnProfile ? (
-          <Link
-            href="/discover"
-            className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
-          >
-            Discover a Story
-          </Link>
+          <Button asChild variant="outline" className="w-full tracking-wide">
+            <Link href="/discover">Discover a Story</Link>
+          </Button>
         ) : null}
       </div>
     </div>

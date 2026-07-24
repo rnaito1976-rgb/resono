@@ -5,6 +5,7 @@ import {
   getProfileItemLabel,
   getProfileItems,
 } from "@/lib/profile/items";
+import { Button } from "@/components/ui/button";
 import type { Member } from "@/types/member";
 
 type ProfileItemsViewProps = {
@@ -70,18 +71,12 @@ export function ProfileItemsView({
 
       {isOwnProfile ? (
         <div className="flex flex-col gap-3">
-          <Link
-            href="/discover"
-            className="flex h-12 items-center justify-center rounded-full border border-border bg-white/[0.03] text-[15px] font-medium text-white/85 transition-quiet active:opacity-80"
-          >
-            Discover a Story
-          </Link>
-          <Link
-            href={`/member/${member.id}/edit#profile-items`}
-            className="flex h-12 items-center justify-center rounded-full border border-border text-[15px] font-medium text-white/60 transition-quiet active:opacity-80"
-          >
-            項目を編集
-          </Link>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/discover">Discover a Story</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href={`/member/${member.id}/edit#profile-items`}>項目を編集</Link>
+          </Button>
         </div>
       ) : null}
     </div>
