@@ -19,7 +19,8 @@
     --accent-foreground: 0 0% 4%;
     --muted: 0 0% 42%;
     --subtle: 0 0% 8%;
-    --border: 0 0% 100% / 0.08;
+    --border: 0 0% 18%;
+    --border-subtle: 0 0% 14%;
     --ring: 166 82% 66%;
     --frequency-color: #5ef2c8;
     --frequency-color-soft: rgba(94, 242, 200, 0.12);

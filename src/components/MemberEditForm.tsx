@@ -146,7 +146,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             label="あなたのサインカラー"
             hint="プロフィールやResono全体に静かに反映されます"
           >
-            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-5">
+            <div className="rounded-2xl border border-border bg-white/[0.03] px-4 py-5">
               <div className="mb-5 flex items-center gap-4">
                 <div
                   className="h-12 w-12 rounded-full transition-quiet"
@@ -205,14 +205,14 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
         <Link
           href="/discover"
-          className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-[15px] text-white/80 transition-colors active:bg-white/[0.07]"
+          className="flex items-center justify-between rounded-2xl border border-border bg-white/[0.04] px-5 py-4 text-[15px] text-white/80 transition-colors active:bg-white/[0.07]"
         >
           <span>AIと少し話して、共鳴を深める</span>
           <span aria-hidden>→</span>
         </Link>
       </div>
 
-      <div className="sticky bottom-0 border-t border-white/5 bg-background px-5 pb-8 pt-4">
+      <div className="sticky bottom-0 border-t border-border bg-background px-5 pb-8 pt-4">
         <button
           type="submit"
           disabled={isPending}

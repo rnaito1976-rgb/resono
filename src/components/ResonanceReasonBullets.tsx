@@ -36,7 +36,7 @@ export function ResonanceReasonBullets({
 
 export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
   return (
-    <section className="mb-5 rounded-[28px] border border-white/10 bg-subtle px-5 py-5">
+    <section className="mb-5 rounded-[28px] border border-border bg-subtle px-5 py-5">
       <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
         Resonance
       </p>
@@ -48,7 +48,7 @@ export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
         <ResonanceReasonBullets reason={reason} />
       </div>
 
-      <div className="mt-4 rounded-[22px] border border-white/10 bg-black/20 px-4 py-4">
+      <div className="mt-4 rounded-[22px] border border-border bg-black/20 px-4 py-4">
         <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">
           AIコメント
         </p>

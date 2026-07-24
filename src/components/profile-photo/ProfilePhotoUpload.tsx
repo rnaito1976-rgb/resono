@@ -153,7 +153,7 @@ export function ProfilePhotoUpload({
         type="button"
         disabled={isBusy}
         onClick={() => inputRef.current?.click()}
-        className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.03] text-[15px] font-medium text-[#F6F6F6] transition-opacity disabled:opacity-40"
+        className="flex h-12 w-full items-center justify-center rounded-full border border-border bg-white/[0.03] text-[15px] font-medium text-[#F6F6F6] transition-opacity disabled:opacity-40"
       >
         {isBusy ? "処理しています..." : displayUrl ? "別の写真を選ぶ" : "写真を選ぶ"}
       </button>

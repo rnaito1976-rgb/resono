@@ -72,7 +72,7 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
         type="button"
         disabled={isUploading}
         onClick={() => inputRef.current?.click()}
-        className="flex h-12 w-full items-center justify-center rounded-full border border-white/15 text-[15px] font-medium text-white transition-opacity disabled:opacity-40"
+        className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium text-white transition-opacity disabled:opacity-40"
       >
         {isUploading ? "アップロード中..." : "写真を選ぶ"}
       </button>
@@ -86,7 +86,7 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
           type="url"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/25"
+          className="w-full rounded-2xl border border-border bg-white/5 px-4 py-3 text-[15px] text-white outline-none transition-colors placeholder:text-white/30 focus:border-border"
         />
       </FormField>
 

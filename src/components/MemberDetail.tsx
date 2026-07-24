@@ -185,7 +185,7 @@ function LookingForSlide({
                 return (
                   <div
                     key={resonateMember.id}
-                    className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-subtle px-4 py-4"
+                    className="flex items-center gap-4 rounded-[24px] border border-border bg-subtle px-4 py-4"
                   >
                     <Link href={`/member/${resonateMember.id}`} className="shrink-0">
                       <ProfilePhotoRing color={color} className="h-14 w-14 rounded-full">
@@ -214,7 +214,7 @@ function LookingForSlide({
                     {conversationId ? (
                       <Link
                         href={`/messages/${conversationId}`}
-                        className="shrink-0 rounded-full border border-white/10 px-3 py-2 text-[13px] text-primary"
+                        className="shrink-0 rounded-full border border-border px-3 py-2 text-[13px] text-primary"
                       >
                         メッセージ
                       </Link>
@@ -230,7 +230,7 @@ function LookingForSlide({
               </Link>
             </div>
           ) : (
-            <div className="rounded-[28px] border border-white/8 bg-subtle px-6 py-8 text-center">
+            <div className="rounded-[28px] border border-border bg-subtle px-6 py-8 text-center">
               <p className="text-[15px] leading-relaxed text-white/55">
                 まだ共鳴した人がいません。
                 <br />
@@ -249,7 +249,7 @@ function LookingForSlide({
             member.lookingFor.parts.map((part) => (
               <div
                 key={part}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4"
+                className="flex items-center justify-between rounded-2xl border border-border bg-white/5 px-5 py-4"
               >
                 <span className="text-base font-medium">{part}</span>
                 <span className="text-xs uppercase tracking-[0.15em] text-primary">
@@ -393,13 +393,13 @@ export function MemberDetail({
           <div className="space-y-3">
             <Link
               href="/discover"
-              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
             >
               AIと少し話す
             </Link>
             <Link
               href={`/member/${member.id}/edit`}
-              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
             >
               プロフィールを編集
             </Link>

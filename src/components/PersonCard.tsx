@@ -132,7 +132,7 @@ function PersonCardComponent({
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] ${
                       isHighlighted
                         ? "border border-primary/40 bg-[var(--frequency-color-soft)] text-white"
-                        : "border border-white/10 bg-white/[0.04] text-white/90"
+                        : "border border-border bg-white/[0.04] text-white/90"
                     }`}
                   >
                     {part}
@@ -156,7 +156,7 @@ function PersonCardComponent({
 
         <TagList items={member.tags} />
 
-        <blockquote className="border-l border-white/20 pl-4 text-[15px] leading-relaxed text-white/75">
+        <blockquote className="border-l border-border pl-4 text-[15px] leading-relaxed text-white/75">
           {member.aiComment}
         </blockquote>
 
@@ -166,14 +166,14 @@ function PersonCardComponent({
             {isOwnCard ? (
               <Link
                 href="/discover"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
               >
                 AIと少し話す
               </Link>
             ) : null}
             <Link
               href={`/member/${member.id}`}
-              className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
             >
               {isOwnCard ? "マイページ" : "もっと知る"}
             </Link>

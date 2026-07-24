@@ -71,7 +71,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
           </div>
 
           {mutualMembers.length === 0 ? (
-            <div className="rounded-[28px] border border-white/8 bg-subtle px-6 py-8 text-center">
+            <div className="rounded-[28px] border border-border bg-subtle px-6 py-8 text-center">
               <p className="text-[15px] leading-relaxed text-white/55">
                 まだ共鳴済みメンバーがいません。
                 <br />
@@ -98,7 +98,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
                     className={`flex w-full items-center gap-4 rounded-[24px] border px-4 py-4 text-left transition-quiet ${
                       selected
                         ? "border-primary/40 bg-[var(--frequency-color-soft)]"
-                        : "border-white/8 bg-subtle"
+                        : "border-border bg-subtle"
                     }`}
                   >
                     <ProfilePhotoRing color={color} className="h-14 w-14 rounded-full">
@@ -122,7 +122,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
                       className={`flex h-6 w-6 items-center justify-center rounded-full border ${
                         selected
                           ? "border-primary bg-primary text-primary-foreground"
-                          : "border-white/15"
+                          : "border-border"
                       }`}
                     >
                       {selected ? "✓" : ""}
@@ -155,7 +155,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Band名"
-            className="h-14 w-full rounded-[24px] border border-white/10 bg-white/[0.04] px-5 text-[18px] text-white outline-none placeholder:text-white/30 focus:border-white/25"
+            className="h-14 w-full rounded-[24px] border border-border bg-white/[0.04] px-5 text-[18px] text-white outline-none placeholder:text-white/30 focus:border-border"
           />
 
           {error ? <p className="text-[13px] text-red-300">{error}</p> : null}

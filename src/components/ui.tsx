@@ -14,7 +14,7 @@ export function TagList({ items, variant = "default" }: TagListProps) {
           className={
             variant === "primary"
               ? "rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs tracking-wide text-primary"
-              : "rounded-full border border-white/10 px-3 py-1 text-xs tracking-wide text-white/70"
+              : "rounded-full border border-border px-3 py-1 text-xs tracking-wide text-white/70"
           }
         >
           {item}

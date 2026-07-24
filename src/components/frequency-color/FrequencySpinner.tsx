@@ -12,7 +12,7 @@ export function FrequencySpinner({ size = 18, className = "" }: FrequencySpinner
 
   return (
     <span
-      className={`inline-block animate-spin rounded-full border-2 border-white/15 ${className}`}
+      className={`inline-block animate-spin rounded-full border-2 border-border ${className}`}
       style={{
         width: size,
         height: size,

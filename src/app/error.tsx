@@ -26,7 +26,7 @@ export default function Error({ error, reset }: ErrorProps) {
         </button>
         <Link
           href="/"
-          className="rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-white"
+          className="rounded-full border border-border px-6 py-3 text-sm font-medium text-white"
         >
           トップへ
         </Link>

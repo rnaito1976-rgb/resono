@@ -8,11 +8,11 @@ type BandsEmptyStateProps = {
 export function BandsEmptyState({ showCreate = true }: BandsEmptyStateProps) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-8 text-center">
-      <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-[32px] border border-white/8 bg-white/[0.03]">
+      <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-[32px] border border-border bg-white/[0.03]">
         <div className="relative h-24 w-24">
           <span className="absolute left-3 top-4 h-10 w-10 rounded-full bg-primary/20" />
           <span className="absolute right-2 top-8 h-8 w-8 rounded-full bg-white/10" />
-          <span className="absolute bottom-3 left-8 h-12 w-12 rounded-[18px] border border-white/10 bg-subtle" />
+          <span className="absolute bottom-3 left-8 h-12 w-12 rounded-[18px] border border-border bg-subtle" />
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export function BandListItem({ band }: BandListItemProps) {
   return (
     <Link
       href={`/bands/${band.id}`}
-      className="block rounded-[28px] border border-white/8 bg-subtle px-6 py-5 transition-quiet active:opacity-85"
+      className="block rounded-[28px] border border-border bg-subtle px-6 py-5 transition-quiet active:opacity-85"
     >
       <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Band</p>
       <h3 className="mt-2 text-[22px] font-light tracking-tight">{band.name}</h3>

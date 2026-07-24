@@ -60,7 +60,7 @@ export function OnboardingPhotoPicker({
           sizes="280px"
         />
         <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-black/10 to-transparent p-6">
-          <span className="rounded-full border border-white/20 bg-black/40 px-5 py-2.5 text-[14px] font-medium text-white backdrop-blur-sm">
+          <span className="rounded-full border border-border bg-black/40 px-5 py-2.5 text-[14px] font-medium text-white backdrop-blur-sm">
             {isUploading ? "アップロード中..." : hasPhoto ? "写真を変更" : "写真を選ぶ"}
           </span>
         </div>

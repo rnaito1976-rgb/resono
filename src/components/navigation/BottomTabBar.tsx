@@ -21,7 +21,7 @@ export function BottomTabBar() {
       aria-label="Main navigation"
       className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
     >
-      <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-background/85 px-4 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border bg-background/85 px-4 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
         {TABS.map(({ href, label, icon: Icon, ...rest }) => {
           const active =
             href === "/"

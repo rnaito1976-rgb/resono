@@ -174,7 +174,7 @@ export function ChatRoom({
             onChange={(event) => setDraft(event.target.value)}
             rows={1}
             placeholder="メッセージ"
-            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-[22px] border border-white/10 bg-black/20 px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-white/15"
+            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-[22px] border border-border bg-black/20 px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-border"
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();

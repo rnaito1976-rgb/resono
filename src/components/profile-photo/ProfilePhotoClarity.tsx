@@ -9,11 +9,11 @@ const LEVEL_STYLES: Record<
     text: "text-primary/90",
   },
   great: {
-    badge: "border-white/15 bg-white/[0.05] text-[#F6F6F6]",
+    badge: "border-border bg-white/[0.05] text-[#F6F6F6]",
     text: "text-white/70",
   },
   good: {
-    badge: "border-white/10 bg-white/[0.04] text-white/75",
+    badge: "border-border bg-white/[0.04] text-white/75",
     text: "text-white/60",
   },
   "needs-improvement": {
@@ -30,7 +30,7 @@ export function ProfilePhotoClarity({ clarity }: ProfilePhotoClarityProps) {
   const styles = LEVEL_STYLES[clarity.level];
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-white/[0.03] px-5 py-5">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">

@@ -58,13 +58,13 @@ export function BandPageClient({ detail }: BandPageClientProps) {
             {detail.band.name}
           </h1>
           <div className="flex flex-wrap gap-2 text-[13px] text-white/70">
-            <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 backdrop-blur-sm">
+            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
               {STATUS_LABELS[detail.band.activityStatus]}
             </span>
-            <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 backdrop-blur-sm">
+            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
               {new Date(detail.band.createdAt).toLocaleDateString("ja-JP")} 結成
             </span>
-            <span className="rounded-full border border-white/15 bg-black/20 px-3 py-1 backdrop-blur-sm">
+            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
               {detail.members.length} members
             </span>
           </div>
@@ -111,7 +111,7 @@ function TimelineTab({
       {events.map((event) => (
         <article
           key={event.id}
-          className="rounded-[24px] border border-white/8 bg-subtle px-5 py-5"
+          className="rounded-[24px] border border-border bg-subtle px-5 py-5"
         >
           <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">
             {new Date(event.occurredAt).toLocaleDateString("ja-JP")}
@@ -162,7 +162,7 @@ function ActivityTab({
 
   return (
     <div className="space-y-10">
-      <section className="space-y-5 rounded-[28px] border border-white/8 bg-subtle px-5 py-6">
+      <section className="space-y-5 rounded-[28px] border border-border bg-subtle px-5 py-6">
         <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Activity</p>
         <div className="flex gap-2">
           {(["text", "photo", "video"] as const).map((value) => (
@@ -173,7 +173,7 @@ function ActivityTab({
               className={`rounded-full px-3 py-1.5 text-[13px] ${
                 kind === value
                   ? "bg-[var(--frequency-color-soft)] text-primary"
-                  : "border border-white/10 text-white/55"
+                  : "border border-border text-white/55"
               }`}
             >
               {value === "text" ? "テキスト" : value === "photo" ? "写真" : "動画"}
@@ -191,14 +191,14 @@ function ActivityTab({
                 : "動画タイトル"
           }
           rows={4}
-          className="w-full resize-none rounded-[22px] border border-white/8 bg-black/20 px-4 py-4 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30"
+          className="w-full resize-none rounded-[22px] border border-border bg-black/20 px-4 py-4 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30"
         />
         {kind !== "text" ? (
           <input
             value={mediaUrl}
             onChange={(event) => setMediaUrl(event.target.value)}
             placeholder="画像または動画URL"
-            className="h-12 w-full rounded-full border border-white/10 bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
+            className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
           />
         ) : null}
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
@@ -209,7 +209,7 @@ function ActivityTab({
 
       <div className="space-y-8">
         {activities.map((activity) => (
-          <article key={activity.id} className="space-y-3 border-l border-white/10 pl-5">
+          <article key={activity.id} className="space-y-3 border-l border-border pl-5">
             <p className="text-[12px] uppercase tracking-[0.14em] text-white/35">
               {new Date(activity.createdAt).toLocaleDateString("ja-JP")}
             </p>
@@ -287,7 +287,7 @@ function MembersTab({ members }: { members: BandDetail["members"] }) {
         return (
           <article
             key={item.memberId}
-            className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-subtle px-4 py-4"
+            className="flex items-center gap-4 rounded-[24px] border border-border bg-subtle px-4 py-4"
           >
             <ProfilePhotoRing color={color} className="h-16 w-16 rounded-full">
               <div className="relative h-16 w-16 overflow-hidden rounded-full">

@@ -251,7 +251,7 @@ export function AIDialogueFlow({
               value={textValue}
               onChange={(event) => setTextValue(event.target.value)}
               placeholder={step.placeholder}
-              className="h-12 w-full rounded-full border border-white/10 bg-white/[0.04] px-5 text-[15px] text-white outline-none placeholder:text-white/30 focus:border-white/25"
+              className="h-12 w-full rounded-full border border-border bg-white/[0.04] px-5 text-[15px] text-white outline-none placeholder:text-white/30 focus:border-border"
             />
           </div>
         ) : (
@@ -274,7 +274,7 @@ export function AIDialogueFlow({
                     }
                   }}
                   placeholder="自由入力"
-                  className="h-11 flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[14px] text-white outline-none placeholder:text-white/30 focus:border-white/25"
+                  className="h-11 flex-1 rounded-full border border-border bg-white/[0.04] px-4 text-[14px] text-white outline-none placeholder:text-white/30 focus:border-border"
                 />
                 <Button type="button" variant="outline" size="sm" onClick={addCustomArtist}>
                   追加
@@ -291,7 +291,7 @@ export function AIDialogueFlow({
         )}
       </div>
 
-      <div className="space-y-3 border-t border-white/8 pt-5">
+      <div className="space-y-3 border-t border-border pt-5">
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
         <Button
           size="lg"
@@ -332,7 +332,7 @@ function DialogueTurn({
       <div
         className={`max-w-[82%] rounded-[22px] px-4 py-3 text-[15px] leading-relaxed ${
           active
-            ? "border border-white/10 bg-white/[0.05] text-white"
+            ? "border border-border bg-white/[0.05] text-white"
             : "bg-white/[0.03] text-white/55"
         }`}
       >

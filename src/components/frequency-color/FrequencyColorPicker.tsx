@@ -81,7 +81,7 @@ export function FrequencyColorPicker({
         />
       </div>
 
-      <div className="mt-10 space-y-3 border-t border-white/8 pt-6">
+      <div className="mt-10 space-y-3 border-t border-border pt-6">
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
         <Button
           size="lg"

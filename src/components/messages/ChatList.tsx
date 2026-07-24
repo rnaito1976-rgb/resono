@@ -13,11 +13,11 @@ export function ChatList({ conversations }: ChatListProps) {
   if (conversations.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-8 text-center">
-        <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-[32px] border border-white/10 bg-white/[0.03]">
+        <div className="mb-10 flex h-40 w-40 items-center justify-center rounded-[32px] border border-border bg-white/[0.03]">
           <div className="relative h-24 w-24">
             <span className="absolute left-4 top-5 h-10 w-10 rounded-full bg-primary/20" />
             <span className="absolute right-3 top-7 h-8 w-8 rounded-full bg-white/10" />
-            <span className="absolute bottom-4 left-7 h-12 w-12 rounded-[18px] border border-white/10 bg-subtle" />
+            <span className="absolute bottom-4 left-7 h-12 w-12 rounded-[18px] border border-border bg-subtle" />
           </div>
         </div>
         <h2 className="text-[28px] font-light tracking-tight text-foreground">
@@ -44,9 +44,9 @@ export function ChatList({ conversations }: ChatListProps) {
         <Link
           key={conversation.id}
           href={`/messages/${conversation.id}`}
-          className="flex items-center gap-4 rounded-[28px] border border-white/10 bg-subtle px-5 py-4 transition-quiet active:opacity-85"
+          className="flex items-center gap-4 rounded-[28px] border border-border bg-subtle px-5 py-4 transition-quiet active:opacity-85"
         >
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
+          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border bg-white/[0.03]">
             <Image
               src={conversation.partner.photo}
               alt={conversation.partner.name}
