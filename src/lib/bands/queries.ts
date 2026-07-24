@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type {
   Band,
   BandActivity,
+  BandActivityFeedItem,
   BandDetail,
   BandMember,
   BandTimelineEvent,
@@ -291,4 +292,66 @@ export async function getViewerMemberId(): Promise<string | null> {
 
   const member = await getMemberByUserId(user.id);
   return member?.id ?? null;
+}
+
+export async function getBandActivityFeedForMember(
+  memberId: string,
+  limit = 30
+): Promise<BandActivityFeedItem[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data: memberships, error: membershipError } = await supabase
+    .from("band_members")
+    .select("band_id")
+    .eq("member_id", memberId);
+
+  if (membershipError) {
+    console.error("[Supabase] getBandActivityFeed memberships:", membershipError.message);
+    return [];
+  }
+
+  const bandIds = (memberships ?? []).map((row) => row.band_id);
+  if (bandIds.length === 0) {
+    return [];
+  }
+
+  const { data: rows, error: activitiesError } = await supabase
+    .from("band_activities")
+    .select("*, bands(name)")
+    .in("band_id", bandIds)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (activitiesError) {
+    console.error("[Supabase] getBandActivityFeed activities:", activitiesError.message);
+    return [];
+  }
+
+  const authorIds = [
+    ...new Set((rows ?? []).map((row) => row.author_member_id)),
+  ];
+  const authors = await Promise.all(authorIds.map((id) => getMemberById(id)));
+  const authorMap = new Map(
+    authors.filter(Boolean).map((author) => [author!.id, author!])
+  );
+
+  return (rows ?? []).map((row): BandActivityFeedItem => {
+    const band = row.bands as { name: string } | null;
+
+    return {
+      id: row.id,
+      bandId: row.band_id,
+      authorMemberId: row.author_member_id,
+      kind: row.kind as BandActivity["kind"],
+      title: row.title ?? undefined,
+      body: row.body ?? undefined,
+      mediaUrl: row.media_url ?? undefined,
+      createdAt: row.created_at,
+      author: authorMap.get(row.author_member_id),
+      bandName: band?.name ?? "Band",
+    };
+  });
 }

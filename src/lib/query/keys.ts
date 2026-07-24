@@ -6,4 +6,7 @@ export const queryKeys = {
     status: (memberId: string) => ["resonance", "status", memberId] as const,
     unreadCount: () => ["resonance", "unread-count"] as const,
   },
+  bands: {
+    unreadCount: () => ["bands", "unread-count"] as const,
+  },
 } as const;

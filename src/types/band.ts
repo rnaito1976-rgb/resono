@@ -66,6 +66,10 @@ export type BandActivity = {
   author?: Member;
 };
 
+export type BandActivityFeedItem = BandActivity & {
+  bandName: string;
+};
+
 export type BandDetail = {
   band: Band;
   members: BandMember[];

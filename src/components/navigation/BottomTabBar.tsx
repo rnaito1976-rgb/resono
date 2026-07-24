@@ -3,18 +3,41 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
+import { useBandUnreadCount } from "@/hooks/useBandUnreadCount";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/messages", label: "Messages", icon: MessageCircle, badge: true },
-  { href: "/bands", label: "Bands", icon: Music2 },
+  {
+    href: "/messages",
+    label: "Messages",
+    icon: MessageCircle,
+    badgeKey: "messages" as const,
+  },
+  { href: "/bands", label: "Bands", icon: Music2, badgeKey: "bands" as const },
   { href: "/me", label: "Profile", icon: UserRound },
 ] as const;
 
+function TabBadge({ count }: { count: number }) {
+  if (count <= 0) {
+    return null;
+  }
+
+  return (
+    <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background/85">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 export function BottomTabBar() {
   const pathname = usePathname();
-  const { count } = useUnreadCount();
+  const { count: messageCount } = useUnreadCount();
+  const { count: bandCount } = useBandUnreadCount();
+  const badgeCounts = {
+    messages: messageCount,
+    bands: bandCount,
+  };
 
   return (
     <nav
@@ -27,7 +50,8 @@ export function BottomTabBar() {
             href === "/"
               ? pathname === "/"
               : pathname === href || pathname.startsWith(`${href}/`);
-          const showBadge = "badge" in rest && rest.badge && count > 0;
+          const badgeCount =
+            "badgeKey" in rest ? badgeCounts[rest.badgeKey] : 0;
 
           return (
             <Link
@@ -47,11 +71,7 @@ export function BottomTabBar() {
                   strokeWidth={active ? 2.25 : 1.75}
                 />
               </span>
-              {showBadge ? (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-background/85">
-                  {count > 99 ? "99+" : count}
-                </span>
-              ) : null}
+              <TabBadge count={badgeCount} />
             </Link>
           );
         })}

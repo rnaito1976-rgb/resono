@@ -273,6 +273,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      band_member_reads: {
+        Row: {
+          band_id: string;
+          member_id: string;
+          last_seen_at: string;
+        };
+        Insert: {
+          band_id: string;
+          member_id: string;
+          last_seen_at?: string;
+        };
+        Update: {
+          band_id?: string;
+          member_id?: string;
+          last_seen_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

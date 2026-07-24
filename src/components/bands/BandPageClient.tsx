@@ -1,12 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { PageBackLink } from "@/components/navigation/PageBackLink";
-import { createBandActivityAction } from "@/lib/actions/bands";
+import {
+  createBandActivityAction,
+  markBandAsSeenAction,
+} from "@/lib/actions/bands";
+import { dispatchBandsChange } from "@/lib/bands/events";
 import {
   buildBandGradientStyle,
   formatBandGradientLabel,
@@ -40,6 +44,12 @@ export function BandPageClient({ detail }: BandPageClientProps) {
     () => buildBandGradientStyle(detail.gradientColors),
     [detail.gradientColors]
   );
+
+  useEffect(() => {
+    markBandAsSeenAction(detail.band.id).then(() => {
+      dispatchBandsChange();
+    });
+  }, [detail.band.id]);
 
   const videos = detail.activities.filter((item) => item.kind === "video");
 
@@ -156,6 +166,7 @@ function ActivityTab({
       }
       setBody("");
       setMediaUrl("");
+      dispatchBandsChange();
       router.refresh();
     });
   }

@@ -218,3 +218,51 @@ export async function createBandActivityAction(input: {
   revalidatePath(`/bands/${input.bandId}`);
   return { success: true };
 }
+
+export async function getBandUnreadCountAction(): Promise<number> {
+  if (!isSupabaseConfigured()) {
+    return 0;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return 0;
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return 0;
+  }
+
+  const { getBandUnreadCountForMember } = await import("@/lib/bands/unread");
+  return getBandUnreadCountForMember(member.id);
+}
+
+export async function markBandAsSeenAction(bandId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    return;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return;
+  }
+
+  const { markBandAsSeen } = await import("@/lib/bands/unread");
+  await markBandAsSeen(bandId, member.id);
+  revalidatePath("/bands");
+  revalidatePath(`/bands/${bandId}`);
+}
