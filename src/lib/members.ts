@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { members as fallbackMembers } from "@/data/members";
 import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import { createDefaultMember } from "@/lib/members/defaultMember";
@@ -46,9 +47,9 @@ export async function getMembersPage(
 
   try {
     const supabase = createAnonClient();
-    const { data, error, count } = await supabase
+    const { data, error } = await supabase
       .from("members")
-      .select("*", { count: "exact" })
+      .select("*")
       .order("resonance_rate", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -72,12 +73,12 @@ export async function getMembersPage(
     }
 
     const members = await attachFrequencyColors(data.map(rowToMember));
-    const total = count ?? members.length;
+    const hasMore = data.length === limit;
 
     return {
       members,
-      total,
-      hasMore: offset + limit < total,
+      total: offset + members.length + (hasMore ? 1 : 0),
+      hasMore,
     };
   } catch (error) {
     console.error("[Supabase] getMembersPage:", error);
@@ -87,6 +88,41 @@ export async function getMembersPage(
       total: fallbackMembers.length,
       hasMore: offset + limit < fallbackMembers.length,
     };
+  }
+}
+
+export async function getMembersByIds(ids: string[]): Promise<Map<string, Member>> {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+  if (uniqueIds.length === 0) {
+    return new Map();
+  }
+
+  if (!isSupabaseConfigured()) {
+    return new Map(
+      fallbackMembers
+        .filter((member) => uniqueIds.includes(member.id))
+        .map((member) => [member.id, member])
+    );
+  }
+
+  try {
+    const supabase = createAnonClient();
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .in("id", uniqueIds);
+
+    if (error) {
+      console.error("[Supabase] getMembersByIds:", error.message);
+      return new Map();
+    }
+
+    const members = await attachFrequencyColors((data ?? []).map(rowToMember));
+    return new Map(members.map((member) => [member.id, member]));
+  } catch (error) {
+    console.error("[Supabase] getMembersByIds:", error);
+    return new Map();
   }
 }
 
@@ -175,7 +211,7 @@ async function linkMemberToUser(
   }
 }
 
-export async function getMemberByUserId(
+export const getMemberByUserId = cache(async function getMemberByUserId(
   userId: string
 ): Promise<Member | undefined> {
   if (!isSupabaseConfigured()) {
@@ -225,7 +261,7 @@ export async function getMemberByUserId(
     console.error("[Supabase] getMemberByUserId:", error);
     return undefined;
   }
-}
+});
 
 export async function ensureMemberForUser(
   userId: string,

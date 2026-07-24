@@ -25,11 +25,10 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
   const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
   const viewer = user ? await getMemberByUserId(user.id) : undefined;
-  const mutualMembers =
-    isOwnProfile && viewer ? await getMutualResonateMembers(viewer.id) : [];
-  const bandActivities = viewer
-    ? await getBandActivityFeedForMember(member.id)
-    : [];
+  const [mutualMembers, bandActivities] = await Promise.all([
+    isOwnProfile && viewer ? getMutualResonateMembers(viewer.id) : Promise.resolve([]),
+    viewer ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
+  ]);
   const resonanceReason =
     viewer && !isOwnProfile && viewer.id !== member.id
       ? buildResonanceReason(viewer, member)

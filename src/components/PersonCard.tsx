@@ -17,6 +17,7 @@ import {
   type RecommendationResult,
 } from "@/lib/recommendation/scoring";
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import type { ResonanceStatus } from "@/lib/resonance/status";
 import { Member } from "@/types/member";
 import { ResonanceBadge, TagList } from "@/components/ui";
 
@@ -25,6 +26,7 @@ type PersonCardProps = {
   variant?: "default" | "ambient";
   recommendation?: RecommendationResult;
   resonanceReason?: ResonanceReason;
+  resonanceStatus?: ResonanceStatus;
   isOwnCard?: boolean;
   priority?: boolean;
 };
@@ -39,6 +41,7 @@ function PersonCardComponent({
   variant = "default",
   recommendation,
   resonanceReason,
+  resonanceStatus,
   isOwnCard = false,
   priority = false,
 }: PersonCardProps) {
@@ -162,7 +165,12 @@ function PersonCardComponent({
 
         {!isAmbient ? (
           <div className="space-y-3">
-            {!isOwnCard ? <ResonateButton memberId={member.id} /> : null}
+            {!isOwnCard ? (
+              <ResonateButton
+                memberId={member.id}
+                initialStatus={resonanceStatus}
+              />
+            ) : null}
             {isOwnCard ? (
               <Link
                 href="/discover"

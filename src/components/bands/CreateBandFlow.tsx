@@ -54,7 +54,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-mobile bg-background px-5 pb-10">
+    <div className="mx-auto min-h-dvh max-w-mobile bg-background pb-10">
       <AppPageHeader
         backHref="/bands"
         backLabel="Band一覧に戻る"
@@ -63,7 +63,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
       />
 
       {step === "members" ? (
-        <div className="space-y-8">
+        <div className="space-y-8 px-5">
           <div>
             <p className="text-[15px] leading-relaxed text-white/45">
               共鳴済みメンバーから、一緒に活動を育てる仲間を選んでください。
@@ -143,7 +143,7 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
           </Button>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-8 px-5">
           <div>
             <p className="text-[15px] leading-relaxed text-white/45">
               {selectedMembers.map((item) => item.member.name).join("、")}

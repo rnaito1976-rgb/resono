@@ -4,18 +4,21 @@ import { memo } from "react";
 import Link from "next/link";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { useResonance } from "@/hooks/useResonance";
+import type { ResonanceStatus } from "@/lib/resonance/status";
 
 type ResonateButtonProps = {
   memberId: string;
   className?: string;
+  initialStatus?: ResonanceStatus;
 };
 
 export const ResonateButton = memo(function ResonateButton({
   memberId,
   className = "",
+  initialStatus,
 }: ResonateButtonProps) {
   const { isResonated, isMutual, conversationId, toggle, mounted, isPending } =
-    useResonance(memberId);
+    useResonance(memberId, initialStatus);
 
   if (mounted && isMutual && conversationId) {
     return (

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { BandPageLoader } from "@/components/bands/BandPageLoader";
-import { getBandDetail, getViewerMemberId } from "@/lib/bands/queries";
+import { BandPageClient } from "@/components/bands/BandPageClient";
+import { getBandDetail } from "@/lib/bands/queries";
+import { getMemberByUserId } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -20,15 +21,15 @@ export default async function BandPage({ params }: BandPageProps) {
     redirect(`/login?next=/bands/${id}`);
   }
 
-  const memberId = await getViewerMemberId();
-  if (!memberId) {
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
     redirect("/onboarding");
   }
 
-  const detail = await getBandDetail(id, memberId);
+  const detail = await getBandDetail(id, member.id);
   if (!detail) {
     notFound();
   }
 
-  return <BandPageLoader detail={detail} />;
+  return <BandPageClient detail={detail} />;
 }

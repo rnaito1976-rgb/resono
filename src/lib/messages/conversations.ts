@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getMemberById } from "@/lib/members";
+import { getMemberById, getMembersByIds } from "@/lib/members";
 import {
   getPartnerId,
   orderedMemberPair,
@@ -96,10 +96,10 @@ export async function getConversationsForMember(
     getPartnerId(conversation, memberId)
   );
 
-  const [{ data: messages }, { data: reads }, partners] = await Promise.all([
+  const [{ data: messages }, { data: reads }, partnerMap] = await Promise.all([
     supabase
       .from("messages")
-      .select("*")
+      .select("id, conversation_id, sender_member_id, body, created_at")
       .in("conversation_id", conversationIds)
       .order("created_at", { ascending: false }),
     supabase
@@ -107,21 +107,59 @@ export async function getConversationsForMember(
       .select("conversation_id, last_read_at")
       .eq("member_id", memberId)
       .in("conversation_id", conversationIds),
-    Promise.all(partnerIds.map((id) => getMemberById(id))),
+    getMembersByIds(partnerIds),
   ]);
+
+  const partners = partnerIds
+    .map((id) => partnerMap.get(id))
+    .filter((member): member is Member => Boolean(member));
 
   return buildSummaries(
     memberId,
     conversations,
     messages ?? [],
     reads ?? [],
-    partners.filter((member): member is Member => Boolean(member))
+    partners
   );
 }
 
 export async function getUnreadCountForMember(memberId: string): Promise<number> {
-  const summaries = await getConversationsForMember(memberId);
-  return summaries.reduce((total, summary) => total + summary.unreadCount, 0);
+  const supabase = await createClient();
+  const { data: conversations } = await supabase
+    .from("conversations")
+    .select("id")
+    .or(`member_a_id.eq.${memberId},member_b_id.eq.${memberId}`);
+
+  if (!conversations?.length) {
+    return 0;
+  }
+
+  const conversationIds = conversations.map((conversation) => conversation.id);
+  const [{ data: reads }, { data: messages }] = await Promise.all([
+    supabase
+      .from("conversation_reads")
+      .select("conversation_id, last_read_at")
+      .eq("member_id", memberId)
+      .in("conversation_id", conversationIds),
+    supabase
+      .from("messages")
+      .select("conversation_id, sender_member_id, created_at")
+      .in("conversation_id", conversationIds)
+      .neq("sender_member_id", memberId),
+  ]);
+
+  const readMap = new Map(
+    (reads ?? []).map((read) => [read.conversation_id, read.last_read_at])
+  );
+
+  return (messages ?? []).reduce((total, message) => {
+    const lastReadAt = readMap.get(message.conversation_id);
+    if (lastReadAt && message.created_at <= lastReadAt) {
+      return total;
+    }
+
+    return total + 1;
+  }, 0);
 }
 
 export async function getConversationById(

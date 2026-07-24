@@ -11,12 +11,12 @@ import type { Member } from "@/types/member";
 type HomeFeedProps = {
   viewerId?: string;
   currentMember?: Member;
+  initialFeedPage?: MembersFeedPage;
 };
 
 async function fetchFeedPage(offset: number): Promise<MembersFeedPage> {
   const response = await fetch(
-    `/api/members/feed?offset=${offset}&limit=${FEED_PAGE_SIZE}`,
-    { cache: "no-store" }
+    `/api/members/feed?offset=${offset}&limit=${FEED_PAGE_SIZE}`
   );
 
   if (!response.ok) {
@@ -26,7 +26,11 @@ async function fetchFeedPage(offset: number): Promise<MembersFeedPage> {
   return response.json();
 }
 
-export function HomeFeed({ viewerId, currentMember }: HomeFeedProps) {
+export function HomeFeed({
+  viewerId,
+  currentMember,
+  initialFeedPage,
+}: HomeFeedProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -40,6 +44,9 @@ export function HomeFeed({ viewerId, currentMember }: HomeFeedProps) {
     queryKey: queryKeys.members.feed(viewerId),
     queryFn: ({ pageParam }) => fetchFeedPage(pageParam),
     initialPageParam: 0,
+    initialData: initialFeedPage
+      ? { pages: [initialFeedPage], pageParams: [0] }
+      : undefined,
     getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
     staleTime: 2 * 60 * 1000,
   });
@@ -97,24 +104,26 @@ export function HomeFeed({ viewerId, currentMember }: HomeFeedProps) {
           </div>
 
           <div className="flex flex-col gap-14">
-            {feedItems.map(({ member, recommendation, reason }) => (
+            {feedItems.map(({ member, recommendation, reason, resonanceStatus }) => (
               <PersonCard
                 key={member.id}
                 member={member}
                 recommendation={recommendation}
                 resonanceReason={reason}
+                resonanceStatus={resonanceStatus}
               />
             ))}
           </div>
         </section>
       ) : (
         !isLoading &&
-        feedItems.map(({ member, recommendation, reason }) => (
+        feedItems.map(({ member, recommendation, reason, resonanceStatus }) => (
           <PersonCard
             key={member.id}
             member={member}
             recommendation={recommendation}
             resonanceReason={reason}
+            resonanceStatus={resonanceStatus}
           />
         ))
       )}

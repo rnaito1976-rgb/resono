@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { PageBackLink } from "@/components/navigation/PageBackLink";
+import { AppTopBar } from "@/components/navigation/AppTopBar";
 import {
   completeDialogueOnboardingAction,
   completeDiscoverDialogueAction,
@@ -215,16 +215,14 @@ export function AIDialogueFlow({
   return (
     <div
       className={`mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 ${
-        mode === "discover" ? "pt-6" : "pt-12"
+        mode === "onboarding" ? "pt-12" : "pt-6"
       }`}
     >
       {mode === "discover" ? (
-        <header className="mb-6 flex items-center">
-          <PageBackLink href={backHref} label="戻る" />
-        </header>
+        <AppTopBar backHref={backHref} backLabel="戻る" />
       ) : null}
 
-      <div className="mb-8">
+      <div className={mode === "discover" ? "mt-4 mb-8" : "mb-8"}>
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
           Resono AI
         </p>

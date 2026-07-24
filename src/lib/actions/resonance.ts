@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { ensureConversationForMembers } from "@/lib/messages/conversations";
 import { getMemberByUserId } from "@/lib/members";
+import {
+  getResonanceStatusForMember,
+  type ResonanceStatus,
+} from "@/lib/resonance/status";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-export type ResonanceStatus = {
-  isResonated: boolean;
-  isMutual: boolean;
-  conversationId: string | null;
-};
+export type { ResonanceStatus };
 
 export async function getResonanceStatusAction(
   targetMemberId: string
@@ -33,28 +33,17 @@ export async function getResonanceStatusAction(
     return { isResonated: false, isMutual: false, conversationId: null };
   }
 
-  const [{ data: outgoing }, { data: incoming }] = await Promise.all([
-    supabase
-      .from("resonances")
-      .select("id")
-      .eq("from_member_id", member.id)
-      .eq("to_member_id", targetMemberId)
-      .maybeSingle(),
-    supabase
-      .from("resonances")
-      .select("id")
-      .eq("from_member_id", targetMemberId)
-      .eq("to_member_id", member.id)
-      .maybeSingle(),
-  ]);
+  const status = await getResonanceStatusForMember(member.id, targetMemberId);
 
-  const isResonated = Boolean(outgoing);
-  const isMutual = Boolean(outgoing && incoming);
-  const conversationId = isMutual
-    ? await ensureConversationForMembers(member.id, targetMemberId)
-    : null;
+  if (status.isMutual && !status.conversationId) {
+    const conversationId = await ensureConversationForMembers(
+      member.id,
+      targetMemberId
+    );
+    return { ...status, conversationId };
+  }
 
-  return { isResonated, isMutual, conversationId };
+  return status;
 }
 
 export async function toggleResonanceAction(targetMemberId: string) {

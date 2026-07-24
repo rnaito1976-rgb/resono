@@ -1,11 +1,13 @@
 import type { RecommendationResult } from "@/lib/recommendation/scoring";
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { Member } from "@/types/member";
 
 export type FeedItem = {
   member: Member;
   recommendation?: RecommendationResult;
   reason?: ResonanceReason;
+  resonanceStatus?: ResonanceStatus;
 };
 
 export type MembersFeedPage = {

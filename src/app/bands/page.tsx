@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { BandsEmptyState, BandListItem } from "@/components/bands/BandsEmptyState";
-import { getBandsForMember, getViewerMemberId } from "@/lib/bands/queries";
+import { getBandsForMember } from "@/lib/bands/queries";
 import { getBandUnreadSummaryForMember } from "@/lib/bands/unread";
+import { getMemberByUserId } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +19,15 @@ export default async function BandsPage() {
     redirect("/login?next=/bands");
   }
 
-  const memberId = await getViewerMemberId();
-  if (!memberId) {
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
     redirect("/onboarding");
   }
 
-  const bands = await getBandsForMember(memberId);
-  const unreadSummary = await getBandUnreadSummaryForMember(memberId);
+  const [bands, unreadSummary] = await Promise.all([
+    getBandsForMember(member.id),
+    getBandUnreadSummaryForMember(member.id),
+  ]);
 
   return (
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">

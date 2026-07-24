@@ -15,7 +15,7 @@ import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
-import { PageBackLink } from "@/components/navigation/PageBackLink";
+import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
 import type { Member } from "@/types/member";
 
@@ -89,19 +89,21 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-5 py-4">
-          <PageBackLink href={`/member/${member.id}`} label="マイページに戻る" />
-          <h1 className="text-sm font-medium tracking-[0.2em] text-white/90">
-            プロフィール
-          </h1>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="text-[15px] font-medium text-primary transition-opacity disabled:opacity-40"
-          >
-            {isPending ? "保存中..." : "保存"}
-          </button>
-        </div>
+        <AppPageHeader
+          backHref={`/member/${member.id}`}
+          backLabel="マイページに戻る"
+          eyebrow="Profile"
+          title="プロフィール編集"
+          actions={
+            <button
+              type="submit"
+              disabled={isPending}
+              className="text-[15px] font-medium text-primary transition-opacity disabled:opacity-40"
+            >
+              {isPending ? "保存中..." : "保存"}
+            </button>
+          }
+        />
       </header>
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">

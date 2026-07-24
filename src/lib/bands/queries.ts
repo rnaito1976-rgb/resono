@@ -1,7 +1,7 @@
 import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { getMemberById, getMemberByUserId } from "@/lib/members";
-import { ensureConversationForMembers } from "@/lib/messages/conversations";
+import { getMemberById, getMembersByIds, getMemberByUserId } from "@/lib/members";
+import { getConversationIdsForMemberPairs } from "@/lib/resonance/status";
 import { calculateResonanceMatch } from "@/lib/resonance/matching";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -67,11 +67,6 @@ export async function getMutualResonateMembers(
   }
 
   const supabase = await createClient();
-  const viewer = await getMemberById(viewerMemberId);
-  if (!viewer) {
-    return [];
-  }
-
   const { data: outgoing, error: outgoingError } = await supabase
     .from("resonances")
     .select("to_member_id, created_at")
@@ -82,36 +77,49 @@ export async function getMutualResonateMembers(
     return [];
   }
 
-  const results: MutualResonateMember[] = [];
-
-  for (const row of outgoing ?? []) {
-    const { data: incoming } = await supabase
-      .from("resonances")
-      .select("created_at")
-      .eq("from_member_id", row.to_member_id)
-      .eq("to_member_id", viewerMemberId)
-      .maybeSingle();
-
-    if (!incoming) {
-      continue;
-    }
-
-    const member = await getMemberById(row.to_member_id);
-    if (!member) {
-      continue;
-    }
-
-    const conversationId = await ensureConversationForMembers(
-      viewerMemberId,
-      member.id
-    );
-
-    results.push({
-      member,
-      resonatedAt: row.created_at,
-      conversationId: conversationId ?? undefined,
-    });
+  if (!outgoing?.length) {
+    return [];
   }
+
+  const targetIds = outgoing.map((row) => row.to_member_id);
+  const { data: incoming, error: incomingError } = await supabase
+    .from("resonances")
+    .select("from_member_id")
+    .eq("to_member_id", viewerMemberId)
+    .in("from_member_id", targetIds);
+
+  if (incomingError) {
+    console.error("[Supabase] getMutualResonateMembers incoming:", incomingError.message);
+    return [];
+  }
+
+  const incomingSet = new Set((incoming ?? []).map((row) => row.from_member_id));
+  const mutualRows = outgoing.filter((row) => incomingSet.has(row.to_member_id));
+
+  if (mutualRows.length === 0) {
+    return [];
+  }
+
+  const mutualIds = mutualRows.map((row) => row.to_member_id);
+  const [memberMap, conversationMap] = await Promise.all([
+    getMembersByIds(mutualIds),
+    getConversationIdsForMemberPairs(viewerMemberId, mutualIds),
+  ]);
+
+  const results = mutualRows
+    .map((row) => {
+      const member = memberMap.get(row.to_member_id);
+      if (!member) {
+        return null;
+      }
+
+      return {
+        member,
+        resonatedAt: row.created_at,
+        conversationId: conversationMap.get(row.to_member_id) ?? undefined,
+      } satisfies MutualResonateMember;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   const userIds = results
     .map((item) => item.member.userId)
@@ -142,22 +150,36 @@ async function loadBandMembers(
     return [];
   }
 
-  const members = await Promise.all(
-    (data ?? []).map(async (row) => {
-      const member = await getMemberById(row.member_id);
+  const memberIds = (data ?? []).map((row) => row.member_id);
+  const memberMap = await getMembersByIds(memberIds);
+  const otherMemberIds =
+    viewer != null
+      ? memberIds.filter((memberId) => memberId !== viewer.id)
+      : [];
+  let resonanceMap = new Map<string, string>();
+
+  if (viewer && otherMemberIds.length > 0) {
+    const { data: outgoing } = await supabase
+      .from("resonances")
+      .select("to_member_id, created_at")
+      .eq("from_member_id", viewer.id)
+      .in("to_member_id", otherMemberIds);
+
+    resonanceMap = new Map(
+      (outgoing ?? []).map((row) => [row.to_member_id, row.created_at])
+    );
+  }
+
+  const members = (data ?? [])
+    .map((row) => {
+      const member = memberMap.get(row.member_id);
       if (!member) {
         return null;
       }
 
       let resonatedAt: string | undefined;
       if (viewer && viewer.id !== member.id) {
-        const { data: outgoing } = await supabase
-          .from("resonances")
-          .select("created_at")
-          .eq("from_member_id", viewer.id)
-          .eq("to_member_id", member.id)
-          .maybeSingle();
-        resonatedAt = outgoing?.created_at;
+        resonatedAt = resonanceMap.get(member.id);
       }
 
       return {
@@ -172,15 +194,14 @@ async function loadBandMembers(
             : undefined,
       } satisfies BandMember;
     })
-  );
+    .filter(Boolean) as BandMember[];
 
-  const filtered = members.filter(Boolean) as BandMember[];
-  const userIds = filtered
+  const userIds = members
     .map((item) => item.member.userId)
     .filter((userId): userId is string => Boolean(userId));
   const colorMap = await getFrequencyColorsByUserIds(userIds);
 
-  return filtered.map((item) => ({
+  return members.map((item) => ({
     ...item,
     frequencyColor: item.member.userId
       ? colorMap.get(item.member.userId)
@@ -246,22 +267,21 @@ export async function getBandDetail(
     })
   );
 
-  const activities = await Promise.all(
-    (activitiesResult.data ?? []).map(async (row): Promise<BandActivity> => {
-      const author = await getMemberById(row.author_member_id);
-      return {
-        id: row.id,
-        bandId: row.band_id,
-        authorMemberId: row.author_member_id,
-        kind: row.kind as BandActivity["kind"],
-        title: row.title ?? undefined,
-        body: row.body ?? undefined,
-        mediaUrl: row.media_url ?? undefined,
-        createdAt: row.created_at,
-        author: author ?? undefined,
-      };
-    })
-  );
+  const authorIds = [
+    ...new Set((activitiesResult.data ?? []).map((row) => row.author_member_id)),
+  ];
+  const authorMap = await getMembersByIds(authorIds);
+  const activities = (activitiesResult.data ?? []).map((row): BandActivity => ({
+    id: row.id,
+    bandId: row.band_id,
+    authorMemberId: row.author_member_id,
+    kind: row.kind as BandActivity["kind"],
+    title: row.title ?? undefined,
+    body: row.body ?? undefined,
+    mediaUrl: row.media_url ?? undefined,
+    createdAt: row.created_at,
+    author: authorMap.get(row.author_member_id),
+  }));
 
   const gradientColors = members
     .map((item) => item.frequencyColor)

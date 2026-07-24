@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
-import { PageBackLink } from "@/components/navigation/PageBackLink";
+import { AppTopBar } from "@/components/navigation/AppTopBar";
 import {
   createBandActivityAction,
   markBandAsSeenAction,
@@ -56,11 +56,9 @@ export function BandPageClient({ detail }: BandPageClientProps) {
   return (
     <div className="mx-auto min-h-dvh max-w-mobile bg-background pb-10">
       <div className="relative overflow-hidden px-5 pb-8 pt-6" style={gradientStyle}>
-        <header className="mb-10 flex items-center">
-          <PageBackLink href="/bands" label="Band一覧に戻る" />
-        </header>
+        <AppTopBar backHref="/bands" backLabel="Band一覧に戻る" />
 
-        <div className="space-y-5">
+        <div className="mt-8 space-y-5">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/55">
             {formatBandGradientLabel(detail.gradientColors)}
           </p>
