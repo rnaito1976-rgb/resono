@@ -2,17 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sanitizeNextPath } from "@/lib/auth/urls";
 import { ensureMemberForUser } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 import { getEmailRedirectUrl } from "@/lib/supabase/env";
-
-function sanitizeNextPath(next: string | null | undefined): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/";
-  }
-
-  return next;
-}
 
 function translateAuthError(message: string): string {
   const normalized = message.toLowerCase();
@@ -25,6 +18,8 @@ function translateAuthError(message: string): string {
   }
 
   const translations: Record<string, string> = {
+    "{}":
+      "認証に失敗しました。Googleログインをもう一度お試しください。",
     "Invalid login credentials":
       "メールアドレスまたはパスワードが正しくありません。",
     "Email not confirmed":
@@ -64,8 +59,16 @@ export async function signInWithEmailAction(
     return { error: translateAuthError(error.message) };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    await ensureMemberForUser(user.id, user.email);
+  }
+
   revalidatePath("/", "layout");
-  redirect(sanitizeNextPath(nextPath));
+  return { success: true, nextPath: sanitizeNextPath(nextPath) };
 }
 
 export async function signUpWithEmailAction(email: string, password: string) {

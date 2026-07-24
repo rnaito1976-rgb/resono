@@ -1,32 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getAuthApiErrorMessage } from "@/lib/auth/errors";
+import {
+  getAuthCallbackUrl,
+  getAuthOrigin,
+  sanitizeNextPath,
+} from "@/lib/auth/urls";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
-
-function sanitizeNextPath(next: string | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/";
-  }
-
-  return next;
-}
-
-function getRedirectOrigin(request: NextRequest, fallbackOrigin: string): string {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  return fallbackOrigin;
-}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
-  const origin = getRedirectOrigin(request, requestUrl.origin);
+  const origin = getAuthOrigin(request);
   const { supabase, applyCookies } = createRouteHandlerClient(request);
 
-  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  const redirectTo = getAuthCallbackUrl(next);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -39,7 +26,10 @@ export async function GET(request: NextRequest) {
   });
 
   if (error || !data.url) {
-    const message = error?.message ?? "Google ログインを開始できませんでした。";
+    const message = error
+      ? getAuthApiErrorMessage(error)
+      : "Google ログインを開始できませんでした。";
+    console.error("[Auth oauth/google]", message, error);
     return applyCookies(
       NextResponse.redirect(
         `${origin}/login?error=auth&reason=${encodeURIComponent(message)}`

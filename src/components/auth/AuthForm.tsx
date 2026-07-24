@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import {
   resendConfirmationEmailAction,
@@ -25,6 +26,7 @@ export function AuthForm({
   initialError,
   nextPath = "/",
 }: AuthFormProps) {
+  const router = useRouter();
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
@@ -80,6 +82,12 @@ export function AuthForm({
         if (result.error.includes("確認")) {
           setPendingEmail(email);
         }
+        return;
+      }
+
+      if (result?.success) {
+        router.push(result.nextPath ?? "/");
+        router.refresh();
       }
     });
   }

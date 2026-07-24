@@ -1,31 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getAuthApiErrorMessage } from "@/lib/auth/errors";
+import {
+  getAuthOrigin,
+  sanitizeNextPath,
+} from "@/lib/auth/urls";
 import { ensureMemberForUser } from "@/lib/members";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
-
-function sanitizeNextPath(next: string | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/";
-  }
-
-  return next;
-}
-
-function getRedirectOrigin(request: NextRequest, fallbackOrigin: string): string {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  return fallbackOrigin;
-}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
-  const origin = getRedirectOrigin(request, requestUrl.origin);
+  const origin = getAuthOrigin(request);
   const authError =
     requestUrl.searchParams.get("error_description") ??
     requestUrl.searchParams.get("error");
@@ -41,10 +27,11 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    console.error("[Auth callback] exchangeCodeForSession:", error.message);
+    const message = getAuthApiErrorMessage(error);
+    console.error("[Auth callback] exchangeCodeForSession:", message, error);
     return applyCookies(
       NextResponse.redirect(
-        `${origin}/login?error=auth&reason=${encodeURIComponent(error.message)}`
+        `${origin}/login?error=auth&reason=${encodeURIComponent(message)}`
       )
     );
   }
