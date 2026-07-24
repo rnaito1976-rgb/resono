@@ -311,39 +311,41 @@ export function MemberDetail({
 
   return (
     <div className="flex h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-5 py-4">
-          <Link
-            href="/"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-            aria-label="戻る"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
-          <h1 className="text-sm font-medium tracking-[0.25em] text-white/90">
-            {isOwnProfile ? "マイページ" : member.name}
-          </h1>
-          {isOwnProfile ? (
-            <div className="flex items-center gap-1">
+      <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
+        {isOwnProfile ? (
+          <div className="px-5 pb-4 pt-10">
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+              Profile
+            </p>
+            <div className="mt-3 flex items-end justify-between gap-4">
+              <h1 className="text-[28px] font-light tracking-tight">マイページ</h1>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href={`/member/${member.id}/edit`}
+                  className="rounded-full border border-white/10 px-4 py-2 text-[13px] text-white/75 transition-quiet active:opacity-70"
+                >
+                  編集
+                </Link>
+                <Link
+                  href="/discover"
+                  className="rounded-full border border-white/10 px-4 py-2 text-[13px] text-primary transition-quiet active:opacity-70"
+                >
+                  AIと話す
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="px-5 pb-4 pt-6">
+            <div className="flex items-center gap-3">
               <Link
-                href={`/member/${member.id}/edit`}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-                aria-label="プロフィールを編集"
+                href="/"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
+                aria-label="戻る"
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -351,33 +353,32 @@ export function MemberDetail({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 18.5 3 19l.5-4L16.5 3.5z" />
+                  <path d="M15 18l-6-6 6-6" />
                 </svg>
               </Link>
-              <Link
-                href="/discover"
-                className="flex h-10 items-center justify-center rounded-full px-3 text-[13px] text-primary transition-colors active:bg-white/10"
-              >
-                AIと話す
-              </Link>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+                  Profile
+                </p>
+                <h1 className="truncate text-[22px] font-light tracking-tight">
+                  {member.name}
+                </h1>
+              </div>
             </div>
-          ) : (
-            <div className="h-10 w-10" />
-          )}
-        </div>
+          </div>
+        )}
 
-        <nav className="border-b border-white/5">
-          <div className="flex overflow-x-auto scrollbar-hide">
+        <nav className="border-b border-white/8">
+          <div className="flex overflow-x-auto scrollbar-hide px-2">
             {DETAIL_SECTIONS.map((section, index) => (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => scrollToIndex(index)}
-                className={`shrink-0 px-4 py-3 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors ${
+                className={`shrink-0 px-4 py-4 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors ${
                   activeIndex === index
-                    ? "border-b-2 border-white text-white"
-                    : "text-muted"
+                    ? "border-b-2 border-primary text-white"
+                    : "text-white/40"
                 }`}
               >
                 {section.label}
@@ -415,7 +416,7 @@ export function MemberDetail({
         ))}
       </div>
 
-      <div className="border-t border-white/5 bg-background px-5 pb-8 pt-4">
+      <div className="border-t border-white/10 bg-background px-5 pb-8 pt-4">
         <div className="mb-4 flex justify-center gap-1.5">
           {DETAIL_SECTIONS.map((section, index) => (
             <button
