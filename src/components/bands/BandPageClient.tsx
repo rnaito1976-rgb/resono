@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
 import {
@@ -39,11 +38,24 @@ type BandPageClientProps = {
 };
 
 export function BandPageClient({ detail }: BandPageClientProps) {
-  const [tab, setTab] = useState<BandModuleId>("timeline");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const gradientStyle = useMemo(
     () => buildBandGradientStyle(detail.gradientColors),
     [detail.gradientColors]
   );
+
+  const scrollToIndex = useCallback((index: number) => {
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.scrollTo({
+      left: index * container.clientWidth,
+      behavior: "smooth",
+    });
+  }, []);
 
   useEffect(() => {
     markBandAsSeenAction(detail.band.id).then(() => {
@@ -51,11 +63,26 @@ export function BandPageClient({ detail }: BandPageClientProps) {
     });
   }, [detail.band.id]);
 
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    const handleScroll = () => {
+      const index = Math.round(container.scrollLeft / container.clientWidth);
+      setActiveIndex(index);
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const videos = detail.activities.filter((item) => item.kind === "video");
 
   return (
-    <div className="mx-auto min-h-dvh max-w-mobile bg-background pb-10">
-      <div className="relative overflow-hidden px-5 pb-8 pt-6" style={gradientStyle}>
+    <div className="mx-auto flex h-dvh max-w-mobile flex-col bg-background">
+      <div className="relative shrink-0 overflow-hidden px-5 pb-6 pt-6" style={gradientStyle}>
         <AppTopBar backHref="/bands" backLabel="Band一覧に戻る" />
 
         <div className="mt-8 space-y-5">
@@ -79,23 +106,26 @@ export function BandPageClient({ detail }: BandPageClientProps) {
         </div>
       </div>
 
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl">
-        <AppSubNav
-          items={TABS}
-          activeIndex={TABS.findIndex((item) => item.id === tab)}
-          onSelect={(index) => setTab(TABS[index].id)}
-        />
+      <div className="sticky top-0 z-10 shrink-0 bg-background/90 backdrop-blur-xl">
+        <AppSubNav items={TABS} activeIndex={activeIndex} onSelect={scrollToIndex} />
       </div>
 
-      <div className="px-5 pt-8">
-        {tab === "timeline" ? (
+      <div
+        ref={scrollRef}
+        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hide"
+      >
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
           <TimelineTab events={detail.timeline} />
-        ) : null}
-        {tab === "activity" ? (
+        </section>
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
           <ActivityTab bandId={detail.band.id} activities={detail.activities} />
-        ) : null}
-        {tab === "videos" ? <VideosTab videos={videos} /> : null}
-        {tab === "members" ? <MembersTab members={detail.members} /> : null}
+        </section>
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
+          <VideosTab videos={videos} />
+        </section>
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
+          <MembersTab members={detail.members} />
+        </section>
       </div>
     </div>
   );
