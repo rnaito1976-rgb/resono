@@ -9,7 +9,6 @@ import {
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import { queryKeys } from "@/lib/query/keys";
 import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
-import { MESSAGES_CHANGE_EVENT, dispatchMessagesChange } from "@/lib/messages/events";
 
 const RESONANCE_STALE_MS = 5 * 60 * 1000;
 
@@ -23,7 +22,7 @@ export function useResonance(
   const query = useQuery({
     queryKey: queryKeys.resonance.status(memberId),
     queryFn: () => getResonanceStatusAction(memberId),
-    initialData: initialStatus,
+    ...(initialStatus ? { initialData: initialStatus } : {}),
     staleTime: RESONANCE_STALE_MS,
     gcTime: 30 * 60 * 1000,
   });
@@ -37,11 +36,9 @@ export function useResonance(
   useEffect(() => {
     const handleChange = () => refresh();
     window.addEventListener(RESONANCE_CHANGE_EVENT, handleChange);
-    window.addEventListener(MESSAGES_CHANGE_EVENT, handleChange);
 
     return () => {
       window.removeEventListener(RESONANCE_CHANGE_EVENT, handleChange);
-      window.removeEventListener(MESSAGES_CHANGE_EVENT, handleChange);
     };
   }, [refresh]);
 
@@ -61,7 +58,6 @@ export function useResonance(
 
       queryClient.setQueryData(queryKeys.resonance.status(memberId), next);
       window.dispatchEvent(new Event(RESONANCE_CHANGE_EVENT));
-      dispatchMessagesChange();
     });
   }, [memberId, queryClient]);
 

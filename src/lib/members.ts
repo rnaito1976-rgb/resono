@@ -2,6 +2,7 @@ import { cache } from "react";
 import { members as fallbackMembers } from "@/data/members";
 import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import { createDefaultMember } from "@/lib/members/defaultMember";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -219,8 +220,27 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
   }
 
   try {
-    const supabase = createAnonClient();
-    const { data: byUserId, error: userIdError } = await supabase
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user?.id === userId) {
+      const memberId = await resolveCurrentMemberId();
+      if (memberId) {
+        const member = await getMemberById(memberId);
+        if (member) {
+          if (!member.userId) {
+            const linked = await linkMemberToUser(member.id, userId);
+            return linked ?? { ...member, userId };
+          }
+          return member;
+        }
+      }
+    }
+
+    const anon = createAnonClient();
+    const { data: byUserId, error: userIdError } = await anon
       .from("members")
       .select("*")
       .eq("user_id", userId)
@@ -234,7 +254,7 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
       return (await attachFrequencyColors([rowToMember(byUserId)]))[0];
     }
 
-    const { data: byId, error: idError } = await supabase
+    const { data: byId, error: idError } = await anon
       .from("members")
       .select("*")
       .eq("id", userId)
@@ -250,7 +270,7 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
     }
 
     const member = rowToMember(byId);
-    if (!member.userId) {
+    if (!member.userId && user?.id === userId) {
       const linked = await linkMemberToUser(member.id, userId);
       const resolved = linked ?? { ...member, userId };
       return (await attachFrequencyColors([resolved]))[0];

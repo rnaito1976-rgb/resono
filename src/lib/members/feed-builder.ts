@@ -1,4 +1,5 @@
 import { getMembersPage } from "@/lib/members";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { rankRecommendations } from "@/lib/recommendation/scoring";
 import { buildResonanceReason } from "@/lib/resonance/matching";
@@ -17,8 +18,11 @@ export async function buildMembersFeedPage(
   options: BuildMembersFeedPageOptions = {}
 ): Promise<MembersFeedPage> {
   const page = await getMembersPage(offset, limit);
+  const viewerMemberId = options.viewer
+    ? (await resolveCurrentMemberId()) ?? options.viewer.id
+    : null;
   const feedMembers = page.members.filter((member) => {
-    if (options.viewer && member.id === options.viewer.id) {
+    if (viewerMemberId && member.id === viewerMemberId) {
       return false;
     }
 
@@ -29,7 +33,7 @@ export async function buildMembersFeedPage(
     return true;
   });
 
-  if (!options.viewer) {
+  if (!options.viewer || !viewerMemberId) {
     return {
       items: feedMembers.map((member) => ({
         member,
@@ -43,12 +47,12 @@ export async function buildMembersFeedPage(
   }
 
   const statusMap = await getResonanceStatusBatch(
-    options.viewer.id,
+    viewerMemberId,
     feedMembers.map((member) => member.id)
   );
 
   return {
-    items: rankRecommendations(options.viewer, feedMembers).map(
+    items: rankRecommendations(options.viewer!, feedMembers).map(
       ({ member, recommendation }) => ({
         member,
         recommendation,

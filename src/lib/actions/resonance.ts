@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ensureConversationForMembers } from "@/lib/messages/conversations";
 import { getMemberByUserId } from "@/lib/members";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import {
   getResonanceStatusForMember,
   type ResonanceStatus,
@@ -28,16 +29,16 @@ export async function getResonanceStatusAction(
     return { isResonated: false, isMutual: false, conversationId: null };
   }
 
-  const member = await getMemberByUserId(user.id);
-  if (!member || member.id === targetMemberId) {
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId || memberId === targetMemberId) {
     return { isResonated: false, isMutual: false, conversationId: null };
   }
 
-  const status = await getResonanceStatusForMember(member.id, targetMemberId);
+  const status = await getResonanceStatusForMember(memberId, targetMemberId);
 
   if (status.isMutual && !status.conversationId) {
     const conversationId = await ensureConversationForMembers(
-      member.id,
+      memberId,
       targetMemberId
     );
     return { ...status, conversationId };
@@ -70,8 +71,8 @@ export async function toggleResonanceAction(targetMemberId: string) {
     };
   }
 
-  const member = await getMemberByUserId(user.id);
-  if (!member) {
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
     return {
       error: "プロフィールが見つかりません。",
       isResonated: false,
@@ -80,7 +81,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
     };
   }
 
-  if (member.id === targetMemberId) {
+  if (memberId === targetMemberId) {
     return {
       error: "自分自身には共鳴できません。",
       isResonated: false,
@@ -92,7 +93,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
   const { data: existing } = await supabase
     .from("resonances")
     .select("id")
-    .eq("from_member_id", member.id)
+    .eq("from_member_id", memberId)
     .eq("to_member_id", targetMemberId)
     .maybeSingle();
 
@@ -113,6 +114,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
 
     revalidatePath("/");
     revalidatePath(`/member/${targetMemberId}`);
+    revalidatePath(`/member/${memberId}`);
     revalidatePath("/messages");
 
     return {
@@ -123,7 +125,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
   }
 
   const { error: insertError } = await supabase.from("resonances").insert({
-    from_member_id: member.id,
+    from_member_id: memberId,
     to_member_id: targetMemberId,
   });
 
@@ -140,12 +142,12 @@ export async function toggleResonanceAction(targetMemberId: string) {
     .from("resonances")
     .select("id")
     .eq("from_member_id", targetMemberId)
-    .eq("to_member_id", member.id)
+    .eq("to_member_id", memberId)
     .maybeSingle();
 
   const isMutual = Boolean(reverse);
   const conversationId = isMutual
-    ? await ensureConversationForMembers(member.id, targetMemberId)
+    ? await ensureConversationForMembers(memberId, targetMemberId)
     : null;
 
   revalidatePath("/");

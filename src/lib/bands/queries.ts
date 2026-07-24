@@ -1,6 +1,7 @@
 import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { getMemberById, getMembersByIds, getMemberByUserId } from "@/lib/members";
+import { getMemberById, getMembersByIds } from "@/lib/members";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { getConversationIdsForMemberPairs } from "@/lib/resonance/status";
 import { calculateResonanceMatch } from "@/lib/resonance/matching";
 import { createClient } from "@/lib/supabase/server";
@@ -60,9 +61,14 @@ export async function getBandsForMember(memberId: string): Promise<Band[]> {
 }
 
 export async function getMutualResonateMembers(
-  viewerMemberId: string
+  viewerMemberId?: string
 ): Promise<MutualResonateMember[]> {
   if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const resolvedViewerId = (await resolveCurrentMemberId()) ?? viewerMemberId;
+  if (!resolvedViewerId) {
     return [];
   }
 
@@ -70,7 +76,7 @@ export async function getMutualResonateMembers(
   const { data: outgoing, error: outgoingError } = await supabase
     .from("resonances")
     .select("to_member_id, created_at")
-    .eq("from_member_id", viewerMemberId);
+    .eq("from_member_id", resolvedViewerId);
 
   if (outgoingError) {
     console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingError.message);
@@ -85,7 +91,7 @@ export async function getMutualResonateMembers(
   const { data: incoming, error: incomingError } = await supabase
     .from("resonances")
     .select("from_member_id")
-    .eq("to_member_id", viewerMemberId)
+    .eq("to_member_id", resolvedViewerId)
     .in("from_member_id", targetIds);
 
   if (incomingError) {
@@ -103,7 +109,7 @@ export async function getMutualResonateMembers(
   const mutualIds = mutualRows.map((row) => row.to_member_id);
   const [memberMap, conversationMap] = await Promise.all([
     getMembersByIds(mutualIds),
-    getConversationIdsForMemberPairs(viewerMemberId, mutualIds),
+    getConversationIdsForMemberPairs(resolvedViewerId, mutualIds),
   ]);
 
   const results = mutualRows
@@ -297,21 +303,7 @@ export async function getBandDetail(
 }
 
 export async function getViewerMemberId(): Promise<string | null> {
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const member = await getMemberByUserId(user.id);
-  return member?.id ?? null;
+  return resolveCurrentMemberId();
 }
 
 export async function getBandActivityFeedForMember(
