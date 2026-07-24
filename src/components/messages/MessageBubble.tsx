@@ -16,7 +16,9 @@ export function MessageBubble({ body, isOwn, time }: MessageBubbleProps) {
       <div className={`max-w-[78%] ${isOwn ? "items-end" : "items-start"} flex flex-col gap-1`}>
         <div
           className={`rounded-[22px] px-4 py-2.5 text-[16px] leading-relaxed ${
-            isOwn ? "rounded-br-md text-primary-foreground" : "rounded-bl-md bg-white/10 text-white"
+            isOwn
+              ? "rounded-br-md text-primary-foreground"
+              : "rounded-bl-md border border-white/10 bg-subtle text-white"
           }`}
           style={isOwn ? { backgroundColor: color } : undefined}
         >

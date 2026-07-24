@@ -129,12 +129,12 @@ export function ChatRoom({
   const showStarters = messages.length === 0;
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-20 border-b border-white/8 bg-background/90 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-3">
+    <div className="mx-auto flex h-dvh max-w-mobile flex-col bg-background">
+      <header className="px-5 pb-4 pt-6">
+        <div className="flex items-center gap-3">
           <Link
             href="/messages"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
             aria-label="戻る"
           >
             <svg
@@ -150,14 +150,20 @@ export function ChatRoom({
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </Link>
-          <h1 className="text-[15px] font-medium text-white/90">{partnerName}</h1>
-          <div className="h-10 w-10" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+              Messages
+            </p>
+            <h1 className="truncate text-[22px] font-light tracking-tight">
+              {partnerName}
+            </h1>
+          </div>
         </div>
       </header>
 
-      <ResonanceReasonHeader reason={reason} />
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+        <ResonanceReasonHeader reason={reason} />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <div className="flex flex-col gap-3">
           {messages.map((message) => (
             <MessageBubble
@@ -171,7 +177,7 @@ export function ChatRoom({
         </div>
       </div>
 
-      <div className="border-t border-white/8 bg-background pb-8 pt-3">
+      <div className="border-t border-white/10 bg-background/90 px-5 pb-8 pt-4 backdrop-blur-xl">
         {showStarters ? (
           <ConversationStarters
             starters={starters}
@@ -181,7 +187,7 @@ export function ChatRoom({
         ) : null}
 
         <form
-          className="flex items-end gap-3 px-4"
+          className="flex items-end gap-3"
           onSubmit={(event) => {
             event.preventDefault();
             sendMessage(draft);
@@ -192,7 +198,7 @@ export function ChatRoom({
             onChange={(event) => setDraft(event.target.value)}
             rows={1}
             placeholder="メッセージ"
-            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-[22px] border border-white/10 bg-white/[0.06] px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:border-white/20"
+            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-[22px] border border-white/10 bg-black/20 px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-white/15"
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();

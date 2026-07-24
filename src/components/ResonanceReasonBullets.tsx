@@ -36,11 +36,11 @@ export function ResonanceReasonBullets({
 
 export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
   return (
-    <div className="border-b border-white/8 bg-black/40 px-5 py-5 backdrop-blur-xl">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
-        共鳴理由
+    <section className="mb-5 rounded-[28px] border border-white/10 bg-subtle px-5 py-5">
+      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+        Resonance
       </p>
-      <p className="mt-2 text-2xl font-light tabular-nums tracking-tight">
+      <p className="mt-3 text-[28px] font-light tabular-nums tracking-tight">
         共鳴度 {reason.score}%
       </p>
 
@@ -48,7 +48,7 @@ export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
         <ResonanceReasonBullets reason={reason} />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+      <div className="mt-4 rounded-[22px] border border-white/10 bg-black/20 px-4 py-4">
         <p className="text-[11px] uppercase tracking-[0.16em] text-white/45">
           AIコメント
         </p>
@@ -56,6 +56,6 @@ export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
           {reason.aiComment}
         </p>
       </div>
-    </div>
+    </section>
   );
 }
