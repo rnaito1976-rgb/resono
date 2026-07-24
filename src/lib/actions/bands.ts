@@ -31,27 +31,56 @@ export async function createBandAction(input: {
     return { error: "プロフィールが見つかりません。" };
   }
 
-  const name = input.name.trim();
-  if (!name) {
-    return { error: "Band名を入力してください。" };
+  let creatorMemberId = creator.id;
+
+  const { data: ownMemberRow, error: ownMemberError } = await supabase
+    .from("members")
+    .select("id, user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (ownMemberError) {
+    console.error("[createBandAction] own member lookup:", ownMemberError.message);
+  }
+
+  if (ownMemberRow?.id) {
+    creatorMemberId = ownMemberRow.id;
+  } else if (!creator.userId) {
+    const { data: linkedMember, error: linkError } = await supabase
+      .from("members")
+      .update({ user_id: user.id })
+      .eq("id", creator.id)
+      .select("id")
+      .maybeSingle();
+
+    if (linkError || !linkedMember?.id) {
+      return { error: "プロフィールの紐付けに失敗しました。" };
+    }
+
+    creatorMemberId = linkedMember.id;
   }
 
   const selectedIds = [...new Set(input.memberIds)].filter(
-    (id) => id !== creator.id
+    (id) => id !== creatorMemberId
   );
 
   if (selectedIds.length === 0) {
     return { error: "共鳴済みメンバーを1人以上選んでください。" };
   }
 
-  const mutualMembers = await getMutualResonateMembers(creator.id);
+  const mutualMembers = await getMutualResonateMembers(creatorMemberId);
   const mutualIds = new Set(mutualMembers.map((item) => item.member.id));
 
   if (!selectedIds.every((id) => mutualIds.has(id))) {
     return { error: "共鳴済みメンバーのみ選択できます。" };
   }
 
-  const memberIds = [creator.id, ...selectedIds];
+  const name = input.name.trim();
+  if (!name) {
+    return { error: "Band名を入力してください。" };
+  }
+
+  const memberIds = [creatorMemberId, ...selectedIds];
   const colors = mutualMembers
     .filter((item) => selectedIds.includes(item.member.id) && item.frequencyColor)
     .map((item) => item.frequencyColor!)
@@ -70,7 +99,7 @@ export async function createBandAction(input: {
       name,
       accent_color: accentColor ?? null,
       activity_status: "forming",
-      created_by_member_id: creator.id,
+      created_by_member_id: creatorMemberId,
     })
     .select("id")
     .single();
