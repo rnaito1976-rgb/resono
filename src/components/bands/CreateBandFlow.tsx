@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createBandAction } from "@/lib/actions/bands";
 import type { MutualResonateMember } from "@/types/band";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ type CreateBandFlowProps = {
 };
 
 export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
+  const router = useRouter();
   const [step, setStep] = useState<"members" | "name">("members");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [name, setName] = useState("");
@@ -42,6 +44,10 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
       });
       if (result?.error) {
         setError(result.error);
+        return;
+      }
+      if (result?.bandId) {
+        router.push(`/bands/${result.bandId}`);
       }
     });
   }

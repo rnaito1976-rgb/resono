@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getMutualResonateMembers } from "@/lib/bands/queries";
 import { getMemberById, getMemberByUserId } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { buildResonanceReason } from "@/lib/resonance/matching";
@@ -24,6 +25,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
   const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
   const viewer = user ? await getMemberByUserId(user.id) : undefined;
+  const mutualMembers =
+    isOwnProfile && viewer ? await getMutualResonateMembers(viewer.id) : [];
   const resonanceReason =
     viewer && !isOwnProfile && viewer.id !== member.id
       ? buildResonanceReason(viewer, member)
@@ -36,6 +39,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         isOwnProfile={isOwnProfile}
         resonanceReason={resonanceReason}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
+        mutualMembers={mutualMembers}
       />
     </main>
   );

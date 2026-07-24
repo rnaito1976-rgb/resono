@@ -15,7 +15,7 @@ import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
-import { PhotoUpload } from "@/components/PhotoUpload";
+import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
 import type { Member } from "@/types/member";
 
 type MemberEditFormProps = {
@@ -119,6 +119,15 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           </div>
         ) : null}
 
+        <FormSection title="Profile Photo">
+          <ProfilePhotoUpload
+            memberId={member.id}
+            value={member.photo}
+            frequencyColor={frequencyColor}
+            onChange={(url) => updateField("photo", url)}
+          />
+        </FormSection>
+
         <FormSection title="Basic">
           <FormField label="名前" hint="任意">
             <FormInput
@@ -132,13 +141,6 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               onChange={(event) =>
                 updateNested("music", "instruments", splitList(event.target.value))
               }
-            />
-          </FormField>
-          <FormField label="プロフィール写真" hint="任意">
-            <PhotoUpload
-              memberId={member.id}
-              value={member.photo}
-              onChange={(url) => updateField("photo", url)}
             />
           </FormField>
         </FormSection>

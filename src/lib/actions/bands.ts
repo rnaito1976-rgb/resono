@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { blendFrequencyColors } from "@/lib/frequency-color/utils";
 import { getMemberByUserId } from "@/lib/members";
 import { getMutualResonateMembers } from "@/lib/bands/queries";
@@ -112,10 +111,18 @@ export async function createBandAction(input: {
     }),
   ];
 
-  await supabase.from("band_timeline_events").insert(timelineRows);
+  const { error: timelineError } = await supabase
+    .from("band_timeline_events")
+    .insert(timelineRows);
+
+  if (timelineError) {
+    return { error: timelineError.message };
+  }
 
   revalidatePath("/bands");
-  redirect(`/bands/${band.id}`);
+  revalidatePath(`/bands/${band.id}`);
+
+  return { success: true, bandId: band.id };
 }
 
 export async function createBandActivityAction(input: {

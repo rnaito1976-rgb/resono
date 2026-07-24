@@ -1,18 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Member, DETAIL_SECTIONS } from "@/types/member";
 import { ResonateButton } from "@/components/ResonateButton";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import { ChipGrid } from "@/components/onboarding/SelectableChip";
+import { updateInstrumentsAction } from "@/lib/actions/member";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
+import { PLAYING_PART_OPTIONS } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import type { MutualResonateMember } from "@/types/band";
 import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 
 type MemberDetailProps = {
@@ -20,6 +24,7 @@ type MemberDetailProps = {
   isOwnProfile?: boolean;
   resonanceReason?: ResonanceReason;
   showResonateButton?: boolean;
+  mutualMembers?: MutualResonateMember[];
 };
 
 function PortraitSlide({
@@ -85,25 +90,156 @@ function PortraitSlide({
   );
 }
 
-function MusicSlide({ member }: { member: Member }) {
+function InstrumentsEditor({
+  initialInstruments,
+}: {
+  initialInstruments: string[];
+}) {
+  const [selected, setSelected] = useState(initialInstruments);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function toggleInstrument(instrument: string) {
+    const next = selected.includes(instrument)
+      ? selected.filter((item) => item !== instrument)
+      : [...selected, instrument];
+
+    setSelected(next);
+    setError(null);
+
+    startTransition(async () => {
+      const result = await updateInstrumentsAction(next);
+      if (result.error) {
+        setError(result.error);
+        setSelected(initialInstruments);
+        return;
+      }
+      if (result.instruments) {
+        setSelected(result.instruments);
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-3">
+      <ChipGrid
+        items={PLAYING_PART_OPTIONS}
+        selected={selected}
+        onToggle={toggleInstrument}
+      />
+      {isPending ? (
+        <p className="text-[13px] text-white/45">保存中...</p>
+      ) : null}
+      {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+    </div>
+  );
+}
+
+function MusicSlide({
+  member,
+  isOwnProfile = false,
+}: {
+  member: Member;
+  isOwnProfile?: boolean;
+}) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
+      <SectionBlock label="Instruments">
+        {isOwnProfile ? (
+          <InstrumentsEditor initialInstruments={member.music.instruments} />
+        ) : (
+          <TagList items={member.music.instruments} />
+        )}
+      </SectionBlock>
       <SectionBlock label="Genres">
         <TagList items={member.music.genres} variant="primary" />
       </SectionBlock>
-      <SectionBlock label="Favorite Artists">
+      <SectionBlock label="Favorite">
         <TagList items={member.music.favoriteArtists} />
-      </SectionBlock>
-      <SectionBlock label="Instruments">
-        <TagList items={member.music.instruments} />
       </SectionBlock>
     </div>
   );
 }
 
-function LookingForSlide({ member }: { member: Member }) {
+function LookingForSlide({
+  member,
+  isOwnProfile = false,
+  mutualMembers = [],
+}: {
+  member: Member;
+  isOwnProfile?: boolean;
+  mutualMembers?: MutualResonateMember[];
+}) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
+      {isOwnProfile ? (
+        <SectionBlock label="共鳴した人">
+          {mutualMembers.length > 0 ? (
+            <div className="space-y-3">
+              {mutualMembers.map(({ member: resonateMember, frequencyColor, conversationId }) => {
+                const color = frequencyColor as FrequencyColorHex | undefined;
+
+                return (
+                  <div
+                    key={resonateMember.id}
+                    className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-subtle px-4 py-4"
+                  >
+                    <Link href={`/member/${resonateMember.id}`} className="shrink-0">
+                      <ProfilePhotoRing color={color} className="h-14 w-14 rounded-full">
+                        <div className="relative h-14 w-14 overflow-hidden rounded-full">
+                          <Image
+                            src={getProfilePhotoSrc(resonateMember.photo, 112)}
+                            alt={resonateMember.name}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        </div>
+                      </ProfilePhotoRing>
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/member/${resonateMember.id}`}
+                        className="text-[17px] font-medium"
+                      >
+                        {resonateMember.name}
+                      </Link>
+                      <p className="mt-1 text-[13px] text-white/45">
+                        {resonateMember.music.instruments.join(" · ") || "パート未設定"}
+                      </p>
+                    </div>
+                    {conversationId ? (
+                      <Link
+                        href={`/messages/${conversationId}`}
+                        className="shrink-0 rounded-full border border-white/10 px-3 py-2 text-[13px] text-primary"
+                      >
+                        メッセージ
+                      </Link>
+                    ) : null}
+                  </div>
+                );
+              })}
+              <Link
+                href="/bands/new"
+                className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
+              >
+                Bandを作成
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-[28px] border border-white/8 bg-subtle px-6 py-8 text-center">
+              <p className="text-[15px] leading-relaxed text-white/55">
+                まだ共鳴した人がいません。
+                <br />
+                Homeから気になる人に共鳴してみましょう。
+              </p>
+              <Link href="/" className="mt-6 inline-flex text-[15px] text-primary">
+                Homeへ戻る
+              </Link>
+            </div>
+          )}
+        </SectionBlock>
+      ) : null}
       <SectionBlock label="募集パート">
         <div className="space-y-3">
           {member.lookingFor.parts.length > 0 ? (
@@ -146,6 +282,7 @@ export function MemberDetail({
   isOwnProfile = false,
   resonanceReason,
   showResonateButton = false,
+  mutualMembers = [],
 }: MemberDetailProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -265,8 +402,14 @@ export function MemberDetail({
                 resonanceReason={resonanceReason}
                 isOwnProfile={isOwnProfile}
               />
+            ) : index === 1 ? (
+              <MusicSlide member={member} isOwnProfile={isOwnProfile} />
             ) : (
-              <SlideComponent member={member} />
+              <LookingForSlide
+                member={member}
+                isOwnProfile={isOwnProfile}
+                mutualMembers={mutualMembers}
+              />
             )}
           </section>
         ))}
