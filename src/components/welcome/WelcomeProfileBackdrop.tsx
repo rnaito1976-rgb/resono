@@ -1,38 +1,23 @@
-import { getProfilePhotoSrc } from "@/lib/images/profilePhoto";
-import type { Member } from "@/types/member";
-
 type WelcomeProfileBackdropProps = {
-  members: Member[];
+  members?: unknown[];
 };
 
-/** Welcome 背景: PersonCard の代わりに CSS 背景のみ（JS / 画像転送量を大幅削減） */
-export function WelcomeProfileBackdrop({ members }: WelcomeProfileBackdropProps) {
-  const tiles = members.slice(0, 3).map((member, index) => ({
-    id: member.id,
-    src: getProfilePhotoSrc(member.photo, 240),
-    offset: index * 34,
-  }));
-
-  if (tiles.length === 0) {
-    return (
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(80,80,120,0.35),transparent_55%),radial-gradient(circle_at_70%_60%,rgba(60,90,80,0.25),transparent_50%)]"
-      />
-    );
-  }
+/** Welcome 背景: 外部画像なしの CSS のみ（LCP 悪化を防ぎ JS もゼロ） */
+export function WelcomeProfileBackdrop(_props: WelcomeProfileBackdropProps) {
+  const tiles = [
+    "from-violet-900/40 via-fuchsia-900/20 to-transparent",
+    "from-emerald-900/35 via-teal-900/15 to-transparent",
+    "from-amber-900/30 via-orange-900/15 to-transparent",
+  ];
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-80">
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-70">
       <div className="animate-welcome-scroll flex flex-col gap-4 px-5 pt-6">
-        {[...tiles, ...tiles].map((tile, index) => (
+        {[...tiles, ...tiles].map((gradient, index) => (
           <div
-            key={`${tile.id}-${index}`}
-            className="h-44 w-full rounded-[28px] bg-cover bg-center saturate-[0.85]"
-            style={{
-              backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url("${tile.src}")`,
-              transform: `translateX(${tile.offset}px)`,
-            }}
+            key={index}
+            className={`h-44 w-full rounded-[28px] bg-gradient-to-br ${gradient} ring-1 ring-white/10`}
+            style={{ transform: `translateX(${(index % tiles.length) * 28}px)` }}
           />
         ))}
       </div>
