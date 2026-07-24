@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ResonateButton } from "@/components/ResonateButton";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import { useProfileSheetOptional } from "@/providers/ProfileSheetProvider";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
@@ -69,6 +70,7 @@ function PersonCardComponent({
     [member.photo, isAmbient]
   );
   const shouldPrioritize = priority && !isAmbient;
+  const profileSheet = useProfileSheetOptional();
 
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
@@ -179,12 +181,29 @@ function PersonCardComponent({
                 AIと少し話す
               </Link>
             ) : null}
-            <Link
-              href={`/member/${member.id}`}
-              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
-            >
-              {isOwnCard ? "マイページ" : "もっと知る"}
-            </Link>
+            {isOwnCard ? (
+              <Link
+                href="/me"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+              >
+                マイページ
+              </Link>
+            ) : profileSheet ? (
+              <button
+                type="button"
+                onClick={() => profileSheet.openProfile(member.id)}
+                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+              >
+                もっと知る
+              </button>
+            ) : (
+              <Link
+                href={`/member/${member.id}`}
+                className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
+              >
+                もっと知る
+              </Link>
+            )}
           </div>
         ) : null}
       </div>

@@ -19,6 +19,7 @@ import {
 import { PLAYING_PART_OPTIONS } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
 
@@ -26,9 +27,13 @@ type MemberDetailProps = {
   member: Member;
   isOwnProfile?: boolean;
   resonanceReason?: ResonanceReason;
+  resonanceStatus?: ResonanceStatus;
   showResonateButton?: boolean;
   mutualMembers?: MutualResonateMember[];
   bandActivities?: BandActivityFeedItem[];
+  /** ⑭ page = フルページ / sheet = Bottom Sheet */
+  variant?: "page" | "sheet";
+  onClose?: () => void;
 };
 
 function PortraitSlide({
@@ -367,12 +372,17 @@ export function MemberDetail({
   member,
   isOwnProfile = false,
   resonanceReason,
+  resonanceStatus,
   showResonateButton = false,
   mutualMembers = [],
   bandActivities = [],
+  variant = "page",
+  onClose,
 }: MemberDetailProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const isSheet = variant === "sheet";
+  const containerClass = isSheet ? "flex h-[80dvh] flex-col bg-background" : "flex h-dvh flex-col bg-background";
 
   const scrollToIndex = useCallback((index: number) => {
     const container = scrollRef.current;
@@ -397,9 +407,28 @@ export function MemberDetail({
   }, []);
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className={containerClass}>
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
-        {isOwnProfile ? (
+        {isSheet ? (
+          <div className="flex items-center justify-between px-5 pb-2 pt-1">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+                Profile
+              </p>
+              <h1 className="truncate text-[20px] font-light tracking-tight">
+                {isOwnProfile ? "マイページ" : member.name}
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="閉じる"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-white/80"
+            >
+              ×
+            </button>
+          </div>
+        ) : isOwnProfile ? (
           <AppPageHeader
             backHref="/"
             backLabel="ホームに戻る"
@@ -473,7 +502,9 @@ export function MemberDetail({
             />
           ))}
         </div>
-        {showResonateButton ? <ResonateButton memberId={member.id} /> : null}
+        {showResonateButton ? (
+          <ResonateButton memberId={member.id} initialStatus={resonanceStatus} />
+        ) : null}
         {isOwnProfile ? (
           <Link
             href="/discover"

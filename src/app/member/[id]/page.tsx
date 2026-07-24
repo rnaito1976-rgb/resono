@@ -3,6 +3,7 @@ import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/ba
 import { getMemberById, getMemberByUserId } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { buildResonanceReason } from "@/lib/resonance/matching";
+import { getResonanceStatusForMember } from "@/lib/resonance/status";
 import { MemberDetail } from "@/components/MemberDetail";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,9 +26,12 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
   const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
   const viewer = user ? await getMemberByUserId(user.id) : undefined;
-  const [mutualMembers, bandActivities] = await Promise.all([
+  const [mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
     isOwnProfile && viewer ? getMutualResonateMembers(viewer.id) : Promise.resolve([]),
     viewer ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
+    viewer && !isOwnProfile && viewer.id !== member.id
+      ? getResonanceStatusForMember(viewer.id, member.id)
+      : Promise.resolve(undefined),
   ]);
   const resonanceReason =
     viewer && !isOwnProfile && viewer.id !== member.id
@@ -40,6 +44,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         member={member}
         isOwnProfile={isOwnProfile}
         resonanceReason={resonanceReason}
+        resonanceStatus={resonanceStatus}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
         mutualMembers={mutualMembers}
         bandActivities={bandActivities}

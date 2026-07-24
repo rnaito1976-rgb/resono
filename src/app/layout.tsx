@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
 import { getViewerFrequencyColor } from "@/lib/frequency-color/server";
+import { getSupabaseUrl } from "@/lib/supabase/env";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,15 +25,26 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const frequencyColor = await getViewerFrequencyColor();
+  const supabaseUrl = getSupabaseUrl();
 
   return (
     <html lang="ja" className="dark">
+      <head>
+        {supabaseUrl ? (
+          <>
+            <link rel="preconnect" href={supabaseUrl} />
+            <link rel="dns-prefetch" href={supabaseUrl} />
+          </>
+        ) : null}
+      </head>
       <body
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
         <QueryProvider>
           <FrequencyColorProvider color={frequencyColor}>
-            <TabBarWrapper>{children}</TabBarWrapper>
+            <ProfileSheetProvider>
+              <TabBarWrapper>{children}</TabBarWrapper>
+            </ProfileSheetProvider>
           </FrequencyColorProvider>
         </QueryProvider>
       </body>

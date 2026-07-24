@@ -7,6 +7,7 @@ import {
 import { getMemberByUserId } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { MESSAGE_ROOM_COLUMNS } from "@/lib/supabase/member-columns";
 
 export async function sendMessageAction(conversationId: string, body: string) {
   const trimmed = body.trim();
@@ -58,7 +59,7 @@ export async function sendMessageAction(conversationId: string, body: string) {
       sender_member_id: member.id,
       body: trimmed,
     })
-    .select("*")
+    .select(MESSAGE_ROOM_COLUMNS)
     .single();
 
   if (error) {

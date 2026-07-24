@@ -6,6 +6,11 @@ import {
   type ConversationSummary,
   type MessageRow,
 } from "@/lib/messages/types";
+import {
+  MESSAGE_LIST_COLUMNS,
+  MESSAGE_ROOM_COLUMNS,
+  MESSAGE_ROOM_INITIAL_LIMIT,
+} from "@/lib/supabase/member-columns";
 import type { Member } from "@/types/member";
 
 function buildSummaries(
@@ -99,7 +104,7 @@ export async function getConversationsForMember(
   const [{ data: messages }, { data: reads }, partnerMap] = await Promise.all([
     supabase
       .from("messages")
-      .select("id, conversation_id, sender_member_id, body, created_at")
+      .select(MESSAGE_LIST_COLUMNS)
       .in("conversation_id", conversationIds)
       .order("created_at", { ascending: false }),
     supabase
@@ -170,7 +175,7 @@ export async function getConversationById(
 
   const { data: conversation, error } = await supabase
     .from("conversations")
-    .select("*")
+    .select("id, member_a_id, member_b_id, created_at")
     .eq("id", conversationId)
     .maybeSingle();
 
@@ -195,14 +200,15 @@ export async function getConversationById(
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("*")
+    .select(MESSAGE_ROOM_COLUMNS)
     .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(MESSAGE_ROOM_INITIAL_LIMIT);
 
   return {
     conversation,
     partner,
-    messages: messages ?? [],
+    messages: (messages ?? []).slice().reverse(),
   };
 }
 

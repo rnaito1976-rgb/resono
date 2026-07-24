@@ -6,7 +6,11 @@ import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { memberToRow, rowToMember } from "@/lib/supabase/mappers";
+import { memberToRow, rowToMember, rowToMemberDetail, rowToMemberList } from "@/lib/supabase/mappers";
+import {
+  MEMBER_DETAIL_COLUMNS,
+  MEMBER_LIST_COLUMNS,
+} from "@/lib/supabase/member-columns";
 import type { Member } from "@/types/member";
 
 async function attachFrequencyColors(members: Member[]): Promise<Member[]> {
@@ -50,7 +54,7 @@ export async function getMembersPage(
     const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
-      .select("*")
+      .select(MEMBER_LIST_COLUMNS)
       .order("resonance_rate", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -73,7 +77,7 @@ export async function getMembersPage(
       };
     }
 
-    const members = await attachFrequencyColors(data.map(rowToMember));
+    const members = await attachFrequencyColors(data.map(rowToMemberList));
     const hasMore = data.length === limit;
 
     return {
@@ -111,7 +115,7 @@ export async function getMembersByIds(ids: string[]): Promise<Map<string, Member
     const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
-      .select("*")
+      .select(MEMBER_LIST_COLUMNS)
       .in("id", uniqueIds);
 
     if (error) {
@@ -119,7 +123,7 @@ export async function getMembersByIds(ids: string[]): Promise<Map<string, Member
       return new Map();
     }
 
-    const members = await attachFrequencyColors((data ?? []).map(rowToMember));
+    const members = await attachFrequencyColors((data ?? []).map(rowToMemberList));
     return new Map(members.map((member) => [member.id, member]));
   } catch (error) {
     console.error("[Supabase] getMembersByIds:", error);
@@ -136,7 +140,7 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
     const supabase = createAnonClient();
     const { data, error } = await supabase
       .from("members")
-      .select("*")
+      .select(MEMBER_DETAIL_COLUMNS)
       .eq("id", id)
       .maybeSingle();
 
@@ -149,7 +153,7 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
       return fallbackMembers.find((member) => member.id === id);
     }
 
-    const member = rowToMember(data);
+    const member = rowToMemberDetail(data);
     const [withColor] = await attachFrequencyColors([member]);
     return withColor;
   } catch (error) {
@@ -197,7 +201,7 @@ async function linkMemberToUser(
       .from("members")
       .update({ user_id: userId })
       .eq("id", memberId)
-      .select("*")
+      .select(MEMBER_DETAIL_COLUMNS)
       .maybeSingle();
 
     if (error) {
@@ -205,7 +209,7 @@ async function linkMemberToUser(
       return undefined;
     }
 
-    return data ? (await attachFrequencyColors([rowToMember(data)]))[0] : undefined;
+    return data ? (await attachFrequencyColors([rowToMemberDetail(data)]))[0] : undefined;
   } catch (error) {
     console.error("[Supabase] linkMemberToUser:", error);
     return undefined;
@@ -242,7 +246,7 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
     const anon = createAnonClient();
     const { data: byUserId, error: userIdError } = await anon
       .from("members")
-      .select("*")
+      .select(MEMBER_DETAIL_COLUMNS)
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -251,12 +255,12 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
     }
 
     if (byUserId) {
-      return (await attachFrequencyColors([rowToMember(byUserId)]))[0];
+      return (await attachFrequencyColors([rowToMemberDetail(byUserId)]))[0];
     }
 
     const { data: byId, error: idError } = await anon
       .from("members")
-      .select("*")
+      .select(MEMBER_DETAIL_COLUMNS)
       .eq("id", userId)
       .maybeSingle();
 
@@ -269,7 +273,7 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
       return undefined;
     }
 
-    const member = rowToMember(byId);
+    const member = rowToMemberDetail(byId);
     if (!member.userId && user?.id === userId) {
       const linked = await linkMemberToUser(member.id, userId);
       const resolved = linked ?? { ...member, userId };

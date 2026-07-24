@@ -18,7 +18,7 @@ export function WelcomeProfileBackdrop({
       return [];
     }
 
-    const featured = members.slice(0, 8);
+    const featured = members.slice(0, 4);
     return [...featured, ...featured];
   }, [members]);
 

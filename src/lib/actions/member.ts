@@ -5,6 +5,7 @@ import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { getMemberByUserId, updateMember } from "@/lib/members";
+import { invalidateResonanceCacheForMember } from "@/lib/resonance/cache";
 import { PLAYING_PART_OPTIONS } from "@/lib/resonance/dialogue";
 import { createClient } from "@/lib/supabase/server";
 import type { Member } from "@/types/member";
@@ -105,6 +106,8 @@ export async function updateMemberAction(member: Member) {
   revalidatePath("/me");
   revalidatePath(`/member/${member.id}`);
   revalidatePath(`/member/${member.id}/edit`);
+
+  void invalidateResonanceCacheForMember(member.id);
 
   return { success: true };
 }

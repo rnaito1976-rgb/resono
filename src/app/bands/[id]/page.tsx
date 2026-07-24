@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { BandPageClient } from "@/components/bands/BandPageClient";
+import { BandPageClient } from "@/components/bands/BandPageClientLoader";
 import { getBandDetail } from "@/lib/bands/queries";
 import { getMemberByUserId } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";

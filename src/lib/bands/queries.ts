@@ -17,6 +17,13 @@ import type {
 } from "@/types/band";
 import type { Member } from "@/types/member";
 
+const BAND_DETAIL_COLUMNS =
+  "id,name,accent_color,activity_status,created_by_member_id,created_at" as const;
+const BAND_TIMELINE_COLUMNS =
+  "id,band_id,kind,title,body,occurred_at,activity_id" as const;
+const BAND_ACTIVITY_COLUMNS =
+  "id,band_id,author_member_id,kind,title,body,media_url,created_at" as const;
+
 type BandRow = {
   id: string;
   name: string;
@@ -228,7 +235,7 @@ export async function getBandDetail(
 
   const { data: bandRow, error: bandError } = await supabase
     .from("bands")
-    .select("*")
+    .select(BAND_DETAIL_COLUMNS)
     .eq("id", bandId)
     .maybeSingle();
 
@@ -251,12 +258,12 @@ export async function getBandDetail(
     loadBandMembers(bandId, viewer ?? undefined),
     supabase
       .from("band_timeline_events")
-      .select("*")
+      .select(BAND_TIMELINE_COLUMNS)
       .eq("band_id", bandId)
       .order("occurred_at", { ascending: false }),
     supabase
       .from("band_activities")
-      .select("*")
+      .select(BAND_ACTIVITY_COLUMNS)
       .eq("band_id", bandId)
       .order("created_at", { ascending: false }),
   ]);

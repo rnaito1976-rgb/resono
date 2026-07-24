@@ -1,8 +1,38 @@
 import type { Database } from "@/types/database";
 import type { Member } from "@/types/member";
+import {
+  EMPTY_FASHION,
+  EMPTY_PORTRAIT,
+} from "@/lib/members/defaults";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
+type MemberListRow = Pick<
+  MemberRow,
+  | "id"
+  | "user_id"
+  | "name"
+  | "resonance_rate"
+  | "tags"
+  | "ai_comment"
+  | "photo"
+  | "music"
+  | "looking_for"
+>;
+type MemberDetailRow = Pick<
+  MemberRow,
+  | "id"
+  | "user_id"
+  | "name"
+  | "resonance_rate"
+  | "tags"
+  | "ai_comment"
+  | "photo"
+  | "portrait"
+  | "music"
+  | "fashion"
+  | "looking_for"
+>;
 
 const LEGACY_EMPTY_MOOD = {
   keywords: [] as string[],
@@ -26,6 +56,24 @@ export function memberToRow(member: Member): MemberInsert {
     mood: LEGACY_EMPTY_MOOD,
     looking_for: member.lookingFor,
   };
+}
+
+export function rowToMemberList(row: MemberListRow): Member {
+  return rowToMember({
+    ...row,
+    portrait: EMPTY_PORTRAIT,
+    fashion: EMPTY_FASHION,
+    mood: LEGACY_EMPTY_MOOD,
+    created_at: new Date().toISOString(),
+  });
+}
+
+export function rowToMemberDetail(row: MemberDetailRow): Member {
+  return rowToMember({
+    ...row,
+    mood: LEGACY_EMPTY_MOOD,
+    created_at: new Date().toISOString(),
+  });
 }
 
 export function rowToMember(row: MemberRow): Member {

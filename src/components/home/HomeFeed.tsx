@@ -48,7 +48,7 @@ export function HomeFeed({
       ? { pages: [initialFeedPage], pageParams: [0] }
       : undefined,
     getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const handleObserver = useCallback(

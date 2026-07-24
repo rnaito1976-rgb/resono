@@ -3,6 +3,10 @@ import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { rankRecommendations } from "@/lib/recommendation/scoring";
 import { buildResonanceReason } from "@/lib/resonance/matching";
+import {
+  getResonanceReasonsFromCache,
+  saveResonanceReasonsToCache,
+} from "@/lib/resonance/cache";
 import { getResonanceStatusBatch } from "@/lib/resonance/status";
 import type { Member } from "@/types/member";
 import type { MembersFeedPage } from "@/lib/members/feed";
@@ -51,15 +55,33 @@ export async function buildMembersFeedPage(
     feedMembers.map((member) => member.id)
   );
 
+  const targetIds = feedMembers.map((member) => member.id);
+  const cachedReasons = await getResonanceReasonsFromCache(viewerMemberId, targetIds);
+  const ranked = rankRecommendations(options.viewer!, feedMembers);
+  const toSave: Array<{ targetMemberId: string; reason: ReturnType<typeof buildResonanceReason> }> = [];
+
+  const items = ranked.map(({ member, recommendation }) => {
+    let reason = cachedReasons.get(member.id);
+
+    if (!reason) {
+      reason = buildResonanceReason(options.viewer!, member);
+      toSave.push({ targetMemberId: member.id, reason });
+    }
+
+    return {
+      member,
+      recommendation,
+      reason,
+      resonanceStatus: statusMap[member.id],
+    };
+  });
+
+  if (toSave.length > 0) {
+    void saveResonanceReasonsToCache(viewerMemberId, toSave);
+  }
+
   return {
-    items: rankRecommendations(options.viewer!, feedMembers).map(
-      ({ member, recommendation }) => ({
-        member,
-        recommendation,
-        reason: buildResonanceReason(options.viewer!, member),
-        resonanceStatus: statusMap[member.id],
-      })
-    ),
+    items,
     nextOffset: page.hasMore ? offset + limit : null,
     hasMore: page.hasMore,
   };
