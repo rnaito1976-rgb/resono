@@ -1,3 +1,4 @@
+import { applyProfileAiComment, buildProfileAiComment } from "@/lib/profile/ai-comment";
 import type { Member } from "@/types/member";
 
 export const SUGGESTED_ARTISTS = [
@@ -269,11 +270,10 @@ export function buildMemberFromDialogue(
     `メンバー:${answers.idealMember}`,
   ];
 
-  return {
+  const nextMember: Member = {
     ...member,
     name: answers.nickname.trim() || member.name,
     tags: Array.from(new Set([...answers.genres.slice(0, 3), answers.bandValue])),
-    aiComment: buildAiComment(answers),
     portrait: {
       ...member.portrait,
       bio: buildBio(answers),
@@ -292,6 +292,11 @@ export function buildMemberFromDialogue(
       commitment: answers.liveFrequency,
     },
   };
+
+  return {
+    ...nextMember,
+    aiComment: buildProfileAiComment(nextMember),
+  };
 }
 
 export function enrichMemberFromDiscover(
@@ -303,7 +308,7 @@ export function enrichMemberFromDiscover(
     ...(answers.tempo ? [`会話:${answers.tempo}`] : []),
   ];
 
-  return {
+  return applyProfileAiComment({
     ...member,
     tags: Array.from(new Set([...member.tags, ...answers.values.slice(0, 2)])),
     portrait: {
@@ -318,11 +323,7 @@ export function enrichMemberFromDiscover(
         new Set([...member.music.favoriteArtists, ...answers.artists])
       ),
     },
-  };
-}
-
-function buildAiComment(answers: DialogueAnswers): string {
-  return `${answers.musicFocus}。${answers.bandValue}を大切に、${answers.location}でバンド活動を続けたい。`;
+  });
 }
 
 function buildBio(answers: DialogueAnswers): string {

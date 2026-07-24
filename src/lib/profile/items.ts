@@ -1,3 +1,4 @@
+import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import type { Member } from "@/types/member";
 import type {
   LegacyProfileCard,
@@ -289,7 +290,9 @@ export function syncProfileItemsFromMemberFields(member: Member): Member {
   return setProfileItem(member, createMusicDnaItem(artists));
 }
 
-/** 保存前: 項目 ↔ メンバーフィールドを双方向同期 */
+/** 保存前: 項目 ↔ メンバーフィールドを双方向同期 + AIコメント再生成 */
 export function prepareMemberForSave(member: Member): Member {
-  return syncMemberFromProfileItems(syncProfileItemsFromMemberFields(member));
+  return applyProfileAiComment(
+    syncMemberFromProfileItems(syncProfileItemsFromMemberFields(member))
+  );
 }

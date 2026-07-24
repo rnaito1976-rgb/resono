@@ -71,6 +71,21 @@ export async function sendMessageAction(conversationId: string, body: string) {
   revalidatePath("/messages");
   revalidatePath(`/messages/${conversationId}`);
 
+  const recipientMemberId =
+    conversation.member_a_id === member.id
+      ? conversation.member_b_id
+      : conversation.member_a_id;
+
+  void import("@/lib/notifications/badge-email").then(({ notifyMessageBadgeEmail }) =>
+    notifyMessageBadgeEmail({
+      recipientMemberId,
+      senderMemberId: member.id,
+      conversationId,
+    }).catch((error) => {
+      console.error("[BadgeEmail] message notification:", error);
+    })
+  );
+
   return { message: data };
 }
 

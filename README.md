@@ -45,6 +45,10 @@ Supabase Dashboard → **SQL Editor** で以下を順番に実行:
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+# 未読バッジのメール通知（Resend）
+RESEND_API_KEY=re_...
+EMAIL_FROM=Resono <onboarding@resend.dev>
 ```
 
 ### 4. ダミーデータ投入
@@ -57,7 +61,10 @@ npm run seed
 
 ### 5. Vercel デプロイ時
 
-Vercel Dashboard → **Settings → Environment Variables** に上記3つを追加（`SUPABASE_SERVICE_ROLE_KEY` は seed 時のみローカルで使用可）。
+Vercel Dashboard → **Settings → Environment Variables** に上記を追加。
+
+- `SUPABASE_SERVICE_ROLE_KEY` … seed 用に加え、未読バッジのメール通知（登録メールアドレスの取得）にも必要
+- `RESEND_API_KEY` / `EMAIL_FROM` … 未設定の場合はメール通知はスキップ（アプリ自体は動作）
 
 ## Features
 

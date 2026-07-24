@@ -1,3 +1,4 @@
+import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import { createMusicDnaItem } from "@/lib/profile/items";
 import type { Member } from "@/types/member";
 
@@ -27,12 +28,11 @@ export function buildMemberFromMinimalRegistration(
   const artists = input.favoriteArtists.map((artist) => artist.trim()).filter(Boolean);
   const musicDnaItem = createMusicDnaItem(artists);
 
-  return {
+  return applyProfileAiComment({
     ...member,
     name: input.name.trim(),
     photo: input.photo.trim(),
     tags: artists.slice(0, 3),
-    aiComment: `${artists.slice(0, 2).join("と")}あたりの音楽性。${input.part}として、少しずつプロフィールを育てていく。`,
     portrait: {
       ...member.portrait,
       bio: "",
@@ -47,5 +47,5 @@ export function buildMemberFromMinimalRegistration(
       instruments: [input.part.trim()],
       favoriteArtists: artists,
     },
-  };
+  });
 }

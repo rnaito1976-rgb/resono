@@ -148,6 +148,17 @@ export async function createBandAction(input: {
     return { error: timelineError.message };
   }
 
+  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
+    notifyBandMembersBadgeEmail({
+      bandId: band.id,
+      bandName: name,
+      preview: "Bandが結成されました。",
+      excludeMemberIds: [creatorMemberId],
+    }).catch((error) => {
+      console.error("[BadgeEmail] band formed notification:", error);
+    })
+  );
+
   revalidatePath("/bands");
   revalidatePath(`/bands/${band.id}`);
 
@@ -214,6 +225,28 @@ export async function createBandActivityAction(input: {
     body: activity.body ?? activity.title ?? undefined,
     activity_id: activity.id,
   });
+
+  const { data: band } = await supabase
+    .from("bands")
+    .select("name")
+    .eq("id", input.bandId)
+    .maybeSingle();
+
+  const preview =
+    activity.body?.trim() ||
+    activity.title?.trim() ||
+    timelineTitle;
+
+  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
+    notifyBandMembersBadgeEmail({
+      bandId: input.bandId,
+      bandName: band?.name ?? "Band",
+      preview,
+      excludeMemberIds: [member.id],
+    }).catch((error) => {
+      console.error("[BadgeEmail] band activity notification:", error);
+    })
+  );
 
   revalidatePath(`/bands/${input.bandId}`);
   return { success: true };

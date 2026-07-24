@@ -12,6 +12,7 @@ import {
   isDialogueAnswersComplete,
   type DialogueAnswers,
 } from "@/lib/resonance/dialogue";
+import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import {
   buildItemFromConversationAnswer,
   PROFILE_CONVERSATION_STEPS,
@@ -203,7 +204,9 @@ export async function addProfileItemFromConversationAction(
   }
 
   const item = buildItemFromConversationAnswer(step, trimmed);
-  const updated = syncMemberFromProfileItems(setProfileItem(member, item));
+  const updated = applyProfileAiComment(
+    syncMemberFromProfileItems(setProfileItem(member, item))
+  );
   const result = await updateMember(updated);
 
   if (!result.success) {
