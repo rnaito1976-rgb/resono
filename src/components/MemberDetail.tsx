@@ -45,7 +45,7 @@ function PortraitSlide({
   return (
     <div className="flex h-full flex-col px-6 pb-8 pt-4">
       <ProfilePhotoRing color={ringColor} className="mb-8 rounded-3xl">
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl">
+        <div className="relative aspect-square w-full overflow-hidden rounded-3xl">
           <Image
             src={getProfilePhotoSrc(member.photo, 960)}
             alt={member.name}
@@ -317,6 +317,8 @@ export function MemberDetail({
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
         {isOwnProfile ? (
           <AppPageHeader
+            backHref="/"
+            backLabel="ホームに戻る"
             eyebrow="Profile"
             title="マイページ"
             actions={

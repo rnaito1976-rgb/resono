@@ -44,7 +44,7 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-subtle">
+      <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-subtle">
         <Image
           src={getProfilePhotoSrc(value, 800)}
           alt="プロフィール写真"
@@ -78,7 +78,7 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
       </button>
 
       <p className="text-center text-[12px] text-white/40">
-        推奨サイズ: 1200×1500px（4:5）・5MB以下
+        推奨サイズ: 1200×1200px（1:1）・5MB以下
       </p>
 
       <FormField label="または URL を入力">

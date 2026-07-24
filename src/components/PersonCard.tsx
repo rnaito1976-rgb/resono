@@ -70,7 +70,7 @@ function PersonCardComponent({
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
       <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
-        <div className="relative aspect-[4/5] w-full">
+        <div className="relative aspect-square w-full">
           <Image
             key={photoSrc}
             src={photoSrc}

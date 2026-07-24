@@ -29,6 +29,8 @@ export default async function MessagesPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">
       <AppPageHeader
+        backHref="/"
+        backLabel="ホームに戻る"
         eyebrow="Messages"
         title="メッセージ"
         subtitle="共鳴した人との自然な会話"

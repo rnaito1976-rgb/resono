@@ -15,6 +15,7 @@ import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
+import { PageBackLink } from "@/components/navigation/PageBackLink";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
 import type { Member } from "@/types/member";
 
@@ -87,14 +88,9 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-20 border-b border-white/5 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
         <div className="flex items-center justify-between px-5 py-4">
-          <Link
-            href={`/member/${member.id}`}
-            className="text-[15px] text-white/70 transition-opacity active:opacity-70"
-          >
-            戻る
-          </Link>
+          <PageBackLink href={`/member/${member.id}`} label="マイページに戻る" />
           <h1 className="text-sm font-medium tracking-[0.2em] text-white/90">
             プロフィール
           </h1>

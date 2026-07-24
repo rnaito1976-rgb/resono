@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { PageBackLink } from "@/components/navigation/PageBackLink";
 import {
   completeDialogueOnboardingAction,
   completeDiscoverDialogueAction,
@@ -220,24 +220,7 @@ export function AIDialogueFlow({
     >
       {mode === "discover" ? (
         <header className="mb-6 flex items-center">
-          <Link
-            href={backHref}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors active:bg-white/10"
-            aria-label="戻る"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
+          <PageBackLink href={backHref} label="戻る" />
         </header>
       ) : null}
 

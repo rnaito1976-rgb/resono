@@ -27,6 +27,8 @@ export default async function BandsPage() {
   return (
     <main className="mx-auto min-h-dvh max-w-mobile bg-background">
       <AppPageHeader
+        backHref="/"
+        backLabel="ホームに戻る"
         eyebrow="Bands"
         title="Band"
         actions={

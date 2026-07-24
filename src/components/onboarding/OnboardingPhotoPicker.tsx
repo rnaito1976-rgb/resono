@@ -50,7 +50,7 @@ export function OnboardingPhotoPicker({
         type="button"
         disabled={isUploading}
         onClick={() => inputRef.current?.click()}
-        className="group relative mx-auto block aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-[32px] bg-subtle transition-transform active:scale-[0.99]"
+        className="group relative mx-auto block aspect-square w-full max-w-[280px] overflow-hidden rounded-[32px] bg-subtle transition-transform active:scale-[0.99]"
       >
         <Image
           src={value || DEFAULT_PHOTO_URL}
