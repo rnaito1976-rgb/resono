@@ -1,3 +1,5 @@
+import type { ProfileCard } from "@/types/profile-card";
+
 export type Member = {
   id: string;
   userId?: string;
@@ -12,7 +14,10 @@ export type Member = {
     age: number;
     location: string;
     influences: string[];
+    /** 初回登録（最低限プロフィール）が完了している */
     dialogueCompleted?: boolean;
+    /** AI会話で増えていくプロフィールカード */
+    profileCards?: ProfileCard[];
   };
   music: {
     genres: string[];
@@ -39,7 +44,7 @@ export const DETAIL_SECTIONS: {
   id: DetailSection;
   label: string;
 }[] = [
-  { id: "portrait", label: "About" },
+  { id: "portrait", label: "Journal" },
   { id: "music", label: "Music" },
   { id: "lookingFor", label: "Band" },
 ];

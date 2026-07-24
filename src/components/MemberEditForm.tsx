@@ -108,7 +108,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
-          名前や写真、Frequency Color、Influencesを変更できます。音楽的な輪郭はAIとの短い対話で深まります。
+          基本情報だけここで編集できます。音楽人生のカードは、AIとの会話で少しずつ増えていきます。
         </p>
 
         {error ? (
@@ -209,7 +209,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           href="/discover"
           className="flex items-center justify-between rounded-2xl border border-border bg-white/[0.04] px-5 py-4 text-[15px] text-white/80 transition-colors active:bg-white/[0.07]"
         >
-          <span>AIと少し話して、共鳴を深める</span>
+          <span>AIと話して、Journalにカードを追加</span>
           <span aria-hidden>→</span>
         </Link>
       </div>

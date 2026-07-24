@@ -1,12 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { ComponentProps } from "react";
+import type { Member } from "@/types/member";
 
-const AIDialogueFlow = dynamic(
+const MinimalRegistrationFlow = dynamic(
   () =>
-    import("@/components/discover/AIDialogueFlow").then((module) => ({
-      default: module.AIDialogueFlow,
+    import("@/components/onboarding/MinimalRegistrationFlow").then((module) => ({
+      default: module.MinimalRegistrationFlow,
     })),
   {
     loading: () => (
@@ -18,8 +18,37 @@ const AIDialogueFlow = dynamic(
   }
 );
 
-export function DiscoverDialogueLoader(
-  props: ComponentProps<typeof AIDialogueFlow>
-) {
-  return <AIDialogueFlow {...props} />;
+const ProfileConversationFlow = dynamic(
+  () =>
+    import("@/components/discover/ProfileConversationFlow").then((module) => ({
+      default: module.ProfileConversationFlow,
+    })),
+  {
+    loading: () => (
+      <div className="mx-auto flex min-h-dvh max-w-mobile items-center justify-center bg-background px-6">
+        <p className="text-[14px] text-white/45">読み込んでいます...</p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+type OnboardingRegistrationLoaderProps = {
+  memberId: string;
+  initialPhase?: "registration" | "frequency";
+};
+
+export function OnboardingRegistrationLoader({
+  memberId,
+  initialPhase = "registration",
+}: OnboardingRegistrationLoaderProps) {
+  return <MinimalRegistrationFlow memberId={memberId} initialPhase={initialPhase} />;
+}
+
+type DiscoverConversationLoaderProps = {
+  member: Member;
+};
+
+export function DiscoverConversationLoader({ member }: DiscoverConversationLoaderProps) {
+  return <ProfileConversationFlow member={member} />;
 }

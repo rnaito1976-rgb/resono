@@ -10,7 +10,7 @@ export function createDefaultMember(userId: string, email?: string | null): Memb
     name,
     resonanceRate: 0,
     tags: [],
-    aiComment: "AIとの短い対話から、あなたの世界観が見えてきます。",
+    aiComment: "AIとの会話を重ねながら、プロフィールが育っていきます。",
     photo: DEFAULT_PHOTO_URL,
     portrait: {
       bio: "",

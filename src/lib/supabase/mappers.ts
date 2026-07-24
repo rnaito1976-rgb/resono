@@ -85,10 +85,25 @@ export function rowToMember(row: MemberRow): Member {
     tags: row.tags,
     aiComment: row.ai_comment,
     photo: row.photo,
-    portrait: row.portrait as Member["portrait"],
+    portrait: normalizePortrait(row.portrait),
     music: row.music as Member["music"],
     fashion: row.fashion as Member["fashion"],
     lookingFor: normalizeLookingFor(row.looking_for),
+  };
+}
+
+function normalizePortrait(raw: unknown): Member["portrait"] {
+  const value = (raw ?? {}) as Partial<Member["portrait"]>;
+
+  return {
+    bio: typeof value.bio === "string" ? value.bio : "",
+    age: typeof value.age === "number" ? value.age : 0,
+    location: typeof value.location === "string" ? value.location : "",
+    influences: Array.isArray(value.influences)
+      ? value.influences.filter((item): item is string => typeof item === "string")
+      : [],
+    dialogueCompleted: value.dialogueCompleted === true,
+    profileCards: Array.isArray(value.profileCards) ? value.profileCards : [],
   };
 }
 

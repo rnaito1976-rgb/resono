@@ -5,17 +5,74 @@ import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { ensureMemberForUser, getMemberByUserId, updateMember } from "@/lib/members";
+import { invalidateResonanceCacheForMember } from "@/lib/resonance/cache";
 import {
   buildMemberFromDialogue,
   enrichMemberFromDiscover,
   isDialogueAnswersComplete,
   type DialogueAnswers,
 } from "@/lib/resonance/dialogue";
+import {
+  addProfileCard,
+  buildCardFromConversationAnswer,
+  PROFILE_CONVERSATION_STEPS,
+} from "@/lib/profile/cards";
+import {
+  buildMemberFromMinimalRegistration,
+  isMinimalRegistrationInputComplete,
+  type MinimalRegistrationInput,
+} from "@/lib/profile/registration";
 import { createClient } from "@/lib/supabase/server";
 
-export async function completeDialogueOnboardingAction(
-  answers: DialogueAnswers
+export async function completeMinimalRegistrationAction(
+  input: Partial<MinimalRegistrationInput>
 ) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "ログインが必要です" };
+    }
+
+    if (!isMinimalRegistrationInputComplete(input)) {
+      return { error: "必要な項目をすべて入力してください" };
+    }
+
+    let member = await getMemberByUserId(user.id);
+    if (!member) {
+      member = (await ensureMemberForUser(user.id, user.email)) ?? undefined;
+    }
+
+    if (!member) {
+      return { error: "プロフィールの作成に失敗しました。時間をおいて再度お試しください。" };
+    }
+
+    const updated = buildMemberFromMinimalRegistration(member, input);
+    const result = await updateMember(updated);
+
+    if (!result.success) {
+      return { error: result.error ?? "保存に失敗しました" };
+    }
+
+    void invalidateResonanceCacheForMember(member.id);
+
+    revalidatePath("/");
+    revalidatePath("/onboarding");
+    revalidatePath("/discover");
+    revalidatePath(`/member/${member.id}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("[completeMinimalRegistrationAction]", error);
+    return { error: "保存中に問題が発生しました。もう一度お試しください。" };
+  }
+}
+
+/** @deprecated 旧9ステップ対話。既存データ互換のため残置 */
+export async function completeDialogueOnboardingAction(answers: DialogueAnswers) {
   try {
     const supabase = await createClient();
     const {
@@ -77,7 +134,7 @@ export async function saveFrequencyColorAction(color: FrequencyColorHex) {
 
     const member = await getMemberByUserId(user.id);
     if (!member || !member.portrait.dialogueCompleted) {
-      return { error: "先にオンボーディングの対話を完了してください" };
+      return { error: "先にプロフィール登録を完了してください" };
     }
 
     const result = await saveFrequencyColorForUser(user.id, color);
@@ -116,6 +173,53 @@ export async function completeOnboardingWithFrequencyAction(
   return saveFrequencyColorAction(color);
 }
 
+export async function addProfileCardFromConversationAction(
+  stepId: string,
+  answer: string
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です" };
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return { error: "プロフィールが見つかりません" };
+  }
+
+  const step = PROFILE_CONVERSATION_STEPS.find((item) => item.id === stepId);
+  if (!step) {
+    return { error: "質問が見つかりません" };
+  }
+
+  const trimmed = answer.trim();
+  if (!trimmed) {
+    return { error: "回答を入力してください" };
+  }
+
+  const card = buildCardFromConversationAnswer(step, trimmed);
+  const updated = addProfileCard(member, card);
+  const result = await updateMember(updated);
+
+  if (!result.success) {
+    return { error: result.error ?? "保存に失敗しました" };
+  }
+
+  void invalidateResonanceCacheForMember(member.id);
+
+  revalidatePath("/");
+  revalidatePath("/discover");
+  revalidatePath(`/member/${member.id}`);
+  revalidatePath(`/member/${member.id}/edit`);
+
+  return { success: true, card };
+}
+
+/** @deprecated 旧 discover 対話 */
 export async function completeDiscoverDialogueAction(input: {
   artists: string[];
   tempo: string;

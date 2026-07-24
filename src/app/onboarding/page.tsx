@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { DiscoverDialogueLoader } from "@/components/discover/DiscoverDialogueLoader";
+import { OnboardingRegistrationLoader } from "@/components/discover/DiscoverDialogueLoader";
 import { ensureMemberForUser } from "@/lib/members";
 import {
   isOnboardingComplete,
@@ -26,11 +26,10 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <DiscoverDialogueLoader
-      mode="onboarding"
+    <OnboardingRegistrationLoader
       memberId={member?.id ?? user.id}
       initialPhase={
-        member && needsFrequencyColorSelection(member) ? "frequency" : "dialogue"
+        member && needsFrequencyColorSelection(member) ? "frequency" : "registration"
       }
     />
   );

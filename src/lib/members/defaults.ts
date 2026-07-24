@@ -6,6 +6,7 @@ export const EMPTY_PORTRAIT: Member["portrait"] = {
   age: 0,
   location: "",
   influences: [],
+  profileCards: [],
 };
 
 export const EMPTY_FASHION: Member["fashion"] = {

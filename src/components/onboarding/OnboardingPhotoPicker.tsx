@@ -9,12 +9,14 @@ type OnboardingPhotoPickerProps = {
   memberId: string;
   value: string;
   onChange: (url: string) => void;
+  required?: boolean;
 };
 
 export function OnboardingPhotoPicker({
   memberId,
   value,
   onChange,
+  required = false,
 }: OnboardingPhotoPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -75,7 +77,9 @@ export function OnboardingPhotoPicker({
       />
 
       <p className="text-center text-[13px] leading-relaxed text-white/40">
-        写真は任意です。あとから追加できます。
+        {required
+          ? "プロフィール写真は必須です。あなたらしい1枚を選んでください。"
+          : "写真は任意です。あとから追加できます。"}
       </p>
 
       {error ? <p className="text-center text-[13px] text-red-300">{error}</p> : null}
