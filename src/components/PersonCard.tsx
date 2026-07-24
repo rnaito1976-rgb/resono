@@ -185,7 +185,7 @@ function PersonCardComponent({
                 href="/discover"
                 className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
               >
-                AIと少し話す
+                Discover a Story
               </Link>
             ) : null}
             {isOwnCard ? (

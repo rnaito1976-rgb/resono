@@ -93,7 +93,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
 
       <div className="mb-8 mt-4">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-          AI Conversation
+          Discover a Story
         </p>
         <h1 className="mt-3 text-[28px] font-light tracking-tight text-white">
           プロフィールを育てる

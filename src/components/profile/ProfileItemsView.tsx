@@ -74,7 +74,7 @@ export function ProfileItemsView({
             href="/discover"
             className="flex h-12 items-center justify-center rounded-full border border-border bg-white/[0.03] text-[15px] font-medium text-white/85 transition-quiet active:opacity-80"
           >
-            AIと話して項目を追加
+            Discover a Story
           </Link>
           <Link
             href={`/member/${member.id}/edit#profile-items`}
