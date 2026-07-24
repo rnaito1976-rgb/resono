@@ -1,30 +1,29 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
+import type { ReactNode } from "react";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { AuthLogo, AuthTagline } from "@/components/auth/AuthShell";
 import { AuthWelcomeActions } from "@/components/auth/AuthWelcomeActions";
-import { WelcomeProfileBackdrop } from "@/components/welcome/WelcomeProfileBackdrop";
-import type { Member } from "@/types/member";
 
 const BG = "#0A0A0A";
 const TEXT = "#F6F6F6";
 
 type WelcomeHeroProps = {
   initialUser?: User | null;
-  members?: Member[];
+  backdrop?: ReactNode;
 };
 
 export function WelcomeHero({
   initialUser = null,
-  members = [],
+  backdrop = null,
 }: WelcomeHeroProps) {
   return (
     <div
       className="relative mx-auto min-h-dvh w-full max-w-mobile overflow-hidden"
       style={{ backgroundColor: BG, color: TEXT }}
     >
-      <WelcomeProfileBackdrop members={members} visible />
+      {backdrop}
 
       <div
         aria-hidden

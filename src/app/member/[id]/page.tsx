@@ -48,6 +48,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         showResonateButton={Boolean(viewer && !isOwnProfile)}
         mutualMembers={mutualMembers}
         bandActivities={bandActivities}
+        priorityPhoto
       />
     </main>
   );

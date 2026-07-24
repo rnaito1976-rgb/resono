@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { MemberDetail } from "@/components/MemberDetail";
+import { MemberDetailFrame } from "@/components/member-detail/MemberDetailFrame";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import { useMemberProfile } from "@/hooks/useMemberProfile";
 
@@ -66,7 +66,7 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
             プロフィールを読み込めませんでした
           </div>
         ) : (
-          <MemberDetail
+          <MemberDetailFrame
             {...data}
             variant="sheet"
             onClose={onClose}

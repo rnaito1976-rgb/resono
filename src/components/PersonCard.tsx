@@ -65,11 +65,11 @@ function PersonCardComponent({
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
-  const photoSrc = useMemo(
-    () => getProfilePhotoSrc(member.photo, isAmbient ? 640 : 800),
-    [member.photo, isAmbient]
-  );
   const shouldPrioritize = priority && !isAmbient;
+  const photoSrc = useMemo(
+    () => getProfilePhotoSrc(member.photo, shouldPrioritize ? 720 : isAmbient ? 480 : 560),
+    [member.photo, isAmbient, shouldPrioritize]
+  );
   const profileSheet = useProfileSheetOptional();
 
   return (

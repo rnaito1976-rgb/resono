@@ -104,26 +104,28 @@ export function HomeFeed({
           </div>
 
           <div className="flex flex-col gap-14">
-            {feedItems.map(({ member, recommendation, reason, resonanceStatus }) => (
+            {feedItems.map(({ member, recommendation, reason, resonanceStatus }, index) => (
               <PersonCard
                 key={member.id}
                 member={member}
                 recommendation={recommendation}
                 resonanceReason={reason}
                 resonanceStatus={resonanceStatus}
+                priority={index === 0}
               />
             ))}
           </div>
         </section>
       ) : (
         !isLoading &&
-        feedItems.map(({ member, recommendation, reason, resonanceStatus }) => (
+        feedItems.map(({ member, recommendation, reason, resonanceStatus }, index) => (
           <PersonCard
             key={member.id}
             member={member}
             recommendation={recommendation}
             resonanceReason={reason}
             resonanceStatus={resonanceStatus}
+            priority={index === 0}
           />
         ))
       )}
