@@ -5,11 +5,11 @@ import Link from "next/link";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { Button } from "@/components/ui/button";
-import { addProfileCardFromConversationAction } from "@/lib/actions/onboarding";
+import { addProfileItemFromConversationAction } from "@/lib/actions/onboarding";
 import {
   getPendingConversationSteps,
   type ProfileConversationStep,
-} from "@/lib/profile/cards";
+} from "@/lib/profile/items";
 import type { Member } from "@/types/member";
 
 type ProfileConversationFlowProps = {
@@ -42,7 +42,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
     setError(null);
 
     startTransition(async () => {
-      const result = await addProfileCardFromConversationAction(step.id, answer.trim());
+      const result = await addProfileItemFromConversationAction(step.id, answer.trim());
       if (result.error) {
         setError(result.error);
         return;
@@ -64,7 +64,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
             Profile Updated
           </p>
           <h1 className="mt-4 text-[28px] font-light tracking-tight text-white">
-            新しいカードが追加されました
+            新しい項目が追加されました
           </h1>
           <p className="mt-4 max-w-[28ch] text-[15px] leading-relaxed text-white/45">
             プロフィールは、会話を重ねるほど音楽人生のアルバムのように育っていきます。
@@ -99,7 +99,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
           プロフィールを育てる
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/45">
-          質問に答えるたびに、Journal に新しいカードが追加されます。
+          質問に答えるたびに、プロフィールに新しい項目が追加されます。
         </p>
         <p className="mt-4 text-[12px] uppercase tracking-[0.18em] text-white/30">
           {completedCount + 1} / {pendingSteps.length}
@@ -135,12 +135,12 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
           {isPending ? (
             <span className="inline-flex items-center gap-2">
               <FrequencySpinner size={16} />
-              カードを追加中...
+              項目を追加中...
             </span>
           ) : completedCount + 1 >= pendingSteps.length ? (
-            "カードを追加して完了"
+            "項目を追加して完了"
           ) : (
-            "カードを追加して次へ"
+            "項目を追加して次へ"
           )}
         </Button>
       </div>

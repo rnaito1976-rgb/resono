@@ -21,6 +21,7 @@ export function useMemberProfile(memberId: string | null) {
       return result.data;
     },
     enabled: Boolean(memberId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    refetchOnMount: "always",
   });
 }

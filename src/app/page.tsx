@@ -4,6 +4,7 @@ import { HomeFeed } from "@/components/home/HomeFeed";
 import { buildMembersFeedPage } from "@/lib/members/feed-builder";
 import { FEED_PAGE_SIZE } from "@/lib/members/feed";
 import { getMemberByUserId } from "@/lib/members";
+import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { isOnboardingComplete } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,14 +27,24 @@ export default async function HomePage() {
     userId: user?.id,
   });
 
+  const lcpImageHref = getHomeLcpImageHref(
+    currentMember,
+    initialFeedPage.items[0]?.member
+  );
+
   return (
-    <main className="mx-auto min-h-dvh max-w-mobile bg-background">
-      <AppHeader initialUser={user} />
-      <HomeFeed
-        viewerId={currentMember?.id ?? user?.id}
-        currentMember={currentMember}
-        initialFeedPage={initialFeedPage}
-      />
-    </main>
+    <>
+      {lcpImageHref ? (
+        <link rel="preload" as="image" href={lcpImageHref} fetchPriority="high" />
+      ) : null}
+      <main className="mx-auto min-h-dvh max-w-mobile bg-background">
+        <AppHeader initialUser={user} />
+        <HomeFeed
+          viewerId={currentMember?.id ?? user?.id}
+          currentMember={currentMember}
+          initialFeedPage={initialFeedPage}
+        />
+      </main>
+    </>
   );
 }

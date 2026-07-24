@@ -4,6 +4,7 @@ import {
   EMPTY_FASHION,
   EMPTY_PORTRAIT,
 } from "@/lib/members/defaults";
+import { normalizeProfileItems } from "@/lib/profile/items";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
@@ -103,7 +104,7 @@ function normalizePortrait(raw: unknown): Member["portrait"] {
       ? value.influences.filter((item): item is string => typeof item === "string")
       : [],
     dialogueCompleted: value.dialogueCompleted === true,
-    profileCards: Array.isArray(value.profileCards) ? value.profileCards : [],
+    profileItems: normalizeProfileItems(raw),
   };
 }
 

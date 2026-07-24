@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
-import { ProfileJournal } from "@/components/profile/ProfileJournal";
+import { ProfileItemsView } from "@/components/profile/ProfileItemsView";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
 import {
   getProfilePhotoSizes,
@@ -55,7 +55,7 @@ export function PortraitSlide({
         </div>
       </ProfilePhotoRing>
 
-      <ProfileJournal
+      <ProfileItemsView
         member={member}
         isOwnProfile={isOwnProfile}
         resonanceSection={resonanceSection}

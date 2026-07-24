@@ -5,12 +5,13 @@ const fieldClassName =
 
 type FormSectionProps = {
   title: string;
+  id?: string;
   children: React.ReactNode;
 };
 
-export function FormSection({ title, children }: FormSectionProps) {
+export function FormSection({ title, id, children }: FormSectionProps) {
   return (
-    <section className="space-y-4">
+    <section id={id} className="space-y-4">
       <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted">
         {title}
       </h2>

@@ -1,4 +1,4 @@
-import { createMusicDnaCard } from "@/lib/profile/cards";
+import { createMusicDnaItem } from "@/lib/profile/items";
 import type { Member } from "@/types/member";
 
 export type MinimalRegistrationInput = {
@@ -25,7 +25,7 @@ export function buildMemberFromMinimalRegistration(
   input: MinimalRegistrationInput
 ): Member {
   const artists = input.favoriteArtists.map((artist) => artist.trim()).filter(Boolean);
-  const musicDnaCard = createMusicDnaCard(artists);
+  const musicDnaItem = createMusicDnaItem(artists);
 
   return {
     ...member,
@@ -37,9 +37,9 @@ export function buildMemberFromMinimalRegistration(
       ...member.portrait,
       bio: "",
       dialogueCompleted: true,
-      profileCards: [
-        musicDnaCard,
-        ...(member.portrait.profileCards ?? []).filter((card) => card.kind !== "music-dna"),
+      profileItems: [
+        musicDnaItem,
+        ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
       ],
     },
     music: {

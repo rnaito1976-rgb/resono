@@ -1,4 +1,4 @@
-import type { ProfileCard } from "@/types/profile-card";
+import type { ProfileItem } from "@/types/profile-item";
 
 export type Member = {
   id: string;
@@ -16,8 +16,8 @@ export type Member = {
     influences: string[];
     /** 初回登録（最低限プロフィール）が完了している */
     dialogueCompleted?: boolean;
-    /** AI会話で増えていくプロフィールカード */
-    profileCards?: ProfileCard[];
+    /** AI会話で増えていくプロフィール項目 */
+    profileItems?: ProfileItem[];
   };
   music: {
     genres: string[];
@@ -44,7 +44,7 @@ export const DETAIL_SECTIONS: {
   id: DetailSection;
   label: string;
 }[] = [
-  { id: "portrait", label: "Journal" },
+  { id: "portrait", label: "About" },
   { id: "music", label: "Music" },
   { id: "lookingFor", label: "Band" },
 ];

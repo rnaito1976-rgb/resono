@@ -11,6 +11,7 @@ import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
+import { HOME_LCP_IMAGE_WIDTH } from "@/lib/images/lcp";
 import { getPlayingParts } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import {
@@ -65,11 +66,16 @@ function PersonCardComponent({
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
-  const shouldPrioritize = priority && !isAmbient;
-  const photoSrc = useMemo(
-    () => getProfilePhotoSrc(member.photo, shouldPrioritize ? 720 : isAmbient ? 480 : 560),
-    [member.photo, isAmbient, shouldPrioritize]
-  );
+  const shouldPrioritize = (priority || isOwnCard) && !isAmbient;
+  const photoSrc = useMemo(() => {
+    if (isOwnCard) {
+      return getProfilePhotoSrc(member.photo, HOME_LCP_IMAGE_WIDTH);
+    }
+    return getProfilePhotoSrc(
+      member.photo,
+      shouldPrioritize ? 720 : isAmbient ? 480 : 560
+    );
+  }, [member.photo, isAmbient, isOwnCard, shouldPrioritize]);
   const profileSheet = useProfileSheetOptional();
 
   return (
@@ -84,6 +90,7 @@ function PersonCardComponent({
             className="object-cover"
             sizes={getProfilePhotoSizes(isAmbient ? "ambient" : "card")}
             priority={shouldPrioritize}
+            fetchPriority={shouldPrioritize ? "high" : undefined}
             loading={shouldPrioritize ? undefined : "lazy"}
           />
           <div

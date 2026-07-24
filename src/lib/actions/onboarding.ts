@@ -13,10 +13,11 @@ import {
   type DialogueAnswers,
 } from "@/lib/resonance/dialogue";
 import {
-  addProfileCard,
-  buildCardFromConversationAnswer,
+  buildItemFromConversationAnswer,
   PROFILE_CONVERSATION_STEPS,
-} from "@/lib/profile/cards";
+  setProfileItem,
+  syncMemberFromProfileItems,
+} from "@/lib/profile/items";
 import {
   buildMemberFromMinimalRegistration,
   isMinimalRegistrationInputComplete,
@@ -173,7 +174,7 @@ export async function completeOnboardingWithFrequencyAction(
   return saveFrequencyColorAction(color);
 }
 
-export async function addProfileCardFromConversationAction(
+export async function addProfileItemFromConversationAction(
   stepId: string,
   answer: string
 ) {
@@ -201,8 +202,8 @@ export async function addProfileCardFromConversationAction(
     return { error: "回答を入力してください" };
   }
 
-  const card = buildCardFromConversationAnswer(step, trimmed);
-  const updated = addProfileCard(member, card);
+  const item = buildItemFromConversationAnswer(step, trimmed);
+  const updated = syncMemberFromProfileItems(setProfileItem(member, item));
   const result = await updateMember(updated);
 
   if (!result.success) {
@@ -216,7 +217,15 @@ export async function addProfileCardFromConversationAction(
   revalidatePath(`/member/${member.id}`);
   revalidatePath(`/member/${member.id}/edit`);
 
-  return { success: true, card };
+  return { success: true, item };
+}
+
+/** @deprecated use addProfileItemFromConversationAction */
+export async function addProfileCardFromConversationAction(
+  stepId: string,
+  answer: string
+) {
+  return addProfileItemFromConversationAction(stepId, answer);
 }
 
 /** @deprecated 旧 discover 対話 */

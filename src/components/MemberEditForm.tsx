@@ -17,6 +17,17 @@ import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
+import {
+  formatProfileItemForEdit,
+  getProfileItemLabel,
+  getProfileItems,
+  parseProfileItemFromEdit,
+  prepareMemberForSave,
+  setProfileItem,
+  syncMemberFromProfileItems,
+  syncProfileItemsFromMemberFields,
+} from "@/lib/profile/items";
+import type { ProfileItemKind } from "@/types/profile-item";
 import type { Member } from "@/types/member";
 
 type MemberEditFormProps = {
@@ -58,6 +69,27 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
     }));
   }
 
+  function updateProfileItemField(kind: ProfileItemKind, raw: string) {
+    setMember((current) =>
+      syncMemberFromProfileItems(
+        setProfileItem(current, parseProfileItemFromEdit(kind, raw))
+      )
+    );
+  }
+
+  function updateFavoriteArtists(raw: string) {
+    const artists = splitList(raw);
+    setMember((current) =>
+      syncProfileItemsFromMemberFields({
+        ...current,
+        music: {
+          ...current.music,
+          favoriteArtists: artists,
+        },
+      })
+    );
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -74,15 +106,21 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         }
       }
 
-      const result = await updateMemberAction(member);
+      const payload = prepareMemberForSave(member);
+      const result = await updateMemberAction(payload);
       if (result?.error) {
         setError(result.error);
         return;
       }
 
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.members.feed() }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.members.profile(payload.id),
+        }),
+      ]);
       router.refresh();
-      void queryClient.invalidateQueries({ queryKey: queryKeys.members.feed() });
-      router.push(`/member/${member.id}`);
+      router.replace(`/member/${payload.id}`);
     });
   }
 
@@ -108,7 +146,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
       <div className="flex-1 space-y-10 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
-          基本情報だけここで編集できます。音楽人生のカードは、AIとの会話で少しずつ増えていきます。
+          基本情報とプロフィール項目は、いつでもここで編集できます。AIとの会話で新しい項目も追加できます。
         </p>
 
         {error ? (
@@ -176,9 +214,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormField label="好きなアーティスト" hint="カンマ区切り・任意">
             <FormInput
               value={joinList(member.music.favoriteArtists)}
-              onChange={(event) =>
-                updateNested("music", "favoriteArtists", splitList(event.target.value))
-              }
+              onChange={(event) => updateFavoriteArtists(event.target.value)}
             />
           </FormField>
           <FormField
@@ -193,6 +229,23 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             />
           </FormField>
         </FormSection>
+
+        {getProfileItems(member).length > 0 ? (
+          <FormSection title="プロフィール項目" id="profile-items">
+            {getProfileItems(member).map((item) => (
+              <FormField
+                key={item.kind}
+                label={getProfileItemLabel(item.kind)}
+                hint="後から編集できます"
+              >
+                <FormInput
+                  value={formatProfileItemForEdit(item)}
+                  onChange={(event) => updateProfileItemField(item.kind, event.target.value)}
+                />
+              </FormField>
+            ))}
+          </FormSection>
+        ) : null}
 
         <FormSection title="Looking For">
           <FormField label="募集パート" hint="カンマ区切り・任意">
@@ -209,7 +262,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           href="/discover"
           className="flex items-center justify-between rounded-2xl border border-border bg-white/[0.04] px-5 py-4 text-[15px] text-white/80 transition-colors active:bg-white/[0.07]"
         >
-          <span>AIと話して、Journalにカードを追加</span>
+          <span>AIと話して、項目を追加</span>
           <span aria-hidden>→</span>
         </Link>
       </div>
