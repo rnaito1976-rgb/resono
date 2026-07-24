@@ -22,6 +22,5 @@ export function useMemberProfile(memberId: string | null) {
     },
     enabled: Boolean(memberId),
     staleTime: 60 * 1000,
-    refetchOnMount: "always",
   });
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
 import { useBandUnreadCount } from "@/hooks/useBandUnreadCount";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
@@ -30,10 +31,42 @@ function TabBadge({ count }: { count: number }) {
   );
 }
 
+function useDeferredBadgeQueries(pathname: string) {
+  const deferOnHome = pathname === "/";
+  const [enabled, setEnabled] = useState(!deferOnHome);
+
+  useEffect(() => {
+    if (!deferOnHome) {
+      setEnabled(true);
+      return;
+    }
+
+    const idleCallback = window.requestIdleCallback?.(
+      () => setEnabled(true),
+      { timeout: 2000 }
+    );
+    const timeoutId = idleCallback
+      ? undefined
+      : window.setTimeout(() => setEnabled(true), 1200);
+
+    return () => {
+      if (idleCallback) {
+        window.cancelIdleCallback(idleCallback);
+      }
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [deferOnHome]);
+
+  return enabled;
+}
+
 export function BottomTabBar() {
   const pathname = usePathname();
-  const { count: messageCount } = useUnreadCount();
-  const { count: bandCount } = useBandUnreadCount();
+  const badgesEnabled = useDeferredBadgeQueries(pathname);
+  const { count: messageCount } = useUnreadCount(badgesEnabled);
+  const { count: bandCount } = useBandUnreadCount(badgesEnabled);
   const badgeCounts = {
     messages: messageCount,
     bands: bandCount,

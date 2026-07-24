@@ -22,9 +22,7 @@ export async function buildMembersFeedPage(
   options: BuildMembersFeedPageOptions = {}
 ): Promise<MembersFeedPage> {
   const page = await getMembersPage(offset, limit);
-  const viewerMemberId = options.viewer
-    ? (await resolveCurrentMemberId()) ?? options.viewer.id
-    : null;
+  const viewerMemberId = options.viewer?.id ?? (await resolveCurrentMemberId());
   const feedMembers = page.members.filter((member) => {
     if (viewerMemberId && member.id === viewerMemberId) {
       return false;

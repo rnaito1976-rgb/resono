@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-label",
+      "@radix-ui/react-slot",
+    ],
   },
   images: {
     formats: ["image/avif", "image/webp"],

@@ -8,7 +8,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ProfileBottomSheet } from "@/components/profile/ProfileBottomSheet";
+import dynamic from "next/dynamic";
+
+const ProfileBottomSheet = dynamic(
+  () =>
+    import("@/components/profile/ProfileBottomSheet").then((module) => ({
+      default: module.ProfileBottomSheet,
+    })),
+  { ssr: false }
+);
 
 type ProfileSheetContextValue = {
   openProfile: (memberId: string) => void;
@@ -36,7 +44,9 @@ export function ProfileSheetProvider({ children }: { children: ReactNode }) {
   return (
     <ProfileSheetContext.Provider value={value}>
       {children}
-      <ProfileBottomSheet memberId={memberId} onClose={closeProfile} />
+      {memberId ? (
+        <ProfileBottomSheet memberId={memberId} onClose={closeProfile} />
+      ) : null}
     </ProfileSheetContext.Provider>
   );
 }

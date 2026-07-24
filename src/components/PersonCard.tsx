@@ -66,7 +66,7 @@ function PersonCardComponent({
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
-  const shouldPrioritize = (priority || isOwnCard) && !isAmbient;
+  const shouldPrioritize = priority && !isAmbient;
   const photoSrc = useMemo(() => {
     if (isOwnCard) {
       return getProfilePhotoSrc(member.photo, HOME_LCP_IMAGE_WIDTH);
