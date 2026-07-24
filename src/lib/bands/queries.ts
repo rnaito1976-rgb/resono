@@ -147,6 +147,34 @@ export async function getMutualResonateMembers(
   }));
 }
 
+export async function getAddableMutualMembersForBand(
+  bandId: string,
+  viewerMemberId?: string
+): Promise<MutualResonateMember[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data: existingRows, error: existingError } = await supabase
+    .from("band_members")
+    .select("member_id")
+    .eq("band_id", bandId);
+
+  if (existingError) {
+    console.error(
+      "[Supabase] getAddableMutualMembersForBand existing:",
+      existingError.message
+    );
+    return [];
+  }
+
+  const existingIds = new Set((existingRows ?? []).map((row) => row.member_id));
+  const mutualMembers = await getMutualResonateMembers(viewerMemberId);
+
+  return mutualMembers.filter((item) => !existingIds.has(item.member.id));
+}
+
 async function loadBandMembers(
   bandId: string,
   viewer?: Member

@@ -14,7 +14,8 @@ import {
   buildBandGradientStyle,
   formatBandGradientLabel,
 } from "@/lib/bands/gradient";
-import type { BandDetail, BandModuleId } from "@/types/band";
+import type { BandDetail, BandModuleId, MutualResonateMember } from "@/types/band";
+import { AddBandMembersPanel } from "@/components/bands/AddBandMembersPanel";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { Button } from "@/components/ui/button";
@@ -35,9 +36,10 @@ const STATUS_LABELS = {
 
 type BandPageClientProps = {
   detail: BandDetail;
+  addableMembers: MutualResonateMember[];
 };
 
-export function BandPageClient({ detail }: BandPageClientProps) {
+export function BandPageClient({ detail, addableMembers }: BandPageClientProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const gradientStyle = useMemo(
@@ -124,7 +126,12 @@ export function BandPageClient({ detail }: BandPageClientProps) {
           <VideosTab videos={videos} />
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          <MembersTab members={detail.members} />
+          <MembersTab
+            bandId={detail.band.id}
+            bandName={detail.band.name}
+            members={detail.members}
+            addableMembers={addableMembers}
+          />
         </section>
       </div>
     </div>
@@ -316,10 +323,27 @@ function VideosTab({ videos }: { videos: BandDetail["activities"] }) {
   );
 }
 
-function MembersTab({ members }: { members: BandDetail["members"] }) {
+function MembersTab({
+  bandId,
+  bandName,
+  members,
+  addableMembers,
+}: {
+  bandId: string;
+  bandName: string;
+  members: BandDetail["members"];
+  addableMembers: MutualResonateMember[];
+}) {
   return (
-    <div className="space-y-4">
-      {members.map((item) => {
+    <div className="space-y-6">
+      <AddBandMembersPanel
+        bandId={bandId}
+        bandName={bandName}
+        addableMembers={addableMembers}
+      />
+
+      <div className="space-y-4">
+        {members.map((item) => {
         const color = item.frequencyColor as FrequencyColorHex | undefined;
         const parts = item.member.music.instruments.filter(Boolean);
 
@@ -363,6 +387,7 @@ function MembersTab({ members }: { members: BandDetail["members"] }) {
           </article>
         );
       })}
+      </div>
     </div>
   );
 }

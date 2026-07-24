@@ -165,6 +165,125 @@ export async function createBandAction(input: {
   return { success: true, bandId: band.id };
 }
 
+export async function addBandMembersAction(input: {
+  bandId: string;
+  memberIds: string[];
+}) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabaseが設定されていません。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です。" };
+  }
+
+  const actor = await getMemberByUserId(user.id);
+  if (!actor) {
+    return { error: "プロフィールが見つかりません。" };
+  }
+
+  const { data: membership } = await supabase
+    .from("band_members")
+    .select("member_id")
+    .eq("band_id", input.bandId)
+    .eq("member_id", actor.id)
+    .maybeSingle();
+
+  if (!membership) {
+    return { error: "このBandのメンバーではありません。" };
+  }
+
+  const selectedIds = [...new Set(input.memberIds)].filter((id) => id !== actor.id);
+  if (selectedIds.length === 0) {
+    return { error: "追加するメンバーを選んでください。" };
+  }
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("band_members")
+    .select("member_id")
+    .eq("band_id", input.bandId);
+
+  if (existingError) {
+    return { error: existingError.message };
+  }
+
+  const existingIds = new Set((existingRows ?? []).map((row) => row.member_id));
+  const newMemberIds = selectedIds.filter((id) => !existingIds.has(id));
+
+  if (newMemberIds.length === 0) {
+    return { error: "選択したメンバーはすでに参加しています。" };
+  }
+
+  const mutualMembers = await getMutualResonateMembers(actor.id);
+  const mutualIds = new Set(mutualMembers.map((item) => item.member.id));
+
+  if (!newMemberIds.every((id) => mutualIds.has(id))) {
+    return { error: "共鳴済みメンバーのみ追加できます。" };
+  }
+
+  const { data: band, error: bandError } = await supabase
+    .from("bands")
+    .select("name")
+    .eq("id", input.bandId)
+    .maybeSingle();
+
+  if (bandError || !band) {
+    return { error: bandError?.message ?? "Bandが見つかりません。" };
+  }
+
+  const { error: insertError } = await supabase.from("band_members").insert(
+    newMemberIds.map((memberId) => ({
+      band_id: input.bandId,
+      member_id: memberId,
+    }))
+  );
+
+  if (insertError) {
+    return { error: insertError.message };
+  }
+
+  const now = new Date().toISOString();
+  const timelineRows = newMemberIds.map((memberId) => {
+    const mutual = mutualMembers.find((item) => item.member.id === memberId);
+    return {
+      band_id: input.bandId,
+      kind: "member_joined" as const,
+      title: "メンバー加入",
+      body: `${mutual?.member.name ?? "メンバー"} がBandに加わりました。`,
+      occurred_at: now,
+    };
+  });
+
+  const { error: timelineError } = await supabase
+    .from("band_timeline_events")
+    .insert(timelineRows);
+
+  if (timelineError) {
+    console.error("[addBandMembersAction] timeline:", timelineError.message);
+  }
+
+  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
+    notifyBandMembersBadgeEmail({
+      bandId: input.bandId,
+      bandName: band.name,
+      preview: `${newMemberIds.length}人のメンバーが加わりました。`,
+      excludeMemberIds: [actor.id, ...newMemberIds],
+    }).catch((error) => {
+      console.error("[BadgeEmail] band member added notification:", error);
+    })
+  );
+
+  revalidatePath("/bands");
+  revalidatePath(`/bands/${input.bandId}`);
+
+  return { success: true, addedCount: newMemberIds.length };
+}
+
 export async function createBandActivityAction(input: {
   bandId: string;
   kind: BandActivityKind;

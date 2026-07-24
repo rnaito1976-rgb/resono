@@ -1,15 +1,12 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
+import { MutualMemberPicker } from "@/components/bands/MutualMemberPicker";
 import { createBandAction } from "@/lib/actions/bands";
 import type { MutualResonateMember } from "@/types/band";
 import { Button } from "@/components/ui/button";
-import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
-import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 
 type CreateBandFlowProps = {
   mutualMembers: MutualResonateMember[];
@@ -71,66 +68,17 @@ export function CreateBandFlow({ mutualMembers }: CreateBandFlowProps) {
           </div>
 
           {mutualMembers.length === 0 ? (
-            <div className="rounded-[28px] border border-border bg-subtle px-6 py-8 text-center">
-              <p className="text-[15px] leading-relaxed text-white/55">
-                まだ共鳴済みメンバーがいません。
-                <br />
-                まずはHomeから共鳴してみましょう。
-              </p>
-              <Link
-                href="/"
-                className="mt-6 inline-flex text-[15px] text-primary"
-              >
-                Homeへ戻る
-              </Link>
-            </div>
+            <MutualMemberPicker
+              members={[]}
+              selectedIds={[]}
+              onToggle={() => {}}
+            />
           ) : (
-            <div className="space-y-3">
-              {mutualMembers.map(({ member, frequencyColor }) => {
-                const selected = selectedIds.includes(member.id);
-                const color = frequencyColor as FrequencyColorHex | undefined;
-
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => toggleMember(member.id)}
-                    className={`flex w-full items-center gap-4 rounded-[24px] border px-4 py-4 text-left transition-quiet ${
-                      selected
-                        ? "border-primary/40 bg-[var(--frequency-color-soft)]"
-                        : "border-border bg-subtle"
-                    }`}
-                  >
-                    <ProfilePhotoRing color={color} className="h-14 w-14 rounded-full">
-                      <div className="relative h-14 w-14 overflow-hidden rounded-full">
-                        <Image
-                          src={member.photo}
-                          alt={member.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
-                      </div>
-                    </ProfilePhotoRing>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[17px] font-medium">{member.name}</p>
-                      <p className="mt-1 text-[13px] text-white/45">
-                        {member.music.instruments.join(" · ") || "パート未設定"}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full border ${
-                        selected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border"
-                      }`}
-                    >
-                      {selected ? "✓" : ""}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <MutualMemberPicker
+              members={mutualMembers}
+              selectedIds={selectedIds}
+              onToggle={toggleMember}
+            />
           )}
 
           <Button

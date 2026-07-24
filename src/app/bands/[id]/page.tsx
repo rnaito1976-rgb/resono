@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { BandPageClient } from "@/components/bands/BandPageClientLoader";
-import { getBandDetail } from "@/lib/bands/queries";
+import { getAddableMutualMembersForBand, getBandDetail } from "@/lib/bands/queries";
 import { getMemberByUserId } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,10 +26,15 @@ export default async function BandPage({ params }: BandPageProps) {
     redirect("/onboarding");
   }
 
-  const detail = await getBandDetail(id, member.id);
+  const [detail, addableMembers] = await Promise.all([
+    getBandDetail(id, member.id),
+    getAddableMutualMembersForBand(id, member.id),
+  ]);
   if (!detail) {
     notFound();
   }
 
-  return <BandPageClient detail={detail} />;
+  return (
+    <BandPageClient detail={detail} addableMembers={addableMembers} />
+  );
 }
