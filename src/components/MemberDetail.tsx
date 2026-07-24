@@ -475,20 +475,12 @@ export function MemberDetail({
         </div>
         {showResonateButton ? <ResonateButton memberId={member.id} /> : null}
         {isOwnProfile ? (
-          <div className="space-y-3">
-            <Link
-              href="/discover"
-              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
-            >
-              AIと少し話す
-            </Link>
-            <Link
-              href={`/member/${member.id}/edit`}
-              className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white transition-quiet active:opacity-70"
-            >
-              プロフィールを編集
-            </Link>
-          </div>
+          <Link
+            href="/discover"
+            className="flex h-12 w-full items-center justify-center rounded-full border border-border text-[15px] font-medium tracking-wide text-white/80 transition-quiet active:opacity-70"
+          >
+            AIと少し話す
+          </Link>
         ) : null}
       </div>
     </div>
