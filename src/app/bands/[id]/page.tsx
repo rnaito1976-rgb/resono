@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { BandPageClient } from "@/components/bands/BandPageClient";
+import { BandPageLoader } from "@/components/bands/BandPageLoader";
 import { getBandDetail, getViewerMemberId } from "@/lib/bands/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,5 +30,5 @@ export default async function BandPage({ params }: BandPageProps) {
     notFound();
   }
 
-  return <BandPageClient detail={detail} />;
+  return <BandPageLoader detail={detail} />;
 }

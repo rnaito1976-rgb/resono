@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AIDialogueFlow } from "@/components/discover/AIDialogueFlow";
+import { DiscoverDialogueLoader } from "@/components/discover/DiscoverDialogueLoader";
 import { getMemberByUserId } from "@/lib/members";
 import { isOnboardingComplete } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
@@ -22,5 +22,5 @@ export default async function DiscoverPage() {
     redirect("/onboarding");
   }
 
-  return <AIDialogueFlow mode="discover" memberId={member.id} />;
+  return <DiscoverDialogueLoader mode="discover" memberId={member.id} />;
 }

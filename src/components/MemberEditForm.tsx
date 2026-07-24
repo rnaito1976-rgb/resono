@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, useTransition } from "react";
 import {
   updateFrequencyColorAction,
@@ -11,6 +12,7 @@ import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
 import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
+import { queryKeys } from "@/lib/query/keys";
 import { FormField, FormInput, FormSection } from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -22,6 +24,7 @@ type MemberEditFormProps = {
 
 export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [member, setMember] = useState(initialMember);
   const initialFrequencyColor = initialMember.frequencyColor as
     | FrequencyColorHex
@@ -77,6 +80,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
       }
 
       router.refresh();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.members.feed() });
       router.push(`/member/${member.id}`);
     });
   }

@@ -1,14 +1,17 @@
 import { WelcomeHero } from "@/components/welcome/WelcomeHero";
-import { getMembers } from "@/lib/members";
+import { getMembersPage } from "@/lib/members";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function WelcomePage() {
-  const [members, supabase] = await Promise.all([getMembers(), createClient()]);
+  const [supabase, membersPage] = await Promise.all([
+    createClient(),
+    getMembersPage(0, 8),
+  ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <WelcomeHero initialUser={user} members={members} />;
+  return <WelcomeHero initialUser={user} members={membersPage.members} />;
 }

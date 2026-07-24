@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AIDialogueFlow } from "@/components/discover/AIDialogueFlow";
+import { DiscoverDialogueLoader } from "@/components/discover/DiscoverDialogueLoader";
 import { ensureMemberForUser } from "@/lib/members";
 import {
   isOnboardingComplete,
@@ -26,7 +26,7 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <AIDialogueFlow
+    <DiscoverDialogueLoader
       mode="onboarding"
       memberId={member?.id ?? user.id}
       initialPhase={

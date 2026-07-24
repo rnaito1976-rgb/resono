@@ -1,8 +1,15 @@
+"use client";
+
+import { memo, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ResonateButton } from "@/components/ResonateButton";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import {
+  getProfilePhotoSizes,
+  getProfilePhotoSrc,
+} from "@/lib/images/profilePhoto";
 import { getPlayingParts } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import {
@@ -27,7 +34,7 @@ function getOpenParts(member: Member): string[] {
   return Array.isArray(parts) ? parts.filter(Boolean) : [];
 }
 
-export function PersonCard({
+function PersonCardComponent({
   member,
   variant = "default",
   recommendation,
@@ -37,32 +44,42 @@ export function PersonCard({
 }: PersonCardProps) {
   const isAmbient = variant === "ambient";
   const score = resonanceReason?.score;
-  const openParts = getOpenParts(member);
-  const playingParts = getPlayingParts(member);
+  const openParts = useMemo(() => getOpenParts(member), [member.lookingFor?.parts]);
+  const playingParts = useMemo(() => getPlayingParts(member), [member.music.instruments]);
   const ringColor = isOwnCard
     ? undefined
     : (member.frequencyColor as FrequencyColorHex | undefined);
-  const highlightedParts = new Set(
-    recommendation?.recruitmentLabel === "sought-by-target"
-      ? (recommendation.highlightedParts ?? [])
-      : []
+  const highlightedParts = useMemo(
+    () =>
+      new Set(
+        recommendation?.recruitmentLabel === "sought-by-target"
+          ? (recommendation.highlightedParts ?? [])
+          : []
+      ),
+    [recommendation]
   );
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
+  const photoSrc = useMemo(
+    () => getProfilePhotoSrc(member.photo, isAmbient ? 640 : 800),
+    [member.photo, isAmbient]
+  );
+  const shouldPrioritize = priority && !isAmbient;
 
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
       <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
         <div className="relative aspect-[4/5] w-full">
           <Image
-            key={member.photo}
-            src={member.photo}
+            key={photoSrc}
+            src={photoSrc}
             alt={member.name}
             fill
             className="object-cover"
-            sizes="390px"
-            priority={priority || (!isAmbient && member.id === "1")}
+            sizes={getProfilePhotoSizes(isAmbient ? "ambient" : "card")}
+            priority={shouldPrioritize}
+            loading={shouldPrioritize ? undefined : "lazy"}
           />
           <div
             className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${
@@ -166,3 +183,5 @@ export function PersonCard({
     </article>
   );
 }
+
+export const PersonCard = memo(PersonCardComponent);

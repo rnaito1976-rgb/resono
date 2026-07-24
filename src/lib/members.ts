@@ -27,30 +27,66 @@ async function attachFrequencyColors(members: Member[]): Promise<Member[]> {
 }
 
 export async function getMembers(): Promise<Member[]> {
+  const page = await getMembersPage(0, 1000);
+  return page.members;
+}
+
+export async function getMembersPage(
+  offset: number,
+  limit: number
+): Promise<{ members: Member[]; total: number; hasMore: boolean }> {
   if (!isSupabaseConfigured()) {
-    return fallbackMembers;
+    const members = fallbackMembers.slice(offset, offset + limit);
+    return {
+      members,
+      total: fallbackMembers.length,
+      hasMore: offset + limit < fallbackMembers.length,
+    };
   }
 
   try {
     const supabase = createAnonClient();
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("members")
-      .select("*")
-      .order("resonance_rate", { ascending: false });
+      .select("*", { count: "exact" })
+      .order("resonance_rate", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error("[Supabase] getMembers:", error.message);
-      return fallbackMembers;
+      console.error("[Supabase] getMembersPage:", error.message);
+      const members = fallbackMembers.slice(offset, offset + limit);
+      return {
+        members,
+        total: fallbackMembers.length,
+        hasMore: offset + limit < fallbackMembers.length,
+      };
     }
 
     if (!data?.length) {
-      return fallbackMembers;
+      const members = fallbackMembers.slice(offset, offset + limit);
+      return {
+        members,
+        total: fallbackMembers.length,
+        hasMore: offset + limit < fallbackMembers.length,
+      };
     }
 
-    return attachFrequencyColors(data.map(rowToMember));
+    const members = await attachFrequencyColors(data.map(rowToMember));
+    const total = count ?? members.length;
+
+    return {
+      members,
+      total,
+      hasMore: offset + limit < total,
+    };
   } catch (error) {
-    console.error("[Supabase] getMembers:", error);
-    return fallbackMembers;
+    console.error("[Supabase] getMembersPage:", error);
+    const members = fallbackMembers.slice(offset, offset + limit);
+    return {
+      members,
+      total: fallbackMembers.length,
+      hasMore: offset + limit < fallbackMembers.length,
+    };
   }
 }
 

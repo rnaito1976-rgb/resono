@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
+import { QueryProvider } from "@/providers/QueryProvider";
 import { getViewerFrequencyColor } from "@/lib/frequency-color/server";
 import "./globals.css";
 
@@ -28,9 +29,11 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
-        <FrequencyColorProvider color={frequencyColor}>
-          <TabBarWrapper>{children}</TabBarWrapper>
-        </FrequencyColorProvider>
+        <QueryProvider>
+          <FrequencyColorProvider color={frequencyColor}>
+            <TabBarWrapper>{children}</TabBarWrapper>
+          </FrequencyColorProvider>
+        </QueryProvider>
       </body>
     </html>
   );

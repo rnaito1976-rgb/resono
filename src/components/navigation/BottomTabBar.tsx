@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 
@@ -14,14 +14,7 @@ const TABS = [
 
 export function BottomTabBar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { count } = useUnreadCount();
-
-  function handleTabClick(href: string) {
-    if (pathname !== href) {
-      router.refresh();
-    }
-  }
 
   return (
     <nav
@@ -42,7 +35,6 @@ export function BottomTabBar() {
               href={href}
               aria-label={label}
               aria-current={active ? "page" : undefined}
-              onClick={() => handleTabClick(href)}
               className="relative flex h-11 w-11 items-center justify-center rounded-full transition-quiet active:scale-95"
             >
               <span

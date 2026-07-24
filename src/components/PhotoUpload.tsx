@@ -3,6 +3,10 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { FormField } from "@/components/FormField";
+import {
+  getProfilePhotoSizes,
+  getProfilePhotoSrc,
+} from "@/lib/images/profilePhoto";
 import { uploadMemberPhoto } from "@/lib/storage";
 
 type PhotoUploadProps = {
@@ -42,11 +46,12 @@ export function PhotoUpload({ memberId, value, onChange }: PhotoUploadProps) {
     <div className="space-y-3">
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-subtle">
         <Image
-          src={value}
+          src={getProfilePhotoSrc(value, 800)}
           alt="プロフィール写真"
           fill
           className="object-cover"
-          sizes="390px"
+          sizes={getProfilePhotoSizes("card")}
+          loading="lazy"
         />
         {isUploading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">

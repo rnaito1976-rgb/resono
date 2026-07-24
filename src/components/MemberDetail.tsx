@@ -7,6 +7,10 @@ import { Member, DETAIL_SECTIONS } from "@/types/member";
 import { ResonateButton } from "@/components/ResonateButton";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import {
+  getProfilePhotoSizes,
+  getProfilePhotoSrc,
+} from "@/lib/images/profilePhoto";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import { ResonanceBadge, SectionBlock, TagList } from "@/components/ui";
@@ -35,11 +39,13 @@ function PortraitSlide({
       <ProfilePhotoRing color={ringColor} className="mb-8 rounded-3xl">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl">
           <Image
-            src={member.photo}
+            src={getProfilePhotoSrc(member.photo, 960)}
             alt={member.name}
             fill
             className="object-cover"
-            sizes="390px"
+            sizes={getProfilePhotoSizes("detail")}
+            priority={isOwnProfile}
+            loading={isOwnProfile ? undefined : "lazy"}
           />
         </div>
       </ProfilePhotoRing>

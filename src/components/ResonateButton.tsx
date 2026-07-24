@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { useResonance } from "@/hooks/useResonance";
@@ -9,7 +10,10 @@ type ResonateButtonProps = {
   className?: string;
 };
 
-export function ResonateButton({ memberId, className = "" }: ResonateButtonProps) {
+export const ResonateButton = memo(function ResonateButton({
+  memberId,
+  className = "",
+}: ResonateButtonProps) {
   const { isResonated, isMutual, conversationId, toggle, mounted, isPending } =
     useResonance(memberId);
 
@@ -76,4 +80,4 @@ export function ResonateButton({ memberId, className = "" }: ResonateButtonProps
       )}
     </button>
   );
-}
+});
