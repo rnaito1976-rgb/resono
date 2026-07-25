@@ -3,7 +3,7 @@ import { MenuScreen } from "@/components/menu/MenuScreen";
 
 export default function MenuPage() {
   return (
-    <MenuPageShell backHref="/" backLabel="ホームに戻る" title="Menu">
+    <MenuPageShell closeHref="/" title="Menu">
       <MenuScreen />
     </MenuPageShell>
   );
