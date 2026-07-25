@@ -56,3 +56,14 @@ export const OWN_PROFILE_DETAIL_SECTIONS: {
   ...DETAIL_SECTIONS,
   { id: "activity", label: "Activity" },
 ];
+
+const ACTIVITY_SECTION = { id: "activity" as const, label: "Activity" };
+
+/** Activity に表示があるときは先頭、なければ末尾 */
+export function getOwnProfileDetailSections(hasActivityContent: boolean) {
+  if (hasActivityContent) {
+    return [ACTIVITY_SECTION, ...DETAIL_SECTIONS];
+  }
+
+  return [...DETAIL_SECTIONS, ACTIVITY_SECTION];
+}

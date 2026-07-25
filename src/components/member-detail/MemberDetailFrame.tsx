@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { DETAIL_SECTIONS, OWN_PROFILE_DETAIL_SECTIONS } from "@/types/member";
+import { DETAIL_SECTIONS, getOwnProfileDetailSections, type DetailSection } from "@/types/member";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
@@ -82,7 +82,10 @@ export function MemberDetailFrame({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const isSheet = variant === "sheet";
-  const sections = isOwnProfile ? OWN_PROFILE_DETAIL_SECTIONS : DETAIL_SECTIONS;
+  const hasActivityContent = isOwnProfile && memberActivities.length > 0;
+  const sections = isOwnProfile
+    ? getOwnProfileDetailSections(hasActivityContent)
+    : DETAIL_SECTIONS;
   const containerClass = isSheet
     ? "flex h-[80dvh] flex-col bg-background"
     : "flex h-dvh flex-col bg-background";
@@ -108,6 +111,33 @@ export function MemberDetailFrame({
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
+
+  function renderSlide(sectionId: DetailSection) {
+    switch (sectionId) {
+      case "portrait":
+        return (
+          <PortraitSlide
+            member={member}
+            resonanceReason={resonanceReason}
+            isOwnProfile={isOwnProfile}
+            priorityPhoto={priorityPhoto}
+          />
+        );
+      case "music":
+        return <MusicSlide member={member} isOwnProfile={isOwnProfile} />;
+      case "lookingFor":
+        return (
+          <LookingForSlide
+            member={member}
+            isOwnProfile={isOwnProfile}
+            mutualMembers={mutualMembers}
+            bandActivities={isOwnProfile ? [] : bandActivities}
+          />
+        );
+      case "activity":
+        return <ActivitySlide activities={memberActivities} />;
+    }
+  }
 
   return (
     <div className={containerClass}>
@@ -170,30 +200,14 @@ export function MemberDetailFrame({
         ref={scrollRef}
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hide"
       >
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain">
-          <PortraitSlide
-            member={member}
-            resonanceReason={resonanceReason}
-            isOwnProfile={isOwnProfile}
-            priorityPhoto={priorityPhoto}
-          />
-        </section>
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain">
-          <MusicSlide member={member} isOwnProfile={isOwnProfile} />
-        </section>
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain">
-          <LookingForSlide
-            member={member}
-            isOwnProfile={isOwnProfile}
-            mutualMembers={mutualMembers}
-            bandActivities={isOwnProfile ? [] : bandActivities}
-          />
-        </section>
-        {isOwnProfile ? (
-          <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain">
-            <ActivitySlide activities={memberActivities} />
+        {sections.map((section) => (
+          <section
+            key={section.id}
+            className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
+          >
+            {renderSlide(section.id)}
           </section>
-        ) : null}
+        ))}
       </div>
 
       <div className="bg-background px-5 pb-8 pt-4">
