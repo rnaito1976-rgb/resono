@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { DETAIL_SECTIONS } from "@/types/member";
+import { DETAIL_SECTIONS, OWN_PROFILE_DETAIL_SECTIONS } from "@/types/member";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
@@ -42,6 +42,14 @@ const LookingForSlide = dynamic(
   { loading: SlideFallback }
 );
 
+const ActivitySlide = dynamic(
+  () =>
+    import("@/components/member-detail/slides/ActivitySlide").then((module) => ({
+      default: module.ActivitySlide,
+    })),
+  { loading: SlideFallback }
+);
+
 export type MemberDetailFrameProps = {
   member: Member;
   isOwnProfile?: boolean;
@@ -50,6 +58,7 @@ export type MemberDetailFrameProps = {
   showResonateButton?: boolean;
   mutualMembers?: import("@/types/band").MutualResonateMember[];
   bandActivities?: import("@/types/band").BandActivityFeedItem[];
+  memberActivities?: import("@/types/activity").MemberActivityFeedItem[];
   variant?: "page" | "sheet";
   onClose?: () => void;
   priorityPhoto?: boolean;
@@ -64,6 +73,7 @@ export function MemberDetailFrame({
   showResonateButton = false,
   mutualMembers = [],
   bandActivities = [],
+  memberActivities = [],
   variant = "page",
   onClose,
   priorityPhoto = false,
@@ -72,6 +82,7 @@ export function MemberDetailFrame({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const isSheet = variant === "sheet";
+  const sections = isOwnProfile ? OWN_PROFILE_DETAIL_SECTIONS : DETAIL_SECTIONS;
   const containerClass = isSheet
     ? "flex h-[80dvh] flex-col bg-background"
     : "flex h-dvh flex-col bg-background";
@@ -147,7 +158,7 @@ export function MemberDetailFrame({
             )}
 
             <AppSubNav
-              items={DETAIL_SECTIONS}
+              items={sections}
               activeIndex={activeIndex}
               onSelect={scrollToIndex}
             />
@@ -175,14 +186,19 @@ export function MemberDetailFrame({
             member={member}
             isOwnProfile={isOwnProfile}
             mutualMembers={mutualMembers}
-            bandActivities={bandActivities}
+            bandActivities={isOwnProfile ? [] : bandActivities}
           />
         </section>
+        {isOwnProfile ? (
+          <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain">
+            <ActivitySlide activities={memberActivities} />
+          </section>
+        ) : null}
       </div>
 
       <div className="bg-background px-5 pb-8 pt-4">
         <div className="mb-4 flex justify-center gap-1.5">
-          {DETAIL_SECTIONS.map((section, index) => (
+          {sections.map((section, index) => (
             <button
               key={section.id}
               type="button"

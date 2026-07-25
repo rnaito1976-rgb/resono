@@ -129,6 +129,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
     }
 
     revalidatePath("/");
+    revalidatePath("/me");
     revalidatePath(`/member/${targetMemberId}`);
     revalidatePath(`/member/${memberId}`);
     revalidatePath("/messages");
@@ -167,6 +168,7 @@ export async function toggleResonanceAction(targetMemberId: string) {
     : null;
 
   revalidatePath("/");
+  revalidatePath("/me");
   revalidatePath(`/member/${targetMemberId}`);
   revalidatePath("/messages");
 

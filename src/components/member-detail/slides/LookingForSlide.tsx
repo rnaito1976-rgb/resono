@@ -123,9 +123,11 @@ export function LookingForSlide({
           <p>{member.lookingFor.commitment}</p>
         </SectionBlock>
       ) : null}
-      <SectionBlock label="Activity">
-        <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
-      </SectionBlock>
+      {!isOwnProfile ? (
+        <SectionBlock label="Activity">
+          <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
+        </SectionBlock>
+      ) : null}
     </div>
   );
 }

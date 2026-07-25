@@ -160,6 +160,7 @@ export async function createBandAction(input: {
   );
 
   revalidatePath("/bands");
+  revalidatePath("/me");
   revalidatePath(`/bands/${band.id}`);
 
   return { success: true, bandId: band.id };
@@ -279,6 +280,7 @@ export async function addBandMembersAction(input: {
   );
 
   revalidatePath("/bands");
+  revalidatePath("/me");
   revalidatePath(`/bands/${input.bandId}`);
 
   return { success: true, addedCount: newMemberIds.length };
@@ -367,6 +369,7 @@ export async function createBandActivityAction(input: {
     })
   );
 
+  revalidatePath("/me");
   revalidatePath(`/bands/${input.bandId}`);
   return { success: true };
 }
@@ -439,5 +442,6 @@ export async function markBandAsSeenAction(bandId: string): Promise<void> {
   const { markBandAsSeen } = await import("@/lib/bands/unread");
   await markBandAsSeen(bandId, member.id);
   revalidatePath("/bands");
+  revalidatePath("/me");
   revalidatePath(`/bands/${bandId}`);
 }

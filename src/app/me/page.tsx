@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/bands/queries";
+import { getMutualResonateMembers } from "@/lib/bands/queries";
 import { getMemberById } from "@/lib/members";
+import { getMemberActivityFeed } from "@/lib/members/activity-feed";
 import { requireViewer } from "@/lib/navigation/require-viewer";
 import { MemberDetail } from "@/components/MemberDetail";
 
@@ -12,9 +13,9 @@ export default async function MyPage() {
     redirect("/onboarding");
   }
 
-  const [mutualMembers, bandActivities] = await Promise.all([
+  const [mutualMembers, memberActivities] = await Promise.all([
     getMutualResonateMembers(memberId),
-    getBandActivityFeedForMember(memberId),
+    getMemberActivityFeed(memberId),
   ]);
 
   return (
@@ -23,7 +24,7 @@ export default async function MyPage() {
         member={member}
         isOwnProfile
         mutualMembers={mutualMembers}
-        bandActivities={bandActivities}
+        memberActivities={memberActivities}
         priorityPhoto
       />
     </main>

@@ -38,7 +38,7 @@ export type Member = {
   };
 };
 
-export type DetailSection = "portrait" | "music" | "lookingFor";
+export type DetailSection = "portrait" | "music" | "lookingFor" | "activity";
 
 export const DETAIL_SECTIONS: {
   id: DetailSection;
@@ -47,4 +47,12 @@ export const DETAIL_SECTIONS: {
   { id: "portrait", label: "About" },
   { id: "music", label: "Music" },
   { id: "lookingFor", label: "Band" },
+];
+
+export const OWN_PROFILE_DETAIL_SECTIONS: {
+  id: DetailSection;
+  label: string;
+}[] = [
+  ...DETAIL_SECTIONS,
+  { id: "activity", label: "Activity" },
 ];
