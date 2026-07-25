@@ -1,7 +1,4 @@
 export const queryKeys = {
-  home: {
-    bootstrap: () => ["home", "bootstrap"] as const,
-  },
   members: {
     feed: (viewerId?: string) => ["members", "feed", viewerId ?? "anonymous"] as const,
     profile: (memberId: string) => ["members", "profile", memberId] as const,

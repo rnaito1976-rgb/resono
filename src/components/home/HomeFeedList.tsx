@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { PersonCardSkeleton } from "@/components/skeletons/PersonCardSkeleton";
+import { getResonanceStatusBatchAction } from "@/lib/actions/resonance";
 import {
   FEED_PAGE_SIZE,
   INITIAL_FEED_PAGE_SIZE,
@@ -20,11 +21,51 @@ const PersonCardClient = dynamic(
   { loading: () => <PersonCardSkeleton /> }
 );
 
+const FEED_CACHE_PREFIX = "resono:home-feed:";
+const FEED_CACHE_TTL_MS = 3 * 60 * 1000;
+
 type HomeFeedListProps = {
   viewerId?: string;
   showSectionHeader?: boolean;
-  initialFeedPage?: MembersFeedPage;
 };
+
+function getFeedCacheKey(viewerId?: string) {
+  return `${FEED_CACHE_PREFIX}${viewerId ?? "anonymous"}`;
+}
+
+function readFeedCache(viewerId?: string): MembersFeedPage | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  try {
+    const raw = sessionStorage.getItem(getFeedCacheKey(viewerId));
+    if (!raw) {
+      return undefined;
+    }
+
+    const parsed = JSON.parse(raw) as { savedAt: number; page: MembersFeedPage };
+    if (Date.now() - parsed.savedAt > FEED_CACHE_TTL_MS) {
+      sessionStorage.removeItem(getFeedCacheKey(viewerId));
+      return undefined;
+    }
+
+    return parsed.page;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeFeedCache(viewerId: string | undefined, page: MembersFeedPage) {
+  try {
+    sessionStorage.setItem(
+      getFeedCacheKey(viewerId),
+      JSON.stringify({ savedAt: Date.now(), page })
+    );
+  } catch {
+    // Ignore quota errors.
+  }
+}
 
 async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeedPage> {
   const response = await fetch(
@@ -41,9 +82,10 @@ async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeed
 export function HomeFeedList({
   viewerId,
   showSectionHeader = false,
-  initialFeedPage,
 }: HomeFeedListProps) {
+  const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const cachedFirstPage = useRef(readFeedCache(viewerId));
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -54,14 +96,34 @@ export function HomeFeedList({
           pageParam === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE
         ),
       initialPageParam: 0,
-      initialData: initialFeedPage
-        ? { pages: [initialFeedPage], pageParams: [0] }
+      initialData: cachedFirstPage.current
+        ? { pages: [cachedFirstPage.current], pageParams: [0] }
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
       staleTime: 5 * 60 * 1000,
     });
 
   const feedItems = data?.pages.flatMap((page) => page.items) ?? [];
+  const firstPage = data?.pages[0];
+
+  useEffect(() => {
+    if (firstPage) {
+      writeFeedCache(viewerId, firstPage);
+    }
+  }, [firstPage, viewerId]);
+
+  useEffect(() => {
+    const memberIds = feedItems.map((item) => item.member.id);
+    if (memberIds.length === 0) {
+      return;
+    }
+
+    void getResonanceStatusBatchAction(memberIds).then((statusMap) => {
+      for (const [memberId, status] of Object.entries(statusMap)) {
+        queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
+      }
+    });
+  }, [feedItems, queryClient]);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -88,7 +150,7 @@ export function HomeFeedList({
   }, [handleObserver, hasNextPage]);
 
   if (isLoading) {
-    return <HomeFeedSkeleton count={showSectionHeader ? 3 : 4} />;
+    return <HomeFeedSkeleton count={showSectionHeader ? 2 : 3} />;
   }
 
   if (error) {

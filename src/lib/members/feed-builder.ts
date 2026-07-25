@@ -54,17 +54,12 @@ export async function buildMembersFeedPage(
   }
 
   if (options.fast) {
-    const statusMap = await getResonanceStatusBatch(
-      viewerMemberId,
-      feedMembers.map((member) => member.id)
-    );
-
     return {
       items: feedMembers.map((member) => ({
         member,
         recommendation: undefined,
         reason: undefined,
-        resonanceStatus: statusMap[member.id],
+        resonanceStatus: undefined,
       })),
       nextOffset: page.hasMore ? offset + limit : null,
       hasMore: page.hasMore,

@@ -5,6 +5,7 @@ import { ensureConversationForMembers } from "@/lib/messages/conversations";
 import { getMemberByUserId } from "@/lib/members";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import {
+  getResonanceStatusBatch,
   getResonanceStatusForMember,
   type ResonanceStatus,
 } from "@/lib/resonance/status";
@@ -45,6 +46,21 @@ export async function getResonanceStatusAction(
   }
 
   return status;
+}
+
+export async function getResonanceStatusBatchAction(
+  targetMemberIds: string[]
+): Promise<Record<string, ResonanceStatus>> {
+  if (!isSupabaseConfigured()) {
+    return {};
+  }
+
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
+    return {};
+  }
+
+  return getResonanceStatusBatch(memberId, targetMemberIds);
 }
 
 export async function toggleResonanceAction(targetMemberId: string) {
