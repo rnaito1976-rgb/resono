@@ -1,21 +1,11 @@
 import { MenuPageShell } from "@/components/menu/MenuPageShell";
+import { TermsOfUseContent } from "@/components/menu/TermsOfUseContent";
 import { MENU_TERMS } from "@/lib/menu/copy";
 
 export default function MenuTermsPage() {
   return (
-    <MenuPageShell title={MENU_TERMS.title}>
-      <article className="space-y-8">
-        <p className="text-[13px] text-muted">{MENU_TERMS.updated}</p>
-
-        {MENU_TERMS.sections.map((section) => (
-          <section key={section.heading} className="space-y-3">
-            <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
-              {section.heading}
-            </h2>
-            <p className="text-[16px] leading-[1.8] text-foreground/65">{section.body}</p>
-          </section>
-        ))}
-      </article>
+    <MenuPageShell title={MENU_TERMS.title} subtitle={MENU_TERMS.subtitle}>
+      <TermsOfUseContent />
     </MenuPageShell>
   );
 }

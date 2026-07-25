@@ -45,7 +45,7 @@ export function MenuScreen() {
 
       <MenuGroup>
         <MenuRow href="/menu/privacy" label="Privacy Policy" />
-        <MenuRow href="/menu/terms" label="Terms of Service" />
+        <MenuRow href="/menu/terms" label="Terms of Use" />
       </MenuGroup>
 
       {isLoggedIn ? (
