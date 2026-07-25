@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const resolveCurrentMemberId = cache(async function resolveCurrentMemberId(): Promise<string | null> {
@@ -7,15 +8,13 @@ export const resolveCurrentMemberId = cache(async function resolveCurrentMemberI
     return null;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (!user) {
     return null;
   }
 
+  const supabase = await createClient();
   const { data: byUserId, error: byUserIdError } = await supabase
     .from("members")
     .select("id")

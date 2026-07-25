@@ -74,7 +74,7 @@ function PersonCardComponent({
     }
     return getProfilePhotoSrc(
       member.photo,
-      shouldPrioritize ? 720 : isAmbient ? 480 : 560
+      shouldPrioritize ? HOME_LCP_IMAGE_WIDTH : isAmbient ? 320 : 400
     );
   }, [member.photo, isAmbient, isOwnCard, shouldPrioritize]);
   const profileSheet = useProfileSheetOptional();

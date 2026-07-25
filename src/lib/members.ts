@@ -5,6 +5,7 @@ import { createDefaultMember } from "@/lib/members/defaultMember";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { memberToRow, rowToMember, rowToMemberDetail, rowToMemberList } from "@/lib/supabase/mappers";
 import {
@@ -131,6 +132,36 @@ export async function getMembersByIds(ids: string[]): Promise<Map<string, Member
   }
 }
 
+export async function getMemberListById(id: string): Promise<Member | undefined> {
+  if (!isSupabaseConfigured()) {
+    return fallbackMembers.find((member) => member.id === id);
+  }
+
+  try {
+    const supabase = createAnonClient();
+    const { data, error } = await supabase
+      .from("members")
+      .select(MEMBER_LIST_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[Supabase] getMemberListById:", error.message);
+      return fallbackMembers.find((member) => member.id === id);
+    }
+
+    if (!data) {
+      return fallbackMembers.find((member) => member.id === id);
+    }
+
+    const [member] = await attachFrequencyColors([rowToMemberList(data)]);
+    return member;
+  } catch (error) {
+    console.error("[Supabase] getMemberListById:", error);
+    return fallbackMembers.find((member) => member.id === id);
+  }
+}
+
 export async function getMemberById(id: string): Promise<Member | undefined> {
   if (!isSupabaseConfigured()) {
     return fallbackMembers.find((member) => member.id === id);
@@ -217,22 +248,23 @@ async function linkMemberToUser(
 }
 
 export const getMemberByUserId = cache(async function getMemberByUserId(
-  userId: string
+  userId: string,
+  options: { columns?: "list" | "detail" } = {}
 ): Promise<Member | undefined> {
+  const useListColumns = options.columns === "list";
+  const fetchById = useListColumns ? getMemberListById : getMemberById;
+
   if (!isSupabaseConfigured()) {
     return undefined;
   }
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getAuthUser();
 
     if (user?.id === userId) {
       const memberId = await resolveCurrentMemberId();
       if (memberId) {
-        const member = await getMemberById(memberId);
+        const member = await fetchById(memberId);
         if (member) {
           if (!member.userId) {
             const linked = await linkMemberToUser(member.id, userId);
@@ -244,6 +276,47 @@ export const getMemberByUserId = cache(async function getMemberByUserId(
     }
 
     const anon = createAnonClient();
+
+    if (useListColumns) {
+      const { data: byUserId, error: userIdError } = await anon
+        .from("members")
+        .select(MEMBER_LIST_COLUMNS)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (userIdError) {
+        console.error("[Supabase] getMemberByUserId:", userIdError.message);
+      }
+
+      if (byUserId) {
+        return (await attachFrequencyColors([rowToMemberList(byUserId)]))[0];
+      }
+
+      const { data: byId, error: idError } = await anon
+        .from("members")
+        .select(MEMBER_LIST_COLUMNS)
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (idError) {
+        console.error("[Supabase] getMemberByUserId by id:", idError.message);
+        return undefined;
+      }
+
+      if (!byId) {
+        return undefined;
+      }
+
+      const member = rowToMemberList(byId);
+      if (!member.userId && user?.id === userId) {
+        const linked = await linkMemberToUser(member.id, userId);
+        const resolved = linked ?? { ...member, userId };
+        return (await attachFrequencyColors([resolved]))[0];
+      }
+
+      return (await attachFrequencyColors([member]))[0];
+    }
+
     const { data: byUserId, error: userIdError } = await anon
       .from("members")
       .select(MEMBER_DETAIL_COLUMNS)

@@ -11,6 +11,9 @@ import { getResonanceStatusBatch } from "@/lib/resonance/status";
 import type { Member } from "@/types/member";
 import type { MembersFeedPage } from "@/lib/members/feed";
 
+/** Build reasons synchronously for the first N cards; defer the rest. */
+const SYNC_REASON_BUILD_LIMIT = 6;
+
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
   userId?: string;
@@ -48,22 +51,26 @@ export async function buildMembersFeedPage(
     };
   }
 
-  const statusMap = await getResonanceStatusBatch(
-    viewerMemberId,
-    feedMembers.map((member) => member.id)
-  );
-
   const targetIds = feedMembers.map((member) => member.id);
-  const cachedReasons = await getResonanceReasonsFromCache(viewerMemberId, targetIds);
-  const ranked = rankRecommendations(options.viewer!, feedMembers);
-  const toSave: Array<{ targetMemberId: string; reason: ReturnType<typeof buildResonanceReason> }> = [];
+  const [statusMap, cachedReasons] = await Promise.all([
+    getResonanceStatusBatch(viewerMemberId, targetIds),
+    getResonanceReasonsFromCache(viewerMemberId, targetIds),
+  ]);
 
-  const items = ranked.map(({ member, recommendation }) => {
+  const ranked = rankRecommendations(options.viewer, feedMembers);
+  const toSave: Array<{ targetMemberId: string; reason: ReturnType<typeof buildResonanceReason> }> = [];
+  const deferredMembers: Member[] = [];
+
+  const items = ranked.map(({ member, recommendation }, index) => {
     let reason = cachedReasons.get(member.id);
 
     if (!reason) {
-      reason = buildResonanceReason(options.viewer!, member);
-      toSave.push({ targetMemberId: member.id, reason });
+      if (index < SYNC_REASON_BUILD_LIMIT) {
+        reason = buildResonanceReason(options.viewer!, member);
+        toSave.push({ targetMemberId: member.id, reason });
+      } else {
+        deferredMembers.push(member);
+      }
     }
 
     return {
@@ -76,6 +83,17 @@ export async function buildMembersFeedPage(
 
   if (toSave.length > 0) {
     void saveResonanceReasonsToCache(viewerMemberId, toSave);
+  }
+
+  if (deferredMembers.length > 0) {
+    const viewer = options.viewer!;
+    void (async () => {
+      const entries = deferredMembers.map((member) => ({
+        targetMemberId: member.id,
+        reason: buildResonanceReason(viewer, member),
+      }));
+      await saveResonanceReasonsToCache(viewerMemberId, entries);
+    })();
   }
 
   return {

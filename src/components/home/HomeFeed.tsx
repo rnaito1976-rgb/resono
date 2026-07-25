@@ -1,12 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { PersonCard } from "@/components/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
+import { PersonCardSkeleton } from "@/components/skeletons/PersonCardSkeleton";
 import { FEED_PAGE_SIZE, type MembersFeedPage } from "@/lib/members/feed";
 import { queryKeys } from "@/lib/query/keys";
 import type { Member } from "@/types/member";
+
+const LazyPersonCard = dynamic(
+  () => import("@/components/PersonCard").then((module) => module.PersonCard),
+  { loading: () => <PersonCardSkeleton /> }
+);
 
 type HomeFeedProps = {
   viewerId?: string;
@@ -105,7 +112,7 @@ export function HomeFeed({
 
           <div className="flex flex-col gap-14">
             {feedItems.map(({ member, recommendation, reason, resonanceStatus }) => (
-              <PersonCard
+              <LazyPersonCard
                 key={member.id}
                 member={member}
                 recommendation={recommendation}
@@ -118,7 +125,7 @@ export function HomeFeed({
       ) : (
         !isLoading &&
         feedItems.map(({ member, recommendation, reason, resonanceStatus }, index) => (
-          <PersonCard
+          <LazyPersonCard
             key={member.id}
             member={member}
             recommendation={recommendation}

@@ -3,6 +3,7 @@ import {
   isValidFrequencyColor,
 } from "@/lib/frequency-color/palette";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import { getAuthUser } from "@/lib/supabase/auth";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -112,10 +113,7 @@ export async function getViewerFrequencyColor(): Promise<FrequencyColorHex> {
   }
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getAuthUser();
 
     if (!user) {
       return DEFAULT_FREQUENCY_COLOR;

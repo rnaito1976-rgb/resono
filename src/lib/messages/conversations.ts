@@ -130,6 +130,16 @@ export async function getConversationsForMember(
 
 export async function getUnreadCountForMember(memberId: string): Promise<number> {
   const supabase = await createClient();
+
+  const { data: rpcCount, error: rpcError } = await supabase.rpc(
+    "get_unread_message_count",
+    { p_member_id: memberId }
+  );
+
+  if (!rpcError && typeof rpcCount === "number") {
+    return rpcCount;
+  }
+
   const { data: conversations } = await supabase
     .from("conversations")
     .select("id")

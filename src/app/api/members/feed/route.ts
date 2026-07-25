@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getMemberByUserId } from "@/lib/members";
 import { buildMembersFeedPage } from "@/lib/members/feed-builder";
 import { FEED_PAGE_SIZE } from "@/lib/members/feed";
-import { createClient } from "@/lib/supabase/server";
+import { getViewerContext } from "@/lib/members/viewer-context";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,11 +11,7 @@ export async function GET(request: Request) {
     FEED_PAGE_SIZE
   );
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const viewer = user ? await getMemberByUserId(user.id) : undefined;
+  const { user, member: viewer } = await getViewerContext();
 
   const payload = await buildMembersFeedPage(offset, limit, {
     viewer,

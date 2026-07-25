@@ -33,7 +33,7 @@ function TabBadge({ count }: { count: number }) {
 
 function useDeferredBadgeQueries(pathname: string) {
   const deferOnHome = pathname === "/";
-  const [enabled, setEnabled] = useState(!deferOnHome);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     if (!deferOnHome) {
@@ -41,15 +41,23 @@ function useDeferredBadgeQueries(pathname: string) {
       return;
     }
 
-    const idleCallback = window.requestIdleCallback?.(
-      () => setEnabled(true),
-      { timeout: 2000 }
-    );
+    const enable = () => setEnabled(true);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        enable();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+
+    const idleCallback = window.requestIdleCallback?.(enable, { timeout: 8000 });
     const timeoutId = idleCallback
       ? undefined
-      : window.setTimeout(() => setEnabled(true), 1200);
+      : window.setTimeout(enable, 8000);
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisible);
       if (idleCallback) {
         window.cancelIdleCallback(idleCallback);
       }
