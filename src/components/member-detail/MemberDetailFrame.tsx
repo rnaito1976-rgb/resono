@@ -169,6 +169,7 @@ export function MemberDetailFrame({
                 backLabel="ホームに戻る"
                 eyebrow="Profile"
                 title="マイページ"
+                subtitle="あなたの音楽活動をまとめて見る。"
                 actions={
                   <>
                     <HeaderActionLink href={`/member/${member.id}/edit`}>編集</HeaderActionLink>
