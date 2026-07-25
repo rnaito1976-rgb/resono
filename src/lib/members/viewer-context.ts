@@ -27,10 +27,13 @@ export const getViewerContext = cache(async (): Promise<ViewerContext> => {
     };
   }
 
-  const member = await getMemberByUserId(user.id);
+  const [member, frequencyColorFromProfile] = await Promise.all([
+    getMemberByUserId(user.id, { columns: "list" }),
+    getFrequencyColorByUserId(user.id),
+  ]);
   const frequencyColor: FrequencyColorHex =
     (member?.frequencyColor as FrequencyColorHex | undefined) ??
-    (await getFrequencyColorByUserId(user.id)) ??
+    frequencyColorFromProfile ??
     DEFAULT_FREQUENCY_COLOR;
 
   return { user, member, frequencyColor };

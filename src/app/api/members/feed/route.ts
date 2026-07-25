@@ -10,12 +10,14 @@ export async function GET(request: Request) {
     Math.max(1, Number(searchParams.get("limit") ?? FEED_PAGE_SIZE)),
     FEED_PAGE_SIZE
   );
+  const fast = searchParams.get("fast") === "1";
 
   const { user, member: viewer } = await getViewerContext();
 
   const payload = await buildMembersFeedPage(offset, limit, {
     viewer,
     userId: user?.id,
+    fast,
   });
 
   return NextResponse.json(payload, {

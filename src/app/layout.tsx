@@ -4,7 +4,7 @@ import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyCo
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
-import { getViewerContext } from "@/lib/members/viewer-context";
+import { getViewerTheme } from "@/lib/members/viewer-theme";
 import { getSupabaseUrl } from "@/lib/supabase/env";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 import "./globals.css";
@@ -25,7 +25,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { frequencyColor } = await getViewerContext();
+  const frequencyColor = await getViewerTheme();
   const supabaseUrl = getSupabaseUrl();
 
   return (

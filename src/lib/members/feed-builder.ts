@@ -17,6 +17,8 @@ const SYNC_REASON_BUILD_LIMIT = 6;
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
   userId?: string;
+  /** Skip ranking, reasons, and status for faster first paint. */
+  fast?: boolean;
 };
 
 export async function buildMembersFeedPage(
@@ -45,6 +47,24 @@ export async function buildMembersFeedPage(
         recommendation: undefined,
         reason: undefined,
         resonanceStatus: undefined,
+      })),
+      nextOffset: page.hasMore ? offset + limit : null,
+      hasMore: page.hasMore,
+    };
+  }
+
+  if (options.fast) {
+    const statusMap = await getResonanceStatusBatch(
+      viewerMemberId,
+      feedMembers.map((member) => member.id)
+    );
+
+    return {
+      items: feedMembers.map((member) => ({
+        member,
+        recommendation: undefined,
+        reason: undefined,
+        resonanceStatus: statusMap[member.id],
       })),
       nextOffset: page.hasMore ? offset + limit : null,
       hasMore: page.hasMore,

@@ -19,4 +19,4 @@ export type MembersFeedPage = {
 export const FEED_PAGE_SIZE = 20;
 
 /** First paint: fewer cards = faster TTFB and hydration. */
-export const INITIAL_FEED_PAGE_SIZE = 6;
+export const INITIAL_FEED_PAGE_SIZE = 4;
