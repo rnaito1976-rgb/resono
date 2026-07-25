@@ -376,22 +376,45 @@ export async function getBandUnreadCountAction(): Promise<number> {
     return 0;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { getAuthSession } = await import("@/lib/supabase/auth");
+  const { resolveCurrentMemberId } = await import("@/lib/members/resolve");
+  const user = await getAuthSession();
 
   if (!user) {
     return 0;
   }
 
-  const member = await getMemberByUserId(user.id);
-  if (!member) {
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
     return 0;
   }
 
   const { getBandUnreadCountForMember } = await import("@/lib/bands/unread");
-  return getBandUnreadCountForMember(member.id);
+  return getBandUnreadCountForMember(memberId);
+}
+
+export async function getBandUnreadSummaryAction(): Promise<
+  import("@/lib/bands/unread").BandUnreadSummary
+> {
+  if (!isSupabaseConfigured()) {
+    return { total: 0, byBandId: {} };
+  }
+
+  const { getAuthSession } = await import("@/lib/supabase/auth");
+  const { resolveCurrentMemberId } = await import("@/lib/members/resolve");
+  const user = await getAuthSession();
+
+  if (!user) {
+    return { total: 0, byBandId: {} };
+  }
+
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
+    return { total: 0, byBandId: {} };
+  }
+
+  const { getBandUnreadSummaryForMember } = await import("@/lib/bands/unread");
+  return getBandUnreadSummaryForMember(memberId);
 }
 
 export async function markBandAsSeenAction(bandId: string): Promise<void> {

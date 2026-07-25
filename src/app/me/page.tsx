@@ -1,24 +1,31 @@
 import { redirect } from "next/navigation";
-import { ensureMemberForUser } from "@/lib/members";
-import { createClient } from "@/lib/supabase/server";
-
-export const dynamic = "force-dynamic";
+import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/bands/queries";
+import { getMemberById } from "@/lib/members";
+import { requireViewer } from "@/lib/navigation/require-viewer";
+import { MemberDetail } from "@/components/MemberDetail";
 
 export default async function MyPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login?next=/me");
-  }
-
-  const member = await ensureMemberForUser(user.id, user.email);
+  const { memberId } = await requireViewer({ loginNext: "/me" });
+  const member = await getMemberById(memberId);
 
   if (!member) {
     redirect("/onboarding");
   }
 
-  redirect(`/member/${member.id}`);
+  const [mutualMembers, bandActivities] = await Promise.all([
+    getMutualResonateMembers(memberId),
+    getBandActivityFeedForMember(memberId),
+  ]);
+
+  return (
+    <main className="mx-auto max-w-mobile bg-background">
+      <MemberDetail
+        member={member}
+        isOwnProfile
+        mutualMembers={mutualMembers}
+        bandActivities={bandActivities}
+        priorityPhoto
+      />
+    </main>
+  );
 }

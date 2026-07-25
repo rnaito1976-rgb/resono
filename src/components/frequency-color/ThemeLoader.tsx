@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import { readStoredThemeColor, writeStoredThemeColor } from "@/lib/theme/storage";
 
 /** Non-blocking theme load for pages that don't use home bootstrap. */
 export function ThemeLoader() {
@@ -14,12 +15,19 @@ export function ThemeLoader() {
       return;
     }
 
+    const stored = readStoredThemeColor();
+    if (stored) {
+      applyFrequencyColorVariables(document.documentElement, stored);
+      return;
+    }
+
     let cancelled = false;
 
     void fetch("/api/theme")
       .then((response) => response.json())
       .then((payload: { color?: FrequencyColorHex }) => {
         if (!cancelled && payload.color) {
+          writeStoredThemeColor(payload.color);
           applyFrequencyColorVariables(document.documentElement, payload.color);
         }
       });

@@ -106,7 +106,8 @@ export async function getConversationsForMember(
       .from("messages")
       .select(MESSAGE_LIST_COLUMNS)
       .in("conversation_id", conversationIds)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(1500),
     supabase
       .from("conversation_reads")
       .select("conversation_id, last_read_at")

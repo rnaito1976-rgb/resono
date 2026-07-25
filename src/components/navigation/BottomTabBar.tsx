@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
 import { useBandUnreadCount } from "@/hooks/useBandUnreadCount";
@@ -72,7 +72,14 @@ function useDeferredBadgeQueries(pathname: string) {
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const badgesEnabled = useDeferredBadgeQueries(pathname);
+
+  useEffect(() => {
+    for (const { href } of TABS) {
+      router.prefetch(href);
+    }
+  }, [router]);
   const { count: messageCount } = useUnreadCount(badgesEnabled);
   const { count: bandCount } = useBandUnreadCount(badgesEnabled);
   const badgeCounts = {

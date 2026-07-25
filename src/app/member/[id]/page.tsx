@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/bands/queries";
-import { getMemberById, getMemberByUserId } from "@/lib/members";
+import { getMemberById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { buildResonanceReason } from "@/lib/resonance/matching";
 import { getResonanceStatusForMember } from "@/lib/resonance/status";
 import { MemberDetail } from "@/components/MemberDetail";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +16,16 @@ type MemberPageProps = {
 
 export default async function MemberPage({ params }: MemberPageProps) {
   const { id } = await params;
-  const [member, supabase] = await Promise.all([getMemberById(id), createClient()]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [member, user] = await Promise.all([getMemberById(id), getAuthSession()]);
 
   if (!member) {
     notFound();
   }
 
+  const viewerMemberId = user ? await resolveCurrentMemberId() : null;
+  const viewer = viewerMemberId ? await getMemberById(viewerMemberId) : undefined;
   const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
-  const viewer = user ? await getMemberByUserId(user.id) : undefined;
+
   const [mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
     isOwnProfile && viewer ? getMutualResonateMembers(viewer.id) : Promise.resolve([]),
     viewer ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
