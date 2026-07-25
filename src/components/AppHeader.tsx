@@ -15,7 +15,7 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
           <Link href="/">
             <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
           </Link>
-          <p className="mt-2 text-[13px] leading-relaxed text-muted">
+          <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-white/45">
             {BRAND_CATCH_COPY}
           </p>
         </div>
