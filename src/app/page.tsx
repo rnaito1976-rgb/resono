@@ -10,9 +10,16 @@ import { isOnboardingComplete } from "@/lib/onboarding/status";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { user, member: currentMember } = await getViewerContext();
+  const { user, member: currentMember, frequencyColor } = await getViewerContext();
 
-  if (user && currentMember && !isOnboardingComplete(currentMember)) {
+  if (
+    user &&
+    currentMember &&
+    !isOnboardingComplete({
+      ...currentMember,
+      frequencyColor: currentMember.frequencyColor ?? frequencyColor,
+    })
+  ) {
     redirect("/onboarding");
   }
 

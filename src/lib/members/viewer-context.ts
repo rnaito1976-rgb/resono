@@ -27,7 +27,7 @@ export const getViewerContext = cache(async (): Promise<ViewerContext> => {
     };
   }
 
-  const member = await getMemberByUserId(user.id, { columns: "list" });
+  const member = await getMemberByUserId(user.id);
   const frequencyColor: FrequencyColorHex =
     (member?.frequencyColor as FrequencyColorHex | undefined) ??
     (await getFrequencyColorByUserId(user.id)) ??
