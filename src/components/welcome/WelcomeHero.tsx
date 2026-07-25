@@ -39,10 +39,10 @@ export function WelcomeHero({
         <div className="flex flex-1 flex-col items-center justify-center pb-10 pt-6 text-center">
           <AuthFadeIn className="text-center">
             <AuthLogo className="text-center text-[#F6F6F6]" />
-            <p className="mx-auto mt-6 max-w-[320px] text-[22px] font-light leading-[1.65] tracking-tight text-[#F6F6F6]">
+            <p className="mx-auto mt-6 max-w-[320px] whitespace-pre-line text-[22px] font-light leading-[1.65] tracking-tight text-[#F6F6F6]">
               {BRAND_CATCH_COPY}
             </p>
-            <p className="mx-auto mt-5 max-w-[320px] text-[15px] leading-[1.85] text-[#F6F6F6]/55">
+            <p className="mx-auto mt-5 max-w-[320px] whitespace-pre-line text-[15px] leading-[1.85] text-[#F6F6F6]/55">
               {BRAND_DESCRIPTION}
             </p>
           </AuthFadeIn>
