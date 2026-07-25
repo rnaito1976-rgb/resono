@@ -37,7 +37,7 @@ export function MessagesPageContent() {
         backLabel="ホームに戻る"
         eyebrow="Messages"
         title="メッセージ"
-        subtitle="共鳴した人との自然な会話"
+        subtitle="共鳴した人にメッセージをしてみよう"
       />
       <Suspense fallback={<ChatListSkeleton />}>
         <MessagesContent />

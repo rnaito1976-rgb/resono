@@ -38,6 +38,7 @@ export function BandsPageContent() {
         backLabel="ホームに戻る"
         eyebrow="Bands"
         title="Band"
+        subtitle="共鳴から生まれたバンドたち。"
         actions={<HeaderActionLink href="/bands/new">作成</HeaderActionLink>}
       />
       <Suspense fallback={<BandsListSkeleton />}>
