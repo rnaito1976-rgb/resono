@@ -3,8 +3,9 @@
 import type { User } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
-import { AuthLogo, AuthTagline } from "@/components/auth/AuthShell";
+import { AuthLogo } from "@/components/auth/AuthShell";
 import { AuthWelcomeActions } from "@/components/auth/AuthWelcomeActions";
+import { BRAND_CATCH_COPY, BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
 const BG = "#0A0A0A";
 const TEXT = "#F6F6F6";
@@ -38,11 +39,11 @@ export function WelcomeHero({
         <div className="flex flex-1 flex-col items-center justify-center pb-10 pt-6 text-center">
           <AuthFadeIn className="text-center">
             <AuthLogo className="text-center text-[#F6F6F6]" />
-            <AuthTagline className="text-[#F6F6F6]/70" />
-            <p className="mx-auto mt-6 max-w-[300px] text-[17px] leading-[1.85] text-[#F6F6F6]/55">
-              世界観で共鳴する
-              <br />
-              ミュージシャンと出会う。
+            <p className="mx-auto mt-6 max-w-[320px] text-[22px] font-light leading-[1.65] tracking-tight text-[#F6F6F6]">
+              {BRAND_CATCH_COPY}
+            </p>
+            <p className="mx-auto mt-5 max-w-[320px] text-[15px] leading-[1.85] text-[#F6F6F6]/55">
+              {BRAND_DESCRIPTION}
             </p>
           </AuthFadeIn>
         </div>

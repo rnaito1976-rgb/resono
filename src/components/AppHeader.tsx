@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
+import { BRAND_CATCH_COPY } from "@/lib/branding/copy";
 
 type AppHeaderProps = {
   initialUser?: User | null;
@@ -15,7 +16,7 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
             <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
           </Link>
           <p className="mt-2 text-[13px] leading-relaxed text-muted">
-            世界観で共鳴する仲間と出会う
+            {BRAND_CATCH_COPY}
           </p>
         </div>
 

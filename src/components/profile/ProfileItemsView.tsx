@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import {
   getProfileItemLabel,
   getProfileItems,
 } from "@/lib/profile/items";
-import { Button } from "@/components/ui/button";
 import type { Member } from "@/types/member";
 
 type ProfileItemsViewProps = {
@@ -68,17 +66,6 @@ export function ProfileItemsView({
           </div>
         )}
       </div>
-
-      {isOwnProfile ? (
-        <div className="flex flex-col gap-3">
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/discover">Discover a Story</Link>
-          </Button>
-          <Button asChild variant="outline" className="w-full">
-            <Link href={`/member/${member.id}/edit#profile-items`}>項目を編集</Link>
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 }

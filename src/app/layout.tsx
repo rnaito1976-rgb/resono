@@ -6,6 +6,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
 import { getViewerContext } from "@/lib/members/viewer-context";
 import { getSupabaseUrl } from "@/lib/supabase/env";
+import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 import "./globals.css";
 
 const inter = Inter({
@@ -16,7 +17,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Resono",
-  description: "世界観で共鳴する仲間と出会う",
+  description: BRAND_DESCRIPTION,
 };
 
 export default async function RootLayout({

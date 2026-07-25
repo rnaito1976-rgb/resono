@@ -1,8 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DETAIL_SECTIONS } from "@/types/member";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
@@ -198,11 +196,6 @@ export function MemberDetailFrame({
         </div>
         {showResonateButton ? (
           <ResonateButton memberId={member.id} initialStatus={resonanceStatus} />
-        ) : null}
-        {isOwnProfile ? (
-          <Button asChild variant="outline" className="w-full tracking-wide">
-            <Link href="/discover">Discover a Story</Link>
-          </Button>
         ) : null}
       </div>
     </div>

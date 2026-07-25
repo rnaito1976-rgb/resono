@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
+import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
 type AuthFormProps = {
   mode: "signup" | "login";
@@ -121,9 +122,7 @@ export function AuthForm({
           {isSignup ? "アカウントを作成" : "ログイン"}
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-white/50">
-          {isSignup
-            ? "世界観でつながるミュージシャンのための場所へ。"
-            : "おかえりなさい。あなたの frequency を見つけに。"}
+          {isSignup ? BRAND_DESCRIPTION : "おかえりなさい。あなたの frequency を見つけに。"}
         </p>
       </div>
 
