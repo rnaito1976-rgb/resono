@@ -1,8 +1,8 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { HomeFeed } from "@/components/home/HomeFeed";
-import { buildMembersFeedPage } from "@/lib/members/feed-builder";
-import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
+import { HomeFeedSection } from "@/components/home/HomeFeedSection";
+import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { getViewerContext } from "@/lib/members/viewer-context";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { isOnboardingComplete } from "@/lib/onboarding/status";
@@ -23,15 +23,7 @@ export default async function HomePage() {
     redirect("/onboarding");
   }
 
-  const initialFeedPage = await buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
-    viewer: currentMember,
-    userId: user?.id,
-  });
-
-  const lcpImageHref = getHomeLcpImageHref(
-    currentMember,
-    initialFeedPage.items[0]?.member
-  );
+  const lcpImageHref = getHomeLcpImageHref(currentMember, undefined);
 
   return (
     <>
@@ -40,11 +32,13 @@ export default async function HomePage() {
       ) : null}
       <main className="mx-auto min-h-dvh max-w-mobile bg-background">
         <AppHeader initialUser={user} />
-        <HomeFeed
-          viewerId={currentMember?.id ?? user?.id}
-          currentMember={currentMember}
-          initialFeedPage={initialFeedPage}
-        />
+        <Suspense fallback={<HomeFeedSkeleton count={4} />}>
+          <HomeFeedSection
+            viewerId={currentMember?.id ?? user?.id}
+            currentMember={currentMember}
+            userId={user?.id}
+          />
+        </Suspense>
       </main>
     </>
   );

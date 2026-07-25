@@ -1,13 +1,6 @@
-"use client";
-
-import { memo, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ResonateButton } from "@/components/ResonateButton";
-import { Button } from "@/components/ui/button";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
-import { useProfileSheetOptional } from "@/providers/ProfileSheetProvider";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
@@ -17,67 +10,51 @@ import { getPlayingParts } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import {
   getRecruitmentMatchLabelText,
-  type RecommendationResult,
 } from "@/lib/recommendation/scoring";
-import type { ResonanceReason } from "@/lib/resonance/matching";
-import type { ResonanceStatus } from "@/lib/resonance/status";
-import { Member } from "@/types/member";
 import { ResonanceBadge, TagList } from "@/components/ui";
+import type { PersonCardData } from "@/components/person-card/types";
+import type { ReactNode } from "react";
 
-type PersonCardProps = {
-  member: Member;
-  variant?: "default" | "ambient";
-  recommendation?: RecommendationResult;
-  resonanceReason?: ResonanceReason;
-  resonanceStatus?: ResonanceStatus;
-  isOwnCard?: boolean;
-  priority?: boolean;
-};
-
-function getOpenParts(member: Member): string[] {
+function getOpenParts(member: PersonCardData["member"]): string[] {
   const parts = member.lookingFor?.parts;
   return Array.isArray(parts) ? parts.filter(Boolean) : [];
 }
 
-function PersonCardComponent({
+type PersonCardContentProps = PersonCardData & {
+  actions?: ReactNode;
+};
+
+export function PersonCardContent({
   member,
   variant = "default",
   recommendation,
   resonanceReason,
-  resonanceStatus,
   isOwnCard = false,
   priority = false,
-}: PersonCardProps) {
+  actions,
+}: PersonCardContentProps) {
   const isAmbient = variant === "ambient";
   const score = resonanceReason?.score;
-  const openParts = useMemo(() => getOpenParts(member), [member.lookingFor?.parts]);
-  const playingParts = useMemo(() => getPlayingParts(member), [member.music.instruments]);
+  const openParts = getOpenParts(member);
+  const playingParts = getPlayingParts(member);
   const ringColor = isOwnCard
     ? undefined
     : (member.frequencyColor as FrequencyColorHex | undefined);
-  const highlightedParts = useMemo(
-    () =>
-      new Set(
-        recommendation?.recruitmentLabel === "sought-by-target"
-          ? (recommendation.highlightedParts ?? [])
-          : []
-      ),
-    [recommendation]
+  const highlightedParts = new Set(
+    recommendation?.recruitmentLabel === "sought-by-target"
+      ? (recommendation.highlightedParts ?? [])
+      : []
   );
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
   const shouldPrioritize = priority && !isAmbient;
-  const photoSrc = useMemo(() => {
-    if (isOwnCard) {
-      return getProfilePhotoSrc(member.photo, HOME_LCP_IMAGE_WIDTH);
-    }
-    return getProfilePhotoSrc(
-      member.photo,
-      shouldPrioritize ? HOME_LCP_IMAGE_WIDTH : isAmbient ? 320 : 400
-    );
-  }, [member.photo, isAmbient, isOwnCard, shouldPrioritize]);
-  const profileSheet = useProfileSheetOptional();
+  const photoSrc = isOwnCard
+    ? getProfilePhotoSrc(member.photo, HOME_LCP_IMAGE_WIDTH)
+    : getProfilePhotoSrc(
+        member.photo,
+        shouldPrioritize ? HOME_LCP_IMAGE_WIDTH : isAmbient ? 320 : 400
+      );
 
   return (
     <article className="overflow-hidden rounded-[28px] bg-subtle">
@@ -173,42 +150,10 @@ function PersonCardComponent({
           {member.aiComment}
         </blockquote>
 
-        {!isAmbient ? (
-          <div className="space-y-3">
-            {!isOwnCard ? (
-              <ResonateButton
-                memberId={member.id}
-                initialStatus={resonanceStatus}
-              />
-            ) : null}
-            {isOwnCard ? (
-              <Button asChild variant="outline" className="w-full tracking-wide">
-                <Link href="/discover">Discover a Story</Link>
-              </Button>
-            ) : null}
-            {isOwnCard ? (
-              <Button asChild variant="outline" className="w-full tracking-wide">
-                <Link href="/me">マイページ</Link>
-              </Button>
-            ) : profileSheet ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full tracking-wide"
-                onClick={() => profileSheet.openProfile(member.id)}
-              >
-                もっと知る
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="w-full tracking-wide">
-                <Link href={`/member/${member.id}`}>もっと知る</Link>
-              </Button>
-            )}
-          </div>
+        {!isAmbient && actions ? (
+          <div className="space-y-3">{actions}</div>
         ) : null}
       </div>
     </article>
   );
 }
-
-export const PersonCard = memo(PersonCardComponent);

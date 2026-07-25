@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   DEFAULT_FREQUENCY_COLOR,
   isValidFrequencyColor,
@@ -36,7 +37,7 @@ export async function getFrequencyColorByUserId(
   }
 }
 
-export async function getFrequencyColorsByUserIds(
+export const getFrequencyColorsByUserIds = cache(async function getFrequencyColorsByUserIds(
   userIds: string[]
 ): Promise<Map<string, FrequencyColorHex>> {
   const map = new Map<string, FrequencyColorHex>();
@@ -67,7 +68,7 @@ export async function getFrequencyColorsByUserIds(
   }
 
   return map;
-}
+});
 
 export async function saveFrequencyColorForUser(
   userId: string,
