@@ -33,19 +33,68 @@ export const MENU_SUPPORT = {
 
 export const MENU_PRIVACY = {
   title: "Privacy Policy",
-  updated: "Last updated: March 2026",
+  subtitle:
+    "安心してResonoを使っていただくために、\n私たちが大切にしていることです。",
+  version: "Version 0.1",
+  lastUpdated: "Last Updated: March 2026",
   sections: [
     {
-      heading: "Information we collect",
-      body: "Resono collects account information you provide during registration, profile content you choose to share, and usage data needed to operate the service.",
+      id: "info",
+      heading: "あなたの情報について",
+      paragraphs: [
+        "Resonoでは、アカウントやプロフィールの作成、バンドメンバー募集やマッチングなど、サービスを提供するために必要な情報をお預かりします。",
+        "取得した情報は、サービスの提供・改善・安全な運営のために利用します。",
+      ],
     },
     {
-      heading: "How we use information",
-      body: "We use your information to match musicians, enable messaging, improve recommendations, and maintain the security of the platform.",
+      id: "privacy",
+      heading: "あなたのプライバシーについて",
+      paragraphs: [
+        "安心して音楽仲間と出会える場所であるために、Resonoはユーザーのプライバシーを大切にしています。",
+        "プロフィールやメッセージなどの情報は、サービス提供に必要な範囲でのみ利用します。",
+        "運営者がこれらの情報を確認するのは、以下のような必要な場合に限ります。",
+      ],
+      bullets: [
+        "ユーザーからサポートや調査の依頼があった場合",
+        "スパムや迷惑行為などの調査が必要な場合",
+        "システム障害や不具合の調査が必要な場合",
+        "法令に基づく対応が必要な場合",
+      ],
+      footer:
+        "それ以外の目的で内容を確認したり、第三者へ提供・販売することはありません。",
     },
     {
-      heading: "Contact",
-      body: "Questions about privacy can be sent through Feedback in the app menu.",
+      id: "ai",
+      heading: "AI機能について",
+      paragraphs: [
+        "Resonoでは、プロフィール作成やマッチング体験をより良くするためにAIを利用しています。",
+        "AIへの入力内容は、サービス提供や品質向上のために利用される場合があります。",
+      ],
+    },
+    {
+      id: "services",
+      heading: "利用しているサービス",
+      paragraphs: [
+        "Resonoではサービス運営のために以下のサービスを利用しています。",
+      ],
+      bullets: ["Supabase", "Vercel", "OpenAI"],
+      footer:
+        "今後サービスの成長に合わせて追加・変更される場合があります。",
+    },
+    {
+      id: "promise",
+      heading: "私たちの約束",
+      bullets: [
+        "必要以上の個人情報は取得しません。",
+        "個人情報を第三者へ販売することはありません。",
+        "安心して音楽仲間と出会える場所を目指します。",
+        "ユーザーの声を大切にしながらサービスを改善し続けます。",
+      ],
+    },
+    {
+      id: "contact",
+      heading: "お問い合わせ",
+      feedbackLink: true,
     },
   ],
 } as const;
