@@ -2,12 +2,12 @@
 
 import { useTransition } from "react";
 import { MenuGroup } from "@/components/menu/MenuGroup";
-import { MenuRow, MenuRowSeparator } from "@/components/menu/MenuRow";
+import { MenuRow } from "@/components/menu/MenuRow";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { createClient } from "@/lib/supabase/client";
 
-function MenuDivider() {
-  return <div className="h-3" aria-hidden />;
+function MenuSectionGap() {
+  return <div className="h-8" aria-hidden />;
 }
 
 function MenuLogoutRow() {
@@ -22,15 +22,11 @@ function MenuLogoutRow() {
   }
 
   return (
-    <MenuGroup>
-      <MenuRow
-        icon="🚪"
-        label={isPending ? "Signing out…" : "Log Out"}
-        onClick={handleSignOut}
-        destructive
-        showChevron={false}
-      />
-    </MenuGroup>
+    <MenuRow
+      label={isPending ? "Signing out…" : "Log Out"}
+      onClick={handleSignOut}
+      destructive
+    />
   );
 }
 
@@ -38,27 +34,26 @@ export function MenuScreen() {
   const { isLoggedIn } = useAuthUser();
 
   return (
-    <div className="space-y-3">
+    <div>
       <MenuGroup>
-        <MenuRow href="/menu/about" icon="👋" label="About Resono" />
-        <MenuRowSeparator />
-        <MenuRow href="/menu/feedback" icon="💡" label="Feedback" />
-        <MenuRowSeparator />
-        <MenuRow href="/menu/support" icon="💚" label="Support Resono" />
+        <MenuRow href="/menu/about" label="About Resono" />
+        <MenuRow href="/menu/feedback" label="Feedback" />
+        <MenuRow href="/menu/support" label="Support Resono" />
       </MenuGroup>
 
-      <MenuDivider />
+      <MenuSectionGap />
 
       <MenuGroup>
-        <MenuRow href="/menu/privacy" icon="🔒" label="Privacy Policy" />
-        <MenuRowSeparator />
-        <MenuRow href="/menu/terms" icon="📄" label="Terms of Service" />
+        <MenuRow href="/menu/privacy" label="Privacy Policy" />
+        <MenuRow href="/menu/terms" label="Terms of Service" />
       </MenuGroup>
 
       {isLoggedIn ? (
         <>
-          <MenuDivider />
-          <MenuLogoutRow />
+          <MenuSectionGap />
+          <MenuGroup>
+            <MenuLogoutRow />
+          </MenuGroup>
         </>
       ) : null}
     </div>
