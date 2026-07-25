@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
+import { ThemeLoader } from "@/components/frequency-color/ThemeLoader";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
-import { getViewerTheme } from "@/lib/members/viewer-theme";
+import { DEFAULT_FREQUENCY_COLOR } from "@/lib/frequency-color/palette";
 import { getSupabaseUrl } from "@/lib/supabase/env";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 import "./globals.css";
@@ -20,12 +21,11 @@ export const metadata: Metadata = {
   description: BRAND_DESCRIPTION,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const frequencyColor = await getViewerTheme();
   const supabaseUrl = getSupabaseUrl();
 
   return (
@@ -42,7 +42,8 @@ export default async function RootLayout({
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
         <QueryProvider>
-          <FrequencyColorProvider color={frequencyColor}>
+          <FrequencyColorProvider color={DEFAULT_FREQUENCY_COLOR}>
+            <ThemeLoader />
             <ProfileSheetProvider>
               <TabBarWrapper>{children}</TabBarWrapper>
             </ProfileSheetProvider>

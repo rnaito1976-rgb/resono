@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { getAuthUser } from "@/lib/supabase/auth";
+import { getAuthSession } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const resolveCurrentMemberId = cache(async function resolveCurrentMemberId(): Promise<string | null> {
@@ -8,7 +8,7 @@ export const resolveCurrentMemberId = cache(async function resolveCurrentMemberI
     return null;
   }
 
-  const user = await getAuthUser();
+  const user = await getAuthSession();
 
   if (!user) {
     return null;

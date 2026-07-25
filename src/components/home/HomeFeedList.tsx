@@ -23,6 +23,7 @@ const PersonCardClient = dynamic(
 type HomeFeedListProps = {
   viewerId?: string;
   showSectionHeader?: boolean;
+  initialFeedPage?: MembersFeedPage;
 };
 
 async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeedPage> {
@@ -37,7 +38,11 @@ async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeed
   return response.json();
 }
 
-export function HomeFeedList({ viewerId, showSectionHeader = false }: HomeFeedListProps) {
+export function HomeFeedList({
+  viewerId,
+  showSectionHeader = false,
+  initialFeedPage,
+}: HomeFeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
@@ -49,6 +54,9 @@ export function HomeFeedList({ viewerId, showSectionHeader = false }: HomeFeedLi
           pageParam === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE
         ),
       initialPageParam: 0,
+      initialData: initialFeedPage
+        ? { pages: [initialFeedPage], pageParams: [0] }
+        : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
       staleTime: 5 * 60 * 1000,
     });
