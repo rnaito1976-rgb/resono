@@ -25,6 +25,19 @@
     --frequency-color: #5ef2c8;
     --frequency-color-soft: rgba(94, 242, 200, 0.12);
     --frequency-color-muted: rgba(94, 242, 200, 0.4);
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root.light-ready {
+      --background: 0 0% 98%;
+      --foreground: 0 0% 9%;
+      --muted: 0 0% 46%;
+      --subtle: 0 0% 100%;
+      --border: 0 0% 90%;
+      --border-subtle: 0 0% 94%;
+      color-scheme: light;
+    }
   }
 
   html {

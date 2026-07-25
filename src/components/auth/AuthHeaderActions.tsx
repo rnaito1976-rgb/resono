@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -14,14 +14,21 @@ export function AuthHeaderActions({ initialUser = null }: AuthHeaderActionsProps
   const { isLoggedIn, isLoading } = useAuthUser(initialUser);
 
   if (isLoading) {
-    return <div className="h-9 w-20" aria-hidden />;
+    return <div className="h-9 w-10" aria-hidden />;
   }
 
   if (isLoggedIn) {
     return (
-      <div className="flex items-center gap-1">
-        <LogoutButton />
-      </div>
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10 text-white/70 hover:bg-white/[0.06] hover:text-white"
+      >
+        <Link href="/menu" aria-label="Menu">
+          <Menu className="h-5 w-5" strokeWidth={1.75} />
+        </Link>
+      </Button>
     );
   }
 
