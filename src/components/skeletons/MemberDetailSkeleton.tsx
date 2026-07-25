@@ -4,7 +4,7 @@ type MemberDetailSkeletonProps = {
 
 /** ⑮ プロフィール表示中のスケルトンUI */
 export function MemberDetailSkeleton({ variant = "page" }: MemberDetailSkeletonProps) {
-  const heightClass = variant === "sheet" ? "h-[80dvh]" : "h-dvh";
+  const heightClass = variant === "sheet" ? "h-full min-h-0" : "h-dvh";
 
   return (
     <div className={`flex ${heightClass} flex-col bg-background`} aria-hidden>

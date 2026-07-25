@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Home, MessageCircle, Music2, UserRound } from "lucide-react";
 import { useBandUnreadCount } from "@/hooks/useBandUnreadCount";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { scrollHomeToTop } from "@/lib/navigation/home-scroll";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home },
@@ -100,6 +101,25 @@ export function BottomTabBar() {
               : pathname === href || pathname.startsWith(`${href}/`);
           const badgeCount =
             "badgeKey" in rest ? badgeCounts[rest.badgeKey] : 0;
+
+          const isHomeTab = href === "/";
+
+          if (isHomeTab && active) {
+            return (
+              <button
+                key={href}
+                type="button"
+                aria-label={label}
+                aria-current="page"
+                onClick={scrollHomeToTop}
+                className="relative flex h-11 w-11 items-center justify-center rounded-full transition-quiet active:scale-95"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-quiet">
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} />
+                </span>
+              </button>
+            );
+          }
 
           return (
             <Link

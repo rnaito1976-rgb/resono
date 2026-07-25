@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
+import { HomeLogoLink } from "@/components/navigation/HomeLogoLink";
 import { BRAND_CATCH_COPY } from "@/lib/branding/copy";
 
 type AppHeaderProps = {
@@ -12,9 +12,9 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
     <header className="sticky top-0 z-10 bg-background/85 px-5 pb-5 pt-10 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/">
+          <HomeLogoLink>
             <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
-          </Link>
+          </HomeLogoLink>
           <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-white/45">
             {BRAND_CATCH_COPY}
           </p>

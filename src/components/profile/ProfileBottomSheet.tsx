@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { MemberDetailFrame } from "@/components/member-detail/MemberDetailFrame";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import { useMemberProfile } from "@/hooks/useMemberProfile";
+import { HOME_HEADER_SHEET_TOP } from "@/lib/navigation/home-scroll";
 
 type ProfileBottomSheetProps = {
   memberId: string | null;
@@ -53,7 +54,8 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
         role="dialog"
         aria-modal="true"
         aria-label="プロフィール"
-        className="relative mx-auto flex max-h-[92dvh] w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] bg-background shadow-2xl animate-in slide-in-from-bottom duration-200"
+        className="relative mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] bg-background shadow-2xl animate-in slide-in-from-bottom duration-200"
+        style={{ height: `calc(100dvh - ${HOME_HEADER_SHEET_TOP})` }}
       >
         <div className="flex shrink-0 justify-center pb-1 pt-3">
           <div className="h-1 w-10 rounded-full bg-white/20" />

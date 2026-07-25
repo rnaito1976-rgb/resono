@@ -87,7 +87,7 @@ export function MemberDetailFrame({
     ? getOwnProfileDetailSections(hasActivityContent)
     : DETAIL_SECTIONS;
   const containerClass = isSheet
-    ? "flex h-[80dvh] flex-col bg-background"
+    ? "flex h-full min-h-0 flex-col bg-background"
     : "flex h-dvh flex-col bg-background";
 
   const scrollToIndex = useCallback((index: number) => {
