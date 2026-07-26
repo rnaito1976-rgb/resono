@@ -96,7 +96,7 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
   }
 
   return (
-    <WelcomeShell>
+    <WelcomeShell members={members}>
       <AnimatePresence mode="wait">
         {step === "intro" ? (
           <WelcomeMotion stepKey="intro">
