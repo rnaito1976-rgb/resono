@@ -36,9 +36,6 @@ export function WelcomeQuestionStepView({
           Welcome
         </p>
         <h2 className="mt-1 text-[28px] font-light leading-[1.25] tracking-tight">
-          <span aria-hidden className="mr-2">
-            {config.emoji}
-          </span>
           {config.title}
         </h2>
         {config.subtitle ? (

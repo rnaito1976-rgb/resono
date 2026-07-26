@@ -133,7 +133,6 @@ export type WelcomeQuestionKind = "artists" | "parts" | "sounds";
 
 export type WelcomeQuestionConfig = {
   kind: WelcomeQuestionKind;
-  emoji: string;
   title: string;
   subtitle?: string;
   presets: readonly string[];
@@ -146,7 +145,6 @@ export type WelcomeQuestionConfig = {
 export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfig> = {
   artists: {
     kind: "artists",
-    emoji: "🎧",
     title: "好きなアーティストを選んでください",
     subtitle: "Resonoで最も重要な入力項目です。",
     presets: WELCOME_ARTIST_CATALOG,
@@ -157,7 +155,6 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
   },
   parts: {
     kind: "parts",
-    emoji: "🎸",
     title: "担当パートを選んでください",
     presets: WELCOME_PART_PRESETS,
     searchable: false,
@@ -165,7 +162,6 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
   },
   sounds: {
     kind: "sounds",
-    emoji: "🎵",
     title: "一緒に、どんな音を鳴らしたい？",
     presets: WELCOME_SOUND_PRESETS,
     searchable: true,

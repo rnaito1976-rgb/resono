@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { cn } from "@/lib/utils";
 import { WELCOME_ARTIST_CATALOG } from "@/lib/welcome/onboarding-data";
 import {
@@ -31,7 +32,7 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
         )
       : WELCOME_ARTIST_CATALOG;
 
-    return pool.filter((artist) => !selected.includes(artist)).slice(0, 24);
+    return pool.filter((artist) => !selected.includes(artist));
   }, [query, selected]);
 
   const customCandidate = useMemo(() => {
@@ -62,15 +63,7 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
   }
 
   return (
-    <div className="space-y-4">
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="アーティストを検索"
-        className="w-full rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15"
-      />
-
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {selected.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {selected.map((artist) => (
@@ -94,36 +87,46 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
           : null}
       </p>
 
-      <div className="max-h-52 space-y-2 overflow-y-auto scrollbar-hide">
-        {customCandidate ? (
-          <button
-            type="button"
-            onClick={() => addArtist(customCandidate)}
-            className="flex w-full items-center rounded-2xl border border-dashed border-primary/40 px-4 py-3 text-left text-[15px] text-primary transition-quiet active:opacity-85"
-          >
-            + {customCandidate} を追加
-          </button>
-        ) : null}
+      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="flex flex-wrap gap-2.5 pb-2">
+          {customCandidate ? (
+            <button
+              type="button"
+              onClick={() => addArtist(customCandidate)}
+              className="rounded-full border border-dashed border-primary/40 px-4 py-2.5 text-[15px] text-primary transition-quiet active:opacity-85"
+            >
+              + {customCandidate}
+            </button>
+          ) : null}
 
-        {suggestions.map((artist) => (
-          <button
-            key={artist}
-            type="button"
-            disabled={atMax}
-            onClick={() => addArtist(artist)}
-            className={cn(
-              "flex w-full items-center rounded-2xl border border-border bg-subtle px-4 py-3 text-left text-[15px] transition-quiet active:opacity-85",
-              atMax ? "cursor-not-allowed opacity-40" : "text-foreground"
-            )}
-          >
-            {artist}
-          </button>
-        ))}
+          {suggestions.map((artist) => (
+            <SelectableChip
+              key={artist}
+              label={artist}
+              selected={false}
+              onToggle={() => !atMax && addArtist(artist)}
+            />
+          ))}
 
-        {suggestions.length === 0 && !customCandidate ? (
-          <p className="px-1 py-2 text-[14px] text-white/45">該当するアーティストが見つかりません</p>
-        ) : null}
+          {suggestions.length === 0 && !customCandidate ? (
+            <p className="w-full px-1 py-2 text-[14px] text-white/45">
+              該当するアーティストが見つかりません
+            </p>
+          ) : null}
+        </div>
       </div>
+
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="アーティストを検索"
+        className={cn(
+          "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
+          atMax && "opacity-60"
+        )}
+        disabled={atMax}
+      />
     </div>
   );
 }
