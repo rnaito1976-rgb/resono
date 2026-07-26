@@ -9,7 +9,6 @@ import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { ResonateButton } from "@/components/ResonateButton";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
-import { TAB_PAGE_HEIGHT } from "@/lib/navigation/tab-page-layout";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
@@ -92,11 +91,7 @@ export function MemberDetailFrame({
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";
-  const containerStyle = isSheet
-    ? undefined
-    : isOwnProfile
-      ? { height: TAB_PAGE_HEIGHT }
-      : { height: "100dvh" };
+  const containerStyle = isSheet ? undefined : { height: "100dvh" };
   const memberAccentColor = member.frequencyColor as FrequencyColorHex | undefined;
   const useMemberTheme = !isOwnProfile && Boolean(memberAccentColor);
 

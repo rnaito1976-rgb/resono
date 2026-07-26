@@ -7,7 +7,7 @@ import {
   shouldShowBottomTabBar,
 } from "@/components/navigation/BottomTabBar";
 
-const TAB_PAGE_ROUTES = new Set(["/messages", "/bands", "/me"]);
+const TAB_PAGE_ROUTES = new Set(["/messages", "/bands"]);
 
 export function TabBarWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

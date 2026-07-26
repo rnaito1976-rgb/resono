@@ -149,12 +149,7 @@ export function BottomTabBar() {
 }
 
 export function shouldShowBottomTabBar(pathname: string): boolean {
-  return (
-    pathname === "/" ||
-    pathname === "/messages" ||
-    pathname === "/bands" ||
-    pathname === "/me"
-  );
+  return pathname === "/" || pathname === "/messages" || pathname === "/bands";
 }
 
 export function MainTabPadding({ children }: { children: React.ReactNode }) {
