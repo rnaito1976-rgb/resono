@@ -25,5 +25,5 @@ export const WELCOME_QUESTION_STEPS = [
 
 export type WelcomeQuestionStep = (typeof WELCOME_QUESTION_STEPS)[number];
 
-export const WELCOME_ARTIST_MIN = 3;
+export const WELCOME_ARTIST_MIN = 1;
 export const WELCOME_ARTIST_MAX = 20;

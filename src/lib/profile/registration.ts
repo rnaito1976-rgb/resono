@@ -29,7 +29,7 @@ export function isMinimalRegistrationInputComplete(
     input.name?.trim() &&
       input.photo !== undefined &&
       resolveInstruments(input).length >= 1 &&
-      artists.length >= 3
+      artists.length >= 1
   );
 }
 

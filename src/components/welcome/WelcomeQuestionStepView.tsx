@@ -29,11 +29,11 @@ export function WelcomeQuestionStepView({
 }: WelcomeQuestionStepViewProps) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <div className="px-5 pt-5">
+      <div className="px-5 pb-4 pt-5">
         <WelcomeProgress current={step} />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-5 pb-36 pt-6">
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-36 pt-4">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
           Welcome
         </p>

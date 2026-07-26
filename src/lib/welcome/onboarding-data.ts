@@ -147,12 +147,12 @@ export type WelcomeQuestionConfig = {
 export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfig> = {
   artists: {
     kind: "artists",
-    title: "好きなアーティストを選んでください",
-    subtitle: "Resonoで最も重要な入力項目です。",
+    title: "よく聴くアーティストは？",
+    subtitle: "好きな音楽から、共鳴が始まります。",
     presets: WELCOME_ARTIST_CATALOG,
     searchable: true,
     placeholder: "アーティストを検索",
-    minSelected: 3,
+    minSelected: 1,
     maxSelected: 20,
   },
   parts: {

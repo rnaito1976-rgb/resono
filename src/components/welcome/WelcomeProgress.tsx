@@ -13,7 +13,7 @@ export function WelcomeProgress({ current }: WelcomeProgressProps) {
 
   return (
     <div
-      className="flex items-center justify-center gap-1.5"
+      className="flex items-center justify-start gap-1.5"
       aria-label={`${currentIndex + 1} / ${WELCOME_QUESTION_STEPS.length}`}
     >
       {WELCOME_QUESTION_STEPS.map((step, index) => (

@@ -20,6 +20,7 @@ import {
 } from "@/lib/welcome/onboarding-registration";
 import { clearWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-storage";
 import type { WelcomeOnboardingAnswers } from "@/types/welcome-onboarding";
+import { WELCOME_ARTIST_MAX } from "@/types/welcome-onboarding";
 
 type MinimalRegistrationFlowProps = {
   memberId: string;
@@ -60,7 +61,7 @@ export function MinimalRegistrationFlow({
       if (current.includes(value)) {
         return current.filter((item) => item !== value);
       }
-      if (current.length >= 3) {
+      if (current.length >= WELCOME_ARTIST_MAX) {
         return current;
       }
       return [...current, value];
@@ -69,7 +70,7 @@ export function MinimalRegistrationFlow({
 
   function addCustomArtist() {
     const trimmed = customArtist.trim();
-    if (!trimmed || artistSelection.includes(trimmed) || artistSelection.length >= 3) {
+    if (!trimmed || artistSelection.includes(trimmed) || artistSelection.length >= WELCOME_ARTIST_MAX) {
       return;
     }
     setArtistSelection((current) => [...current, trimmed]);
@@ -110,7 +111,7 @@ export function MinimalRegistrationFlow({
       case "part":
         return partSelection.length === 1;
       case "artists":
-        return artistSelection.length === 3;
+        return artistSelection.length >= 1;
       default:
         return false;
     }
@@ -251,7 +252,7 @@ export function MinimalRegistrationFlow({
 
         {step === "artists" ? (
           <div className="space-y-5 pt-2">
-            <p className="text-[15px] text-white/70">好きなアーティストを3組選んでください</p>
+            <p className="text-[15px] text-white/70">好きなアーティストを選んでください</p>
             <ChipGrid
               items={SUGGESTED_ARTISTS}
               selected={artistSelection}
@@ -274,7 +275,7 @@ export function MinimalRegistrationFlow({
                 追加
               </Button>
             </div>
-            <p className="text-[13px] text-white/40">{artistSelection.length} / 3 選択中</p>
+            <p className="text-[13px] text-white/40">{artistSelection.length} 組選択中</p>
           </div>
         ) : null}
       </div>
