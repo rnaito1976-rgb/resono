@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
@@ -50,6 +51,7 @@ export default async function RootLayout({
             </ProfileSheetProvider>
           </FrequencyColorProvider>
         </QueryProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
