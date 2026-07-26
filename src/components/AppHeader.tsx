@@ -1,7 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
 import { HomeLogoLink } from "@/components/navigation/HomeLogoLink";
-import { BRAND_CATCH_COPY } from "@/lib/branding/copy";
+import { BRAND_CATCH_COPY_INLINE } from "@/lib/branding/copy";
 
 type AppHeaderProps = {
   initialUser?: User | null;
@@ -15,8 +15,8 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
           <HomeLogoLink>
             <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
           </HomeLogoLink>
-          <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-white/45">
-            {BRAND_CATCH_COPY}
+          <p className="mt-2 text-[15px] leading-relaxed text-white/45">
+            {BRAND_CATCH_COPY_INLINE}
           </p>
         </div>
 
