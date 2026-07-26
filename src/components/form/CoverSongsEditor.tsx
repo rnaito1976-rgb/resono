@@ -1,13 +1,12 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { FormField, FormInput } from "@/components/FormField";
 import {
-  addCoverSongRow,
-  formatCoverSongForEdit,
+  coverSongsToEditLines,
+  createEmptyCoverSong,
+  editLinesToCoverSongs,
   getCoverSongsForEditor,
-  hasCoverSongContent,
-  removeCoverSongRow,
-  updateCoverSongFromEdit,
 } from "@/lib/music/cover-songs";
 import type { CoverSong } from "@/types/music-profile";
 
@@ -22,42 +21,73 @@ export function CoverSongsEditor({
   value,
   onChange,
 }: CoverSongsEditorProps) {
-  const rows = getCoverSongsForEditor(value, memberId);
+  const songsRef = useRef(getCoverSongsForEditor(value, memberId));
+  const [lines, setLines] = useState(() => coverSongsToEditLines(value));
 
-  function emit(nextRows: CoverSong[]) {
-    onChange(nextRows.length > 0 ? nextRows : undefined);
+  function commit(nextLines: string[], nextSongs = songsRef.current) {
+    const songs = [...nextSongs];
+
+    while (songs.length < nextLines.length) {
+      songs.push(createEmptyCoverSong(memberId));
+    }
+
+    const committed = editLinesToCoverSongs(nextLines, memberId, songs);
+    songsRef.current = getCoverSongsForEditor(committed, memberId);
+    onChange(committed);
   }
 
   function handleLineChange(index: number, raw: string) {
-    emit(updateCoverSongFromEdit(rows, index, raw));
+    const nextLines = lines.map((line, lineIndex) =>
+      lineIndex === index ? raw : line
+    );
+
+    setLines(nextLines);
+    commit(nextLines);
   }
 
   function handleAddRow() {
-    onChange(addCoverSongRow(rows, memberId));
+    const nextLines = [...lines, ""];
+    const nextSongs = [...songsRef.current, createEmptyCoverSong(memberId)];
+
+    songsRef.current = nextSongs;
+    setLines(nextLines);
   }
 
   function handleRemoveRow(index: number) {
-    emit(removeCoverSongRow(rows, index));
+    let nextLines = lines.filter((_, lineIndex) => lineIndex !== index);
+    let nextSongs = songsRef.current.filter((_, songIndex) => songIndex !== index);
+
+    if (nextLines.length === 0) {
+      nextLines = [""];
+      nextSongs = [createEmptyCoverSong(memberId, 0)];
+    }
+
+    songsRef.current = nextSongs;
+    setLines(nextLines);
+    commit(nextLines, nextSongs);
   }
 
   return (
     <div className="space-y-4">
-      {rows.map((song, index) => (
-        <div key={song.id} className="flex items-end gap-3">
+      {lines.map((line, index) => (
+        <div
+          key={songsRef.current[index]?.id ?? `cover-line-${index}`}
+          className="flex items-end gap-3"
+        >
           <div className="min-w-0 flex-1">
             <FormField
               label={index === 0 ? "曲" : `曲 ${index + 1}`}
               hint={index === 0 ? "アーティスト - 曲名" : undefined}
             >
               <FormInput
-                value={formatCoverSongForEdit(song)}
+                value={line}
                 placeholder="Muse - Plug in baby"
                 onChange={(event) => handleLineChange(index, event.target.value)}
               />
             </FormField>
           </div>
 
-          {rows.length > 1 || hasCoverSongContent(song) ? (
+          {lines.length > 1 || line.trim() ? (
             <button
               type="button"
               onClick={() => handleRemoveRow(index)}

@@ -13,19 +13,11 @@ export function joinList(items: string[]): string {
 export function parseArtistSongLine(raw: string): { artist?: string; title: string } {
   const trimmed = raw.trim();
   const dashIndex = trimmed.indexOf(" - ");
-  const hyphenIndex = trimmed.indexOf("-");
 
   if (dashIndex > 0) {
     return {
       artist: trimmed.slice(0, dashIndex).trim(),
       title: trimmed.slice(dashIndex + 3).trim(),
-    };
-  }
-
-  if (hyphenIndex > 0) {
-    return {
-      artist: trimmed.slice(0, hyphenIndex).trim(),
-      title: trimmed.slice(hyphenIndex + 1).trim(),
     };
   }
 

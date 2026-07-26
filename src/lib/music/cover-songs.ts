@@ -36,6 +36,29 @@ export function parseCoverSongFromEdit(raw: string, existing: CoverSong): CoverS
   };
 }
 
+export function coverSongsToEditLines(songs: CoverSong[] | undefined): string[] {
+  if (!songs?.length) {
+    return [""];
+  }
+
+  return songs.map(formatCoverSongForEdit);
+}
+
+export function editLinesToCoverSongs(
+  lines: string[],
+  memberId: string,
+  existingSongs: CoverSong[] = []
+): CoverSong[] | undefined {
+  const songs = lines
+    .map((line, index) => {
+      const existing = existingSongs[index] ?? createEmptyCoverSong(memberId, index);
+      return parseCoverSongFromEdit(line, existing);
+    })
+    .filter(hasCoverSongContent);
+
+  return songs.length > 0 ? songs : undefined;
+}
+
 export function hasCoverSongContent(song: CoverSong): boolean {
   return Boolean(song.title.trim() || song.artist.trim());
 }
@@ -65,22 +88,4 @@ export function sanitizeCoverSongs(
     );
 
   return next.length > 0 ? next : undefined;
-}
-
-export function updateCoverSongFromEdit(
-  songs: CoverSong[],
-  index: number,
-  raw: string
-): CoverSong[] {
-  return songs.map((song, songIndex) =>
-    songIndex === index ? parseCoverSongFromEdit(raw, song) : song
-  );
-}
-
-export function addCoverSongRow(songs: CoverSong[], memberId: string): CoverSong[] {
-  return [...songs, createEmptyCoverSong(memberId)];
-}
-
-export function removeCoverSongRow(songs: CoverSong[], index: number): CoverSong[] {
-  return songs.filter((_, songIndex) => songIndex !== index);
 }
