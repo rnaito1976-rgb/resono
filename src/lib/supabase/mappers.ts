@@ -1,5 +1,6 @@
 import type { Database } from "@/types/database";
 import type { Member } from "@/types/member";
+import type { MemberMusicProfile } from "@/types/music-profile";
 import {
   EMPTY_FASHION,
   EMPTY_PORTRAIT,
@@ -87,7 +88,7 @@ export function rowToMember(row: MemberRow): Member {
     aiComment: row.ai_comment,
     photo: row.photo,
     portrait: normalizePortrait(row.portrait),
-    music: row.music as Member["music"],
+    music: normalizeMusic(row.music),
     fashion: row.fashion as Member["fashion"],
     lookingFor: normalizeLookingFor(row.looking_for),
   };
@@ -117,5 +118,30 @@ function normalizeLookingFor(raw: unknown): Member["lookingFor"] {
       : [],
     bandVision: typeof value.bandVision === "string" ? value.bandVision : "",
     commitment: typeof value.commitment === "string" ? value.commitment : "",
+  };
+}
+
+function normalizeMusic(raw: unknown): MemberMusicProfile {
+  const value = (raw ?? {}) as Partial<MemberMusicProfile>;
+
+  return {
+    genres: Array.isArray(value.genres)
+      ? value.genres.filter((item): item is string => typeof item === "string")
+      : [],
+    favoriteArtists: Array.isArray(value.favoriteArtists)
+      ? value.favoriteArtists.filter((item): item is string => typeof item === "string")
+      : [],
+    instruments: Array.isArray(value.instruments)
+      ? value.instruments.filter((item): item is string => typeof item === "string")
+      : [],
+    listeningMood: typeof value.listeningMood === "string" ? value.listeningMood : "",
+    coverSongs: Array.isArray(value.coverSongs) ? value.coverSongs : undefined,
+    dreamBands: Array.isArray(value.dreamBands)
+      ? value.dreamBands.filter((item): item is string => typeof item === "string")
+      : undefined,
+    playingStyle: Array.isArray(value.playingStyle)
+      ? value.playingStyle.filter((item): item is string => typeof item === "string")
+      : undefined,
+    musicDna: Array.isArray(value.musicDna) ? value.musicDna : undefined,
   };
 }

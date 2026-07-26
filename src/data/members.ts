@@ -176,10 +176,25 @@ export const members: Member[] = [
       influences: ["My Bloody Valentine", "ゆらゆら帝国", "Slowdive"],
     },
     music: {
-      genres: ["Shoegaze", "Dream Pop", "Noise Pop"],
-      favoriteArtists: ["LSD and the Search for God", "きのこ帝国", "Alvvays"],
+      genres: ["Shoegaze", "Dream Pop", "Alternative"],
+      favoriteArtists: ["Radiohead", "Oasis", "羊文学", "King Gnu", "The 1975"],
       instruments: ["ギター", "ボーカル"],
       listeningMood: "ヘッドホンを深く被って、目を閉じる時間",
+      coverSongs: [
+        { id: "haru-1", title: "No Surprises", artist: "Radiohead" },
+        { id: "haru-2", title: "怪獣", artist: "サカナクション" },
+        { id: "haru-3", title: "Just", artist: "Radiohead" },
+      ],
+      dreamBands: ["Radiohead", "羊文学", "L'Arc-en-Ciel", "ASIAN KUNG-FU GENERATION"],
+      playingStyle: [
+        "空間系",
+        "クリーントーン",
+        "アルペジオ",
+        "エモ",
+        "オルタナティブ",
+        "ライブ重視",
+        "オリジナルもやりたい",
+      ],
     },
     fashion: {
       style: "オーバーサイズ × レイヤード",

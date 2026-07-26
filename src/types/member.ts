@@ -1,4 +1,5 @@
 import type { ProfileItem } from "@/types/profile-item";
+import type { MemberMusicProfile } from "@/types/music-profile";
 
 export type Member = {
   id: string;
@@ -19,12 +20,7 @@ export type Member = {
     /** AI会話で増えていくプロフィール項目 */
     profileItems?: ProfileItem[];
   };
-  music: {
-    genres: string[];
-    favoriteArtists: string[];
-    instruments: string[];
-    listeningMood: string;
-  };
+  music: MemberMusicProfile;
   fashion: {
     style: string;
     colors: string[];

@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DETAIL_SECTIONS, getOwnProfileDetailSections, type DetailSection } from "@/types/member";
+import { MemberThemeScope } from "@/components/frequency-color/MemberThemeScope";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { ResonateButton } from "@/components/ResonateButton";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import type { ResonanceStatus } from "@/lib/resonance/status";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
 
 const SlideFallback = () => (
@@ -89,6 +91,8 @@ export function MemberDetailFrame({
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex h-dvh flex-col bg-background";
+  const memberAccentColor = member.frequencyColor as FrequencyColorHex | undefined;
+  const useMemberTheme = !isOwnProfile && Boolean(memberAccentColor);
 
   const scrollToIndex = useCallback((index: number) => {
     const container = scrollRef.current;
@@ -139,15 +143,15 @@ export function MemberDetailFrame({
     }
   }
 
-  return (
-    <div className={containerClass}>
+  const frameContent = (
+    <>
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
         {headerSlot ?? (
           <>
             {isSheet ? (
               <div className="flex items-center justify-between px-5 pb-2 pt-1">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
                     Profile
                   </p>
                   <h1 className="truncate text-[20px] font-light tracking-tight">
@@ -158,7 +162,7 @@ export function MemberDetailFrame({
                   type="button"
                   onClick={onClose}
                   aria-label="閉じる"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-white/80"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground/80"
                 >
                   ×
                 </button>
@@ -220,7 +224,9 @@ export function MemberDetailFrame({
               onClick={() => scrollToIndex(index)}
               aria-label={section.label}
               className={`h-1 rounded-full transition-all ${
-                activeIndex === index ? "w-6 bg-white" : "w-1.5 bg-white/25"
+                activeIndex === index
+                  ? "w-6 bg-[var(--frequency-color)]"
+                  : "w-1.5 bg-foreground/25"
               }`}
             />
           ))}
@@ -229,8 +235,18 @@ export function MemberDetailFrame({
           <ResonateButton memberId={member.id} initialStatus={resonanceStatus} />
         ) : null}
       </div>
-    </div>
+    </>
   );
+
+  if (useMemberTheme && !isSheet) {
+    return (
+      <MemberThemeScope color={memberAccentColor} className={containerClass}>
+        {frameContent}
+      </MemberThemeScope>
+    );
+  }
+
+  return <div className={containerClass}>{frameContent}</div>;
 }
 
 export function MemberDetailFrameLoading({ variant = "page" }: { variant?: "page" | "sheet" }) {

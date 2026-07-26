@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 import { MemberDetailFrame } from "@/components/member-detail/MemberDetailFrame";
+import { MemberThemeScope } from "@/components/frequency-color/MemberThemeScope";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import { useMemberProfile } from "@/hooks/useMemberProfile";
-import { HOME_HEADER_SHEET_TOP } from "@/lib/navigation/home-scroll";
+import { PROFILE_SHEET_HEIGHT } from "@/lib/navigation/home-scroll";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 
 type ProfileBottomSheetProps = {
   memberId: string | null;
@@ -55,7 +57,7 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
         aria-modal="true"
         aria-label="プロフィール"
         className="relative mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] bg-background shadow-2xl animate-in slide-in-from-bottom duration-200"
-        style={{ height: `calc(100dvh - ${HOME_HEADER_SHEET_TOP})` }}
+        style={{ height: PROFILE_SHEET_HEIGHT }}
       >
         <div className="flex shrink-0 justify-center pb-1 pt-3">
           <div className="h-1 w-10 rounded-full bg-white/20" />
@@ -64,15 +66,28 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
         {isLoading ? (
           <MemberDetailSkeleton variant="sheet" />
         ) : isError || !data ? (
-          <div className="px-6 py-16 text-center text-[14px] text-white/60">
+          <div className="px-6 py-16 text-center text-[14px] text-muted">
             プロフィールを読み込めませんでした
           </div>
+        ) : data.isOwnProfile ? (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <MemberDetailFrame
+              {...data}
+              variant="sheet"
+              onClose={onClose}
+            />
+          </div>
         ) : (
-          <MemberDetailFrame
-            {...data}
-            variant="sheet"
-            onClose={onClose}
-          />
+          <MemberThemeScope
+            className="flex min-h-0 flex-1 flex-col"
+            color={data.member.frequencyColor as FrequencyColorHex | undefined}
+          >
+            <MemberDetailFrame
+              {...data}
+              variant="sheet"
+              onClose={onClose}
+            />
+          </MemberThemeScope>
         )}
       </div>
     </div>
