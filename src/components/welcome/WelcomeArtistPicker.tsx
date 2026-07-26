@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
+import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
+import { WELCOME_ARTIST_CATALOG, WELCOME_ARTIST_GROUPS } from "@/lib/welcome/onboarding-data";
 import { cn } from "@/lib/utils";
-import { WELCOME_ARTIST_CATALOG } from "@/lib/welcome/onboarding-data";
 import {
   WELCOME_ARTIST_MAX,
   WELCOME_ARTIST_MIN,
@@ -24,15 +25,23 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
 
   const atMax = selected.length >= WELCOME_ARTIST_MAX;
 
-  const suggestions = useMemo(() => {
+  const filteredGroups = useMemo(() => {
     const normalized = normalize(query);
-    const pool = normalized
-      ? WELCOME_ARTIST_CATALOG.filter((artist) =>
-          artist.toLowerCase().includes(normalized)
-        )
-      : WELCOME_ARTIST_CATALOG;
 
-    return pool.filter((artist) => !selected.includes(artist));
+    return WELCOME_ARTIST_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((artist) => {
+        if (selected.includes(artist)) {
+          return false;
+        }
+
+        if (!normalized) {
+          return true;
+        }
+
+        return normalize(artist).includes(normalized);
+      }),
+    })).filter((group) => group.items.length > 0);
   }, [query, selected]);
 
   const customCandidate = useMemo(() => {
@@ -88,27 +97,35 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
       </p>
 
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-        <div className="flex flex-wrap gap-2.5 pb-2">
+        <div className="space-y-8 pb-2">
           {customCandidate ? (
-            <button
-              type="button"
-              onClick={() => addArtist(customCandidate)}
-              className="rounded-full border border-dashed border-primary/40 px-4 py-2.5 text-[15px] text-primary transition-quiet active:opacity-85"
-            >
-              + {customCandidate}
-            </button>
+            <div className="flex flex-wrap gap-2.5">
+              <button
+                type="button"
+                onClick={() => addArtist(customCandidate)}
+                className="rounded-full border border-dashed border-primary/40 px-4 py-2.5 text-[15px] text-primary transition-quiet active:opacity-85"
+              >
+                + {customCandidate}
+              </button>
+            </div>
           ) : null}
 
-          {suggestions.map((artist) => (
-            <SelectableChip
-              key={artist}
-              label={artist}
-              selected={false}
-              onToggle={() => !atMax && addArtist(artist)}
-            />
+          {filteredGroups.map((group) => (
+            <WelcomePickerSection key={group.label} label={group.label}>
+              <div className="flex flex-wrap gap-2.5">
+                {group.items.map((artist) => (
+                  <SelectableChip
+                    key={artist}
+                    label={artist}
+                    selected={false}
+                    onToggle={() => !atMax && addArtist(artist)}
+                  />
+                ))}
+              </div>
+            </WelcomePickerSection>
           ))}
 
-          {suggestions.length === 0 && !customCandidate ? (
+          {filteredGroups.length === 0 && !customCandidate ? (
             <p className="w-full px-1 py-2 text-[14px] text-white/45">
               該当するアーティストが見つかりません
             </p>
