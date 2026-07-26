@@ -6,10 +6,9 @@ type WelcomeProfileBackdropProps = {
 };
 
 export function WelcomeProfileBackdrop({ members }: WelcomeProfileBackdropProps) {
-  const tiles = members.slice(0, 6).map((member, index) => ({
+  const tiles = members.slice(0, 6).map((member) => ({
     id: member.id,
     src: getProfilePhotoSrc(member.photo, 240),
-    offset: index * 34,
   }));
 
   if (tiles.length === 0) {
@@ -23,14 +22,13 @@ export function WelcomeProfileBackdrop({ members }: WelcomeProfileBackdropProps)
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-80">
-      <div className="animate-welcome-scroll flex flex-col gap-4 px-5 pt-6">
+      <div className="animate-welcome-scroll flex flex-col items-center gap-4 px-5 pt-6">
         {[...tiles, ...tiles].map((tile, index) => (
           <div
             key={`${tile.id}-${index}`}
             className="h-44 w-full rounded-[28px] bg-cover bg-center saturate-[0.85]"
             style={{
               backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url("${tile.src}")`,
-              transform: `translateX(${tile.offset}px)`,
             }}
           />
         ))}
