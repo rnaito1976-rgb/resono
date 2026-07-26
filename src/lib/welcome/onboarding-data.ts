@@ -1,3 +1,111 @@
+export type WelcomeOptionGroup = {
+  label: string;
+  items: readonly string[];
+};
+
+export const WELCOME_PART_GROUPS: WelcomeOptionGroup[] = [
+  {
+    label: "Strings",
+    items: ["Guitar", "Bass", "Violin", "Viola", "Cello", "Contrabass"],
+  },
+  {
+    label: "Vocals",
+    items: ["Vocal", "Chorus"],
+  },
+  {
+    label: "Keyboards",
+    items: ["Keyboard", "Piano", "Synthesizer"],
+  },
+  {
+    label: "Rhythm",
+    items: ["Drums", "Percussion"],
+  },
+  {
+    label: "Woodwinds",
+    items: ["Flute", "Clarinet", "Oboe", "Bassoon", "Saxophone"],
+  },
+  {
+    label: "Brass",
+    items: ["Trumpet", "Trombone", "French Horn", "Euphonium", "Tuba"],
+  },
+  {
+    label: "Traditional",
+    items: ["Harmonica", "Accordion", "Ukulele", "Banjo", "Mandolin", "Shamisen", "Koto"],
+  },
+  {
+    label: "Electronic",
+    items: ["DJ", "Manipulator", "Sampler"],
+  },
+  {
+    label: "Production",
+    items: ["Composer", "Arranger", "Sound Engineer"],
+  },
+  {
+    label: "Other",
+    items: ["Other"],
+  },
+];
+
+export const WELCOME_SOUND_GROUPS: WelcomeOptionGroup[] = [
+  {
+    label: "Rock",
+    items: [
+      "Alternative Rock",
+      "Indie Rock",
+      "J-Rock",
+      "UK Rock",
+      "Punk",
+      "Emo",
+      "Shoegaze",
+      "Post Rock",
+      "Math Rock",
+      "Hard Rock",
+      "Metal",
+      "Loud Rock",
+    ],
+  },
+  {
+    label: "Pop",
+    items: ["Pop", "City Pop", "Singer-Songwriter"],
+  },
+  {
+    label: "Japanese",
+    items: ["アニソン", "ボカロ", "アイドル", "V系", "邦ロック", "渋谷系"],
+  },
+  {
+    label: "Black Music",
+    items: ["Funk", "Soul", "R&B", "Hip Hop", "Rap"],
+  },
+  {
+    label: "Dance",
+    items: ["Electronic", "EDM", "House", "Techno", "Drum & Bass"],
+  },
+  {
+    label: "Acoustic",
+    items: ["Acoustic", "Folk", "Blues", "Jazz", "Fusion", "Bossa Nova"],
+  },
+  {
+    label: "Other",
+    items: [
+      "Instrumental",
+      "Soundtrack",
+      "Lo-fi",
+      "Ambient",
+      "Experimental",
+      "Progressive Rock",
+    ],
+  },
+];
+
+export function flattenWelcomeGroups(groups: readonly WelcomeOptionGroup[]): string[] {
+  return groups.flatMap((group) => [...group.items]);
+}
+
+export const WELCOME_PART_PRESETS = flattenWelcomeGroups(WELCOME_PART_GROUPS);
+export const WELCOME_SOUND_PRESETS = flattenWelcomeGroups(WELCOME_SOUND_GROUPS);
+
+export const WELCOME_OTHER_PART_LABEL = "Other";
+
 /** Initial catalog (~100 artists). Additional names can be added via search. */
 export const WELCOME_ARTIST_CATALOG = [
   "ASIAN KUNG-FU GENERATION",
@@ -93,44 +201,6 @@ export const WELCOME_ARTIST_CATALOG = [
   "Pearl Jam",
 ] as const;
 
-export const WELCOME_PART_PRESETS = [
-  "Vocal",
-  "Guitar",
-  "Bass",
-  "Drums",
-  "Keyboard",
-  "DJ",
-  "Violin",
-  "Saxophone",
-  "Trumpet",
-  "Percussion",
-  "Composer",
-  "Arranger",
-  "Manipulator",
-  "Sound Engineer",
-  "Other",
-] as const;
-
-export const WELCOME_SOUND_PRESETS = [
-  "Alternative Rock",
-  "Indie Rock",
-  "UK Rock",
-  "J-Rock",
-  "Shoegaze",
-  "Emo",
-  "Post Rock",
-  "Math Rock",
-  "Punk",
-  "Hard Rock",
-  "Metal",
-  "Pop",
-  "City Pop",
-  "Jazz",
-  "Funk",
-  "Electronic",
-  "Acoustic",
-] as const;
-
 export type WelcomeQuestionKind = "artists" | "parts" | "sounds";
 
 export type WelcomeQuestionConfig = {
@@ -164,7 +234,7 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
   },
   sounds: {
     kind: "sounds",
-    title: "一緒に、どんな音を鳴らしたい？",
+    title: "どんな音楽を演奏したい？",
     presets: WELCOME_SOUND_PRESETS,
     searchable: true,
     placeholder: "ジャンルを検索",
@@ -177,3 +247,8 @@ export const WELCOME_ANALYSIS_STEPS = [
   "演奏スタイルを整理",
   "共鳴する仲間を探しています…",
 ] as const;
+
+export const WELCOME_COLOR_QUESTION = {
+  title: "好きな色は？",
+  subtitle: "選んだ色が、あなたの primary color になります。",
+} as const;

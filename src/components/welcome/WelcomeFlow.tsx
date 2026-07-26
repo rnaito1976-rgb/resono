@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { WelcomeAnalysisStep } from "@/components/welcome/WelcomeAnalysisStep";
+import { WelcomeColorStepView } from "@/components/welcome/WelcomeColorStepView";
 import { WelcomeIntroStep } from "@/components/welcome/WelcomeIntroStep";
 import { WelcomeMotion } from "@/components/welcome/WelcomeMotion";
 import { WelcomeQuestionStepView } from "@/components/welcome/WelcomeQuestionStepView";
@@ -46,6 +47,8 @@ function getPreviousStep(step: WelcomeStep): WelcomeStep {
       return "artists";
     case "sounds":
       return "parts";
+    case "color":
+      return "sounds";
     default:
       return "intro";
   }
@@ -58,6 +61,8 @@ function getNextQuestionStep(step: WelcomeQuestionStep): WelcomeStep {
     case "parts":
       return "sounds";
     case "sounds":
+      return "color";
+    case "color":
       return "analysis";
   }
 }
@@ -86,8 +91,6 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
   }
 
   function canProceedForStep(current: WelcomeQuestionStep): boolean {
-    const config = WELCOME_QUESTIONS[current];
-
     switch (current) {
       case "artists":
         return (
@@ -95,9 +98,11 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
           answers.artists.length <= WELCOME_ARTIST_MAX
         );
       case "parts":
-        return effectiveParts(answers.parts).length >= (config.minSelected ?? 1);
+        return effectiveParts(answers.parts).length >= (WELCOME_QUESTIONS.parts.minSelected ?? 1);
       case "sounds":
-        return answers.sounds.length >= (config.minSelected ?? 1);
+        return answers.sounds.length >= (WELCOME_QUESTIONS.sounds.minSelected ?? 1);
+      case "color":
+        return Boolean(answers.frequencyColor);
     }
   }
 
@@ -147,6 +152,24 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
                 setStep(getNextQuestionStep(step));
               }}
               canProceed={canProceedForStep(step)}
+            />
+          </WelcomeMotion>
+        ) : null}
+
+        {step === "color" ? (
+          <WelcomeMotion stepKey="color">
+            <WelcomeColorStepView
+              selected={answers.frequencyColor}
+              onChange={(frequencyColor) => updateAnswers({ frequencyColor })}
+              onBack={() => setStep(getPreviousStep(step))}
+              onNext={() => {
+                if (!canProceedForStep("color")) {
+                  return;
+                }
+
+                setStep("analysis");
+              }}
+              canProceed={canProceedForStep("color")}
             />
           </WelcomeMotion>
         ) : null}

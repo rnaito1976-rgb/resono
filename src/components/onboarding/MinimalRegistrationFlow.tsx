@@ -12,6 +12,7 @@ import {
 } from "@/lib/actions/onboarding";
 import { NO_PHOTO_URL, hasCustomPhotoUrl } from "@/lib/onboarding/status";
 import { PLAYING_PART_OPTIONS, SUGGESTED_ARTISTS } from "@/lib/resonance/dialogue";
+import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { MinimalRegistrationInput } from "@/lib/profile/registration";
 import {
@@ -127,6 +128,19 @@ export function MinimalRegistrationFlow({
         return;
       }
 
+      const savedColor = welcome?.frequencyColor;
+      if (savedColor && isValidFrequencyColor(savedColor)) {
+        const colorResult = await saveFrequencyColorAction(savedColor);
+        if (colorResult?.error) {
+          setError(colorResult.error);
+          return;
+        }
+
+        clearWelcomeOnboardingAnswers();
+        window.location.href = "/";
+        return;
+      }
+
       if (welcome) {
         clearWelcomeOnboardingAnswers();
       }
@@ -233,6 +247,7 @@ export function MinimalRegistrationFlow({
                   {welcomeAnswers.sounds.length > 0
                     ? welcomeAnswers.sounds.slice(0, 3).join(" · ")
                     : "未選択"}
+                  {welcomeAnswers.frequencyColor ? " · カラー選択済み" : null}
                 </p>
               </div>
             ) : null}
@@ -294,7 +309,7 @@ export function MinimalRegistrationFlow({
               保存中...
             </span>
           ) : step === "name" && welcomeAnswers ? (
-            "次へ（カラー選択）"
+            welcomeAnswers.frequencyColor ? "Resonoをはじめる" : "次へ（カラー選択）"
           ) : step === "artists" ? (
             "次へ（カラー選択）"
           ) : (

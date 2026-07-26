@@ -3,7 +3,7 @@
 import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
 import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
 import { WelcomeProgress } from "@/components/welcome/WelcomeProgress";
-import { WelcomeTagMultiPicker } from "@/components/welcome/WelcomeTagMultiPicker";
+import { WelcomeSoundsPicker } from "@/components/welcome/WelcomeSoundsPicker";
 import type { WelcomeQuestionConfig } from "@/lib/welcome/onboarding-data";
 import type { WelcomeQuestionStep } from "@/types/welcome-onboarding";
 import { Button } from "@/components/ui/button";
@@ -54,10 +54,9 @@ export function WelcomeQuestionStepView({
           ) : null}
 
           {config.kind === "sounds" ? (
-            <WelcomeTagMultiPicker
-              presets={config.presets}
+            <WelcomeSoundsPicker
               selected={selected}
-              placeholder={config.placeholder ?? "検索"}
+              placeholder={config.placeholder ?? "ジャンルを検索"}
               onChange={onChange}
             />
           ) : null}
