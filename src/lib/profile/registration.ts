@@ -1,4 +1,5 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
+import { attachInitialMemberActivities } from "@/lib/members/initial-activities";
 import { createMusicDnaItem } from "@/lib/profile/items";
 import { NO_PHOTO_URL } from "@/lib/onboarding/status";
 import type { Member } from "@/types/member";
@@ -43,25 +44,27 @@ export function buildMemberFromMinimalRegistration(
   const musicDnaItem = createMusicDnaItem(artists);
   const photo = input.photo.trim() || NO_PHOTO_URL;
 
-  return applyProfileAiComment({
-    ...member,
-    name: input.name.trim(),
-    photo,
-    tags: artists.slice(0, 3),
-    portrait: {
-      ...member.portrait,
-      bio: "",
-      dialogueCompleted: true,
-      profileItems: [
-        musicDnaItem,
-        ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
-      ],
-    },
-    music: {
-      ...member.music,
-      instruments,
-      favoriteArtists: artists,
-      genres,
-    },
-  });
+  return attachInitialMemberActivities(
+    applyProfileAiComment({
+      ...member,
+      name: input.name.trim(),
+      photo,
+      tags: artists.slice(0, 3),
+      portrait: {
+        ...member.portrait,
+        bio: "",
+        dialogueCompleted: true,
+        profileItems: [
+          musicDnaItem,
+          ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
+        ],
+      },
+      music: {
+        ...member.music,
+        instruments,
+        favoriteArtists: artists,
+        genres,
+      },
+    })
+  );
 }

@@ -1,4 +1,8 @@
 import { getMemberById, getMembersByIds } from "@/lib/members";
+import {
+  getMemberActivityMilestones,
+  memberActivityMilestonesToFeedItems,
+} from "@/lib/members/initial-activities";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { MemberActivityFeedItem, MemberActivityKind } from "@/types/activity";
@@ -103,9 +107,8 @@ export async function getOwnMemberActivityFeed(
   }
 
   const supabase = await createClient();
-  const viewerName =
-    memberName ??
-    (await getMemberById(memberId))?.name;
+  const member = await getMemberById(memberId);
+  const viewerName = memberName ?? member?.name;
 
   const { data: memberships } = await supabase
     .from("band_members")
@@ -155,7 +158,10 @@ export async function getOwnMemberActivityFeed(
   }
 
   const partnerMap = await getMembersByIds([...partnerIds]);
-  const items = buildResonanceItems(outgoing, incoming, partnerMap);
+  const items = [
+    ...memberActivityMilestonesToFeedItems(getMemberActivityMilestones(member)),
+    ...buildResonanceItems(outgoing, incoming, partnerMap),
+  ];
 
   for (const row of timelineResult.data ?? []) {
     if (row.kind === "activity" || row.kind === "first_resonance") {

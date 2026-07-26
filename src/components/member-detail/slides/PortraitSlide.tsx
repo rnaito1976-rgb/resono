@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ProfileItemsView } from "@/components/profile/ProfileItemsView";
 import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
@@ -46,23 +45,13 @@ export function PortraitSlide({
     <div className="flex h-full flex-col px-5 pb-8 pt-4">
       {isOwnProfile ? (
         <div className="mb-8 shrink-0 px-1">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
-                Profile
-              </p>
-              <h1 className="mt-1 text-[28px] font-light tracking-tight">プロフィール</h1>
-              <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                あなたの音楽活動をまとめて見る。
-              </p>
-            </div>
-            <Link
-              href={`/member/${member.id}/edit`}
-              className="shrink-0 pt-1 text-[13px] font-medium tracking-wide text-[var(--frequency-color)]"
-            >
-              編集
-            </Link>
-          </div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
+            Profile
+          </p>
+          <h1 className="mt-1 text-[28px] font-light tracking-tight">プロフィール</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">
+            あなたの音楽活動をまとめて見る。
+          </p>
         </div>
       ) : null}
 

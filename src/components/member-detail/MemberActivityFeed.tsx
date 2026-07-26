@@ -12,6 +12,7 @@ const KIND_LABELS: Record<MemberActivityKind, string> = {
   member_joined: "Band参加",
   band_post: "投稿",
   timeline: "マイルストーン",
+  profile_milestone: "Activity",
 };
 
 type MemberActivityFeedProps = {

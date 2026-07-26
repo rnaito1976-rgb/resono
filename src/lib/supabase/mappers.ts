@@ -6,6 +6,7 @@ import {
   EMPTY_PORTRAIT,
 } from "@/lib/members/defaults";
 import { normalizeProfileItems } from "@/lib/profile/items";
+import type { MemberActivityMilestone } from "@/lib/members/initial-activities";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
@@ -106,7 +107,39 @@ function normalizePortrait(raw: unknown): Member["portrait"] {
       : [],
     dialogueCompleted: value.dialogueCompleted === true,
     profileItems: normalizeProfileItems(raw),
+    activityMilestones: normalizeActivityMilestones(value.activityMilestones),
   };
+}
+
+function normalizeActivityMilestones(raw: unknown): MemberActivityMilestone[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+
+  const milestones = raw
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const milestone = item as Partial<MemberActivityMilestone>;
+      if (
+        typeof milestone.id !== "string" ||
+        typeof milestone.title !== "string" ||
+        typeof milestone.occurredAt !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        id: milestone.id,
+        title: milestone.title,
+        occurredAt: milestone.occurredAt,
+      };
+    })
+    .filter((item): item is MemberActivityMilestone => item !== null);
+
+  return milestones.length > 0 ? milestones : undefined;
 }
 
 function normalizeLookingFor(raw: unknown): Member["lookingFor"] {

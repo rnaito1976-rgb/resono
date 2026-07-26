@@ -8,7 +8,8 @@ export type MemberActivityKind =
   | "band_formed"
   | "member_joined"
   | "band_post"
-  | "timeline";
+  | "timeline"
+  | "profile_milestone";
 
 export type MemberActivityFeedItem = {
   id: string;

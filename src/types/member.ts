@@ -1,5 +1,6 @@
 import type { ProfileItem } from "@/types/profile-item";
 import type { MemberMusicProfile } from "@/types/music-profile";
+import type { MemberActivityMilestone } from "@/lib/members/initial-activities";
 
 export type Member = {
   id: string;
@@ -19,6 +20,8 @@ export type Member = {
     dialogueCompleted?: boolean;
     /** AI会話で増えていくプロフィール項目 */
     profileItems?: ProfileItem[];
+    /** 初回登録時の Activity マイルストーン */
+    activityMilestones?: MemberActivityMilestone[];
   };
   music: MemberMusicProfile;
   fashion: {

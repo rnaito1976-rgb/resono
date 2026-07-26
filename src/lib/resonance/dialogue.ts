@@ -1,4 +1,5 @@
 import { applyProfileAiComment, buildProfileAiComment } from "@/lib/profile/ai-comment";
+import { attachInitialMemberActivities } from "@/lib/members/initial-activities";
 import type { Member } from "@/types/member";
 
 export const SUGGESTED_ARTISTS = [
@@ -293,10 +294,10 @@ export function buildMemberFromDialogue(
     },
   };
 
-  return {
+  return attachInitialMemberActivities({
     ...nextMember,
     aiComment: buildProfileAiComment(nextMember),
-  };
+  });
 }
 
 export function enrichMemberFromDiscover(

@@ -48,7 +48,7 @@ export function WelcomeAnalysisStep({ onComplete }: WelcomeAnalysisStepProps) {
                   y: isActive ? 0 : 6,
                 }}
                 transition={{ duration: 0.45, ease: [0.25, 0.1, 0.25, 1] }}
-                className="rounded-2xl border border-border bg-subtle px-5 py-4"
+                className="py-1"
               >
                 <p className="text-[15px] leading-relaxed text-white/80">{label}</p>
               </motion.div>
