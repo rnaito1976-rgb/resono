@@ -189,7 +189,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             <div className="rounded-2xl border border-border bg-white/[0.03] px-4 py-5">
               <div className="mb-5 flex items-center gap-4">
                 <div
-                  className="h-12 w-12 rounded-full transition-quiet"
+                  className="size-12 shrink-0 rounded-full transition-quiet"
                   style={{
                     backgroundColor: frequencyColor ?? "rgba(255,255,255,0.08)",
                     boxShadow: frequencyColor
@@ -253,6 +253,14 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               value={joinList(member.lookingFor.parts)}
               onChange={(event) =>
                 updateNested("lookingFor", "parts", splitList(event.target.value))
+              }
+            />
+          </FormField>
+          <FormField label="活動頻度" hint="任意（例: 週1リハ、月2ライブ）">
+            <FormInput
+              value={member.lookingFor.commitment}
+              onChange={(event) =>
+                updateNested("lookingFor", "commitment", event.target.value)
               }
             />
           </FormField>

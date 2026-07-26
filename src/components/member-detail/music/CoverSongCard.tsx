@@ -29,10 +29,10 @@ export function CoverSongCard({ song }: CoverSongCardProps) {
           />
         ) : (
           <span
-            className="flex h-full w-full items-center justify-center text-[18px] font-medium text-white/70"
+            className="flex h-full w-full items-center justify-center text-[18px] font-medium uppercase text-white/70"
             aria-hidden
           >
-            ♪
+            {song.title.charAt(0)}
           </span>
         )}
       </div>

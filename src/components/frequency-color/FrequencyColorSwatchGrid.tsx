@@ -18,7 +18,7 @@ export function FrequencyColorSwatchGrid({
   return (
     <div
       className={`grid gap-3 ${
-        columns === 8 ? "grid-cols-4 sm:grid-cols-8" : "grid-cols-4"
+        columns === 8 ? "grid-cols-8" : "grid-cols-4"
       }`}
     >
       {FREQUENCY_COLOR_PALETTE.map((swatch) => {
@@ -31,20 +31,16 @@ export function FrequencyColorSwatchGrid({
             aria-label={swatch.label}
             aria-pressed={isSelected}
             onClick={() => onSelect(swatch.hex)}
-            className="group flex flex-col items-center transition-quiet active:scale-95"
-          >
-            <span
-              className={`relative h-9 w-9 rounded-full transition-quiet sm:h-10 sm:w-10 ${
-                isSelected ? "scale-110" : "group-hover:scale-105"
-              }`}
-              style={{
-                backgroundColor: swatch.hex,
-                boxShadow: isSelected
-                  ? `0 0 0 2px ${swatch.hex}, 0 0 0 4px ${withAlpha(swatch.hex, 0.25)}`
-                  : `inset 0 0 0 1px ${withAlpha(swatch.hex, 0.35)}`,
-              }}
-            />
-          </button>
+            className={`aspect-square w-full shrink-0 rounded-full transition-quiet active:scale-95 ${
+              isSelected ? "scale-105" : ""
+            }`}
+            style={{
+              backgroundColor: swatch.hex,
+              boxShadow: isSelected
+                ? `0 0 0 2px ${swatch.hex}, 0 0 0 4px ${withAlpha(swatch.hex, 0.25)}`
+                : `inset 0 0 0 1px ${withAlpha(swatch.hex, 0.35)}`,
+            }}
+          />
         );
       })}
     </div>

@@ -22,12 +22,12 @@ export const MENU_SUPPORT = {
     "Resonoはユーザーのフィードバックと応援によって少しずつ育っています。",
   usageIntro: "いただいた応援は",
   usageItems: [
-    { icon: "🤖", label: "AI利用料" },
-    { icon: "☁️", label: "サーバー運営" },
-    { icon: "🎸", label: "新機能開発" },
+    { label: "AI利用料" },
+    { label: "サーバー運営" },
+    { label: "新機能開発" },
   ] as const,
   usageFooter: "に大切に使わせていただきます。",
-  coffeeButton: "☕ コーヒー1杯分で応援する",
+  coffeeButton: "コーヒー1杯分で応援する",
   coffeeToast: "応援ありがとうございます！決済機能は近日公開予定です。",
 } as const;
 

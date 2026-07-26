@@ -29,11 +29,8 @@ export function SupportPageContent() {
             {MENU_SUPPORT.usageItems.map((item) => (
               <li
                 key={item.label}
-                className="flex items-center gap-3 text-[16px] text-foreground/80"
+                className="flex items-center gap-3 text-[16px] text-foreground/80 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-primary/70 before:content-['']"
               >
-                <span className="text-[20px]" aria-hidden>
-                  {item.icon}
-                </span>
                 {item.label}
               </li>
             ))}
