@@ -1,3 +1,4 @@
+import { logSupabaseError } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberById, getMembersByIds } from "@/lib/members";
 import {
@@ -209,7 +210,9 @@ export async function getUnreadCountForMember(memberId: string): Promise<number>
     return rpcCount;
   }
 
-  console.error("[Supabase] get_unread_message_count:", rpcError?.message);
+  logSupabaseError("get_unread_message_count", rpcError, {
+    ignoreMissing: ["get_unread_message_count"],
+  });
   return 0;
 }
 

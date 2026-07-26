@@ -1,3 +1,4 @@
+import { logSupabaseError } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -133,7 +134,9 @@ export async function getBandUnreadSummaryForMember(
   });
 
   if (error) {
-    console.error("[Supabase] get_band_unread_summary:", error.message);
+    logSupabaseError("get_band_unread_summary", error, {
+      ignoreMissing: ["get_band_unread_summary"],
+    });
     return getBandUnreadSummaryLegacy(memberId);
   }
 
@@ -167,7 +170,9 @@ export async function getBandUnreadCountForMember(memberId: string): Promise<num
   }
 
   if (error) {
-    console.error("[Supabase] get_band_unread_count:", error.message);
+    logSupabaseError("get_band_unread_count", error, {
+      ignoreMissing: ["get_band_unread_count"],
+    });
   }
 
   const summary = await getBandUnreadSummaryForMember(memberId);

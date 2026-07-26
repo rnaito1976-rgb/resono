@@ -1,4 +1,5 @@
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import { isMissingSchemaObject, logSupabaseError } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -7,20 +8,6 @@ type CacheRow = {
   score: number;
   reason: unknown;
 };
-
-function isMissingResonanceCacheTable(error: {
-  code?: string;
-  message?: string;
-}): boolean {
-  return (
-    error.code === "PGRST205" ||
-    Boolean(error.message?.includes("resonance_match_cache"))
-  );
-}
-
-function logResonanceCacheError(context: string, error: { message?: string }) {
-  console.error(`[Supabase] ${context}:`, error.message);
-}
 
 function parseReason(raw: unknown, score: number): ResonanceReason | undefined {
   if (raw && typeof raw === "object" && "score" in raw) {
@@ -61,8 +48,8 @@ export async function getResonanceReasonsFromCache(
     .in("target_member_id", uniqueTargets);
 
   if (error) {
-    if (!isMissingResonanceCacheTable(error)) {
-      logResonanceCacheError("getResonanceReasonsFromCache", error);
+    if (!isMissingSchemaObject(error, "resonance_match_cache")) {
+      logSupabaseError("getResonanceReasonsFromCache", error);
     }
     return result;
   }
@@ -100,8 +87,8 @@ export async function saveResonanceReasonsToCache(
     .upsert(rows, { onConflict: "viewer_member_id,target_member_id" });
 
   if (error) {
-    if (!isMissingResonanceCacheTable(error)) {
-      logResonanceCacheError("saveResonanceReasonsToCache", error);
+    if (!isMissingSchemaObject(error, "resonance_match_cache")) {
+      logSupabaseError("saveResonanceReasonsToCache", error);
     }
   }
 }
@@ -119,8 +106,8 @@ export async function invalidateResonanceCacheForMember(memberId: string): Promi
     .or(`viewer_member_id.eq.${memberId},target_member_id.eq.${memberId}`);
 
   if (error) {
-    if (!isMissingResonanceCacheTable(error)) {
-      logResonanceCacheError("invalidateResonanceCacheForMember", error);
+    if (!isMissingSchemaObject(error, "resonance_match_cache")) {
+      logSupabaseError("invalidateResonanceCacheForMember", error);
     }
   }
 }

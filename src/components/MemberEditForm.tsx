@@ -19,6 +19,7 @@ import {
   FormSection,
 } from "@/components/FormField";
 import { FormPickerSheet } from "@/components/form/FormPickerSheet";
+import { CoverSongsEditor } from "@/components/form/CoverSongsEditor";
 import { FormTagPickerTrigger } from "@/components/form/FormTagPickerTrigger";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
@@ -38,44 +39,6 @@ import {
 } from "@/lib/profile/items";
 import type { ProfileEditSection, ProfileItemKind } from "@/types/profile-item";
 import type { Member } from "@/types/member";
-import type { CoverSong } from "@/types/music-profile";
-
-function coverSongTitle(member: Member): string {
-  return member.music.coverSongs?.[0]?.title ?? "";
-}
-
-function withCoverSongTitle(member: Member, title: string): Member {
-  const trimmed = title.trim();
-  const rest = member.music.coverSongs?.slice(1) ?? [];
-
-  if (!trimmed) {
-    return {
-      ...member,
-      music: {
-        ...member.music,
-        coverSongs: rest.length > 0 ? rest : undefined,
-      },
-    };
-  }
-
-  const existing = member.music.coverSongs?.[0];
-  const nextSong: CoverSong = {
-    id: existing?.id ?? `cover-${member.id}`,
-    title: trimmed,
-    artist: existing?.artist ?? "",
-    artworkUrl: existing?.artworkUrl,
-    sourceProvider: existing?.sourceProvider,
-    externalUrl: existing?.externalUrl,
-  };
-
-  return {
-    ...member,
-    music: {
-      ...member.music,
-      coverSongs: [nextSong, ...rest],
-    },
-  };
-}
 
 type MemberEditFormProps = {
   member: Member;
@@ -368,15 +331,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
 
           <FormSection title="Want to Cover">
             <p className="text-[14px] leading-relaxed text-white/55">コピーしてみたい曲</p>
-            <FormField label="曲名">
-              <FormInput
-                value={coverSongTitle(member)}
-                placeholder="ライラック"
-                onChange={(event) =>
-                  setMember((current) => withCoverSongTitle(current, event.target.value))
-                }
-              />
-            </FormField>
+            <CoverSongsEditor
+              memberId={member.id}
+              value={member.music.coverSongs}
+              onChange={(coverSongs) => updateNested("music", "coverSongs", coverSongs)}
+            />
           </FormSection>
 
           <ProfileItemFields

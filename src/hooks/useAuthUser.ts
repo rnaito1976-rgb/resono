@@ -15,16 +15,6 @@ export function useAuthUser(initialUser: User | null = null) {
     if (initialUser === null) {
       async function syncUser() {
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          setUser(session.user);
-          setIsLoading(false);
-          return;
-        }
-
-        const {
           data: { user: currentUser },
         } = await supabase.auth.getUser();
 

@@ -28,10 +28,10 @@ export function PostAuthOnboardingRedirect() {
 
     async function redirectAfterAuth() {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (cancelled || !session?.user) {
+      if (cancelled || !user) {
         return;
       }
 

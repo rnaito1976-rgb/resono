@@ -1,4 +1,5 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
+import { sanitizeCoverSongs } from "@/lib/music/cover-songs";
 import type { Member } from "@/types/member";
 import type {
   LegacyProfileCard,
@@ -305,7 +306,15 @@ export function syncProfileItemsFromMemberFields(member: Member): Member {
 
 /** 保存前: 項目 ↔ メンバーフィールドを双方向同期 + AIコメント再生成 */
 export function prepareMemberForSave(member: Member): Member {
+  const normalizedMember: Member = {
+    ...member,
+    music: {
+      ...member.music,
+      coverSongs: sanitizeCoverSongs(member.music.coverSongs),
+    },
+  };
+
   return applyProfileAiComment(
-    syncMemberFromProfileItems(syncProfileItemsFromMemberFields(member))
+    syncMemberFromProfileItems(syncProfileItemsFromMemberFields(normalizedMember))
   );
 }
