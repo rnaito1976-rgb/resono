@@ -189,6 +189,7 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
               matchedMembers={matchedMembers}
               musicDna={musicDna}
               renderStars={renderStars}
+              isLoggedIn={Boolean(initialUser)}
             />
           </WelcomeMotion>
         ) : null}

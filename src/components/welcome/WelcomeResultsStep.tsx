@@ -48,12 +48,14 @@ type WelcomeSignupPromptProps = {
   matchedMembers: Member[];
   musicDna: { label: string; stars: number }[];
   renderStars: (count: number) => string;
+  isLoggedIn?: boolean;
 };
 
 export function WelcomeResultsStep({
   matchedMembers,
   musicDna,
   renderStars,
+  isLoggedIn = false,
 }: WelcomeSignupPromptProps) {
   return (
     <div className="flex min-h-dvh flex-col px-5 pb-10 pt-6">
@@ -97,22 +99,33 @@ export function WelcomeResultsStep({
       </div>
 
       <div className="space-y-4 border-t border-border pt-6">
-        <Link
-          href="/signup?from=welcome"
-          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
-        >
-          無料ではじめる
-        </Link>
-
-        <div className="space-y-2 text-center">
-          <p className="text-[14px] text-white/45">すでにアカウントをお持ちですか？</p>
+        {isLoggedIn ? (
           <Link
-            href="/login?from=welcome"
-            className="inline-flex text-[15px] font-medium text-primary transition-quiet active:opacity-70"
+            href="/onboarding"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
           >
-            ログイン
+            プロフィールを完成させる
           </Link>
-        </div>
+        ) : (
+          <Link
+            href="/signup?from=welcome"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
+          >
+            無料ではじめる
+          </Link>
+        )}
+
+        {!isLoggedIn ? (
+          <div className="space-y-2 text-center">
+            <p className="text-[14px] text-white/45">すでにアカウントをお持ちですか？</p>
+            <Link
+              href="/login?from=welcome"
+              className="inline-flex text-[15px] font-medium text-primary transition-quiet active:opacity-70"
+            >
+              ログイン
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );

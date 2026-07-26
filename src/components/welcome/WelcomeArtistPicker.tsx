@@ -59,7 +59,12 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
 
   function addArtist(name: string) {
     const value = name.trim();
-    if (!value || selected.includes(value) || selected.length >= WELCOME_ARTIST_MAX) {
+    if (!value || selected.length >= WELCOME_ARTIST_MAX) {
+      return;
+    }
+
+    if (selected.some((artist) => normalize(artist) === normalize(value))) {
+      setQuery("");
       return;
     }
 
@@ -138,6 +143,14 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="アーティストを検索"
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (customCandidate) {
+              addArtist(customCandidate);
+            }
+          }
+        }}
         className={cn(
           "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
           atMax && "opacity-60"

@@ -228,7 +228,8 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-dvh flex-col bg-background">
+    <>
+      <form onSubmit={handleSubmit} className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
         <AppPageHeader
           backHref={`/member/${member.id}`}
@@ -329,7 +330,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormSection title="Music">
             <FormField label="好きなアーティスト" hint="タップして選択">
               <FormTagPickerTrigger
-                selected={member.music.favoriteArtists}
+                selected={member.music.favoriteArtists ?? []}
                 placeholder="アーティストを選択"
                 onClick={() => setActivePicker("favoriteArtists")}
               />
@@ -384,7 +385,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormSection title="Looking For">
             <FormField label="募集パート" hint="タップして選択">
               <FormTagPickerTrigger
-                selected={member.lookingFor.parts}
+                selected={member.lookingFor.parts ?? []}
                 placeholder="パートを選択"
                 onClick={() => setActivePicker("lookingForParts")}
               />
@@ -424,6 +425,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           {isPending ? "保存中..." : "保存する"}
         </button>
       </div>
+      </form>
 
       <FormPickerSheet
         open={activePicker === "favoriteArtists"}
@@ -431,7 +433,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <WelcomeArtistPicker
-          selected={member.music.favoriteArtists}
+          selected={member.music.favoriteArtists ?? []}
           onChange={updateFavoriteArtists}
         />
       </FormPickerSheet>
@@ -453,10 +455,10 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <WelcomePartsPicker
-          selected={member.lookingFor.parts}
+          selected={member.lookingFor.parts ?? []}
           onChange={(parts) => updateNested("lookingFor", "parts", parts)}
         />
       </FormPickerSheet>
-    </form>
+    </>
   );
 }

@@ -54,7 +54,7 @@ export function AuthHeaderActions({ initialUser = null }: AuthHeaderActionsProps
         <Link href="/login">ログイン</Link>
       </Button>
       <Button asChild size="sm" className="h-9 px-4 text-[13px]">
-        <Link href="/signup">新規登録</Link>
+        <Link href="/welcome">新規登録</Link>
       </Button>
     </>
   );

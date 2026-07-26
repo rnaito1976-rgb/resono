@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
-import {
-  WelcomePickerSection,
-} from "@/components/welcome/WelcomePickerSection";
+import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
 import {
   WELCOME_OTHER_PART_LABEL,
   WELCOME_PART_GROUPS,
@@ -18,26 +17,46 @@ type WelcomePartsPickerProps = {
 
 const PRESET_SET = new Set<string>(WELCOME_PART_PRESETS);
 
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function isPresetPart(part: string) {
   return PRESET_SET.has(part);
+}
+
+function isDisplayPart(part: string) {
+  return part !== WELCOME_OTHER_PART_LABEL;
 }
 
 export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerProps) {
   const [otherText, setOtherText] = useState("");
 
-  const presetSelected = selected.filter((part) => isPresetPart(part));
+  const displaySelected = selected.filter(isDisplayPart);
   const customParts = selected.filter((part) => !isPresetPart(part));
-  const otherSelected = presetSelected.includes(WELCOME_OTHER_PART_LABEL) || customParts.length > 0;
+  const otherSelected = selected.includes(WELCOME_OTHER_PART_LABEL) || customParts.length > 0;
+
+  function removePart(part: string) {
+    onChange(selected.filter((entry) => entry !== part));
+  }
 
   function togglePart(part: string) {
     if (part === WELCOME_OTHER_PART_LABEL) {
       if (otherSelected) {
-        onChange(selected.filter((entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL));
+        onChange(
+          selected.filter(
+            (entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL
+          )
+        );
         setOtherText("");
         return;
       }
 
-      onChange([...selected.filter((entry) => !isPresetPart(entry)), WELCOME_OTHER_PART_LABEL]);
+      onChange(
+        selected.includes(WELCOME_OTHER_PART_LABEL)
+          ? selected
+          : [...selected, WELCOME_OTHER_PART_LABEL]
+      );
       return;
     }
 
@@ -54,19 +73,39 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
       return;
     }
 
-    const presetsOnly = selected.filter(
-      (entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL
-    );
-    onChange([...presetsOnly, WELCOME_OTHER_PART_LABEL, value]);
+    if (selected.some((entry) => normalize(entry) === normalize(value))) {
+      setOtherText("");
+      return;
+    }
+
+    const next = selected.includes(WELCOME_OTHER_PART_LABEL)
+      ? [...selected, value]
+      : [...selected, WELCOME_OTHER_PART_LABEL, value];
+
+    onChange(next);
     setOtherText("");
   }
 
-  const visibleGroups = WELCOME_PART_GROUPS;
-
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {displaySelected.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {displaySelected.map((part) => (
+            <button
+              key={part}
+              type="button"
+              onClick={() => removePart(part)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
+            >
+              {part}
+              <X className="h-3.5 w-3.5 opacity-70" strokeWidth={2} />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pb-2 scrollbar-hide">
-        {visibleGroups.map((group) => {
+        {WELCOME_PART_GROUPS.map((group) => {
           if (group.label === "Other") {
             return (
               <WelcomePickerSection key={group.label} label={group.label}>
@@ -78,19 +117,6 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
                       onToggle={() => togglePart(WELCOME_OTHER_PART_LABEL)}
                     />
                   </div>
-
-                  {customParts.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {customParts.map((part) => (
-                        <span
-                          key={part}
-                          className="rounded-full border border-primary/35 bg-primary/10 px-3 py-1.5 text-[14px]"
-                        >
-                          {part}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
 
                   {otherSelected ? (
                     <div className="flex gap-2">

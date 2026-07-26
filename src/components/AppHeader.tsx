@@ -11,19 +11,17 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-background/85 px-5 pb-5 pt-10 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <HomeLogoLink>
-            <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
-          </HomeLogoLink>
-          <p className="mt-2 text-[15px] leading-relaxed text-white/45">
-            {BRAND_CATCH_COPY_INLINE}
-          </p>
-        </div>
+        <HomeLogoLink>
+          <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
+        </HomeLogoLink>
 
         <div className="flex shrink-0 items-center gap-1">
           <AuthHeaderActions initialUser={initialUser} />
         </div>
       </div>
+      <p className="mt-2 text-[15px] leading-relaxed text-white/45">
+        {BRAND_CATCH_COPY_INLINE}
+      </p>
     </header>
   );
 }

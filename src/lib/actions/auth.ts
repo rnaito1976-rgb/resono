@@ -74,7 +74,7 @@ export async function signInWithEmailAction(
 export async function signUpWithEmailAction(email: string, password: string) {
   const supabase = await createClient();
   const trimmedEmail = email.trim();
-  const emailRedirectTo = getEmailRedirectUrl("/onboarding");
+  const emailRedirectTo = getEmailRedirectUrl("/welcome");
 
   const { data, error } = await supabase.auth.signUp({
     email: trimmedEmail,
@@ -119,13 +119,13 @@ export async function signUpWithEmailAction(email: string, password: string) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/onboarding");
+  redirect("/welcome");
 }
 
 export async function resendConfirmationEmailAction(email: string) {
   const supabase = await createClient();
   const trimmedEmail = email.trim();
-  const emailRedirectTo = getEmailRedirectUrl("/onboarding");
+  const emailRedirectTo = getEmailRedirectUrl("/welcome");
 
   const { error } = await supabase.auth.resend({
     type: "signup",
@@ -170,5 +170,5 @@ export async function initializeMemberProfile() {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/welcome");
+  redirect("/");
 }

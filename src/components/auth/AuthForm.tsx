@@ -156,7 +156,7 @@ export function AuthForm({
 
       <GoogleAuthButton
         label={isSignup ? "Googleで始める" : "Googleでログイン"}
-        nextPath={isSignup ? "/onboarding" : nextPath}
+        nextPath={isSignup ? "/welcome" : nextPath}
       />
 
       {rateLimited ? (
@@ -229,7 +229,7 @@ export function AuthForm({
           {isSignup ? "すでにアカウントをお持ちですか？" : "アカウントをお持ちでないですか？"}
         </p>
         <Link
-          href={isSignup ? "/login" : "/signup"}
+          href={isSignup ? "/login" : "/welcome"}
           className="mt-2 inline-block text-[15px] font-medium text-primary"
         >
           {isSignup ? "ログイン" : "新規登録"}

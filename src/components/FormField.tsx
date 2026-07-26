@@ -40,11 +40,11 @@ type FormFieldProps = {
 
 export function FormField({ label, hint, children }: FormFieldProps) {
   return (
-    <label className="block space-y-2">
+    <div className="block space-y-2">
       <span className="text-[13px] text-white/70">{label}</span>
       {children}
       {hint ? <span className="block text-[12px] text-muted">{hint}</span> : null}
-    </label>
+    </div>
   );
 }
 

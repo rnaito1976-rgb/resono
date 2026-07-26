@@ -33,7 +33,7 @@ export function AuthWelcomeActions({ initialUser = null }: AuthWelcomeActionsPro
   return (
     <div className="space-y-4">
       <Button asChild size="lg" className="w-full">
-        <Link href="/signup">新規登録</Link>
+        <Link href="/welcome">はじめる</Link>
       </Button>
       <div className="text-center">
         <Link
