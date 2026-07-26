@@ -163,7 +163,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
         <AppPageHeader
           backHref={`/member/${member.id}`}
-          backLabel="マイページに戻る"
+          backLabel="プロフィールに戻る"
           eyebrow="Profile"
           title="プロフィール編集"
           actions={

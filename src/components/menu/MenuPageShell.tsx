@@ -23,7 +23,7 @@ export function MenuPageShell({
         eyebrow="Menu"
         title={title}
         subtitle={subtitle}
-        actions={variant === "root" ? <MenuCloseLink href="/" /> : undefined}
+        actions={variant === "root" ? <MenuCloseLink /> : undefined}
       />
       <div className="px-5 pb-12">{children}</div>
     </main>

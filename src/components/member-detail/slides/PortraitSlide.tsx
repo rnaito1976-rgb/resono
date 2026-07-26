@@ -46,7 +46,7 @@ export function PortraitSlide({
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
             Profile
           </p>
-          <h1 className="mt-1 text-[28px] font-light tracking-tight">マイページ</h1>
+          <h1 className="mt-1 text-[28px] font-light tracking-tight">プロフィール</h1>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
             あなたの音楽活動をまとめて見る。
           </p>

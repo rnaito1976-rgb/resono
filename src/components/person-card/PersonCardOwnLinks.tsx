@@ -12,7 +12,7 @@ export function PersonCardOwnLinks() {
         Discover a Story
       </Link>
       <Link href="/me" className={linkClass}>
-        マイページ
+        プロフィール
       </Link>
     </>
   );

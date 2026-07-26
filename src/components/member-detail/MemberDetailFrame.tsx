@@ -165,7 +165,7 @@ export function MemberDetailFrame({
                     Profile
                   </p>
                   <h1 className="truncate text-[20px] font-light tracking-tight">
-                    {isOwnProfile ? "マイページ" : member.name}
+                    {isOwnProfile ? "プロフィール" : member.name}
                   </h1>
                 </div>
                 <button
