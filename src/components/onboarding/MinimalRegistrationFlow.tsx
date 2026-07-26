@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { OnboardingPhotoPicker } from "@/components/onboarding/OnboardingPhotoPicker";
 import { FrequencyColorPicker } from "@/components/frequency-color/FrequencyColorPicker";
 import { ChipGrid } from "@/components/onboarding/SelectableChip";
@@ -10,10 +10,16 @@ import {
   completeMinimalRegistrationAction,
   saveFrequencyColorAction,
 } from "@/lib/actions/onboarding";
-import { hasCustomPhotoUrl } from "@/lib/onboarding/status";
+import { NO_PHOTO_URL, hasCustomPhotoUrl } from "@/lib/onboarding/status";
 import { PLAYING_PART_OPTIONS, SUGGESTED_ARTISTS } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { MinimalRegistrationInput } from "@/lib/profile/registration";
+import {
+  effectiveWelcomeParts,
+  readValidWelcomeOnboardingAnswers,
+} from "@/lib/welcome/onboarding-registration";
+import { clearWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-storage";
+import type { WelcomeOnboardingAnswers } from "@/types/welcome-onboarding";
 
 type MinimalRegistrationFlowProps = {
   memberId: string;
@@ -22,20 +28,24 @@ type MinimalRegistrationFlowProps = {
 
 type RegistrationStep = "photo" | "name" | "part" | "artists";
 
-const STEPS: RegistrationStep[] = ["photo", "name", "part", "artists"];
+const DEFAULT_STEPS: RegistrationStep[] = ["photo", "name", "part", "artists"];
 
 export function MinimalRegistrationFlow({
   memberId,
   initialPhase = "registration",
 }: MinimalRegistrationFlowProps) {
+  const welcomeAnswers = useMemo(() => readValidWelcomeOnboardingAnswers(), []);
+  const steps = welcomeAnswers ? (["photo", "name"] as RegistrationStep[]) : DEFAULT_STEPS;
+
   const [phase, setPhase] = useState<"registration" | "frequency">(initialPhase);
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<Partial<MinimalRegistrationInput>>({
-    photo: "",
+    photo: undefined,
     name: "",
     part: "",
     favoriteArtists: [],
   });
+  const [photoSkipped, setPhotoSkipped] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [partSelection, setPartSelection] = useState<string[]>([]);
   const [artistSelection, setArtistSelection] = useState<string[]>([]);
@@ -43,7 +53,7 @@ export function MinimalRegistrationFlow({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const step = STEPS[stepIndex];
+  const step = steps[stepIndex];
 
   function toggleArtist(value: string) {
     setArtistSelection((current) => {
@@ -66,10 +76,35 @@ export function MinimalRegistrationFlow({
     setCustomArtist("");
   }
 
+  function buildRegistrationInput(
+    welcome: WelcomeOnboardingAnswers | null
+  ): Partial<MinimalRegistrationInput> {
+    if (welcome) {
+      const parts = effectiveWelcomeParts(welcome.parts);
+      return {
+        ...form,
+        name: nameInput.trim(),
+        photo: photoSkipped ? NO_PHOTO_URL : form.photo ?? NO_PHOTO_URL,
+        part: parts[0] ?? "",
+        parts,
+        favoriteArtists: welcome.artists,
+        sounds: welcome.sounds,
+      };
+    }
+
+    return {
+      ...form,
+      name: nameInput.trim(),
+      photo: photoSkipped ? NO_PHOTO_URL : form.photo ?? NO_PHOTO_URL,
+      part: partSelection[0] ?? "",
+      favoriteArtists: artistSelection,
+    };
+  }
+
   function canProceed(): boolean {
     switch (step) {
       case "photo":
-        return Boolean(form.photo && hasCustomPhotoUrl(form.photo));
+        return hasCustomPhotoUrl(form.photo ?? "") || photoSkipped;
       case "name":
         return nameInput.trim().length >= 1;
       case "part":
@@ -79,6 +114,25 @@ export function MinimalRegistrationFlow({
       default:
         return false;
     }
+  }
+
+  function submitRegistration(welcome: WelcomeOnboardingAnswers | null) {
+    const nextForm = buildRegistrationInput(welcome);
+
+    startTransition(async () => {
+      const result = await completeMinimalRegistrationAction(nextForm);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (welcome) {
+        clearWelcomeOnboardingAnswers();
+      }
+
+      setForm(nextForm);
+      setPhase("frequency");
+    });
   }
 
   function handleNext() {
@@ -96,21 +150,13 @@ export function MinimalRegistrationFlow({
       setForm((current) => ({ ...current, part: partSelection[0] ?? "" }));
     }
 
-    if (step === "artists") {
-      const nextForm: Partial<MinimalRegistrationInput> = {
-        ...form,
-        favoriteArtists: artistSelection,
-      };
+    if (step === "name" && welcomeAnswers) {
+      submitRegistration(welcomeAnswers);
+      return;
+    }
 
-      startTransition(async () => {
-        const result = await completeMinimalRegistrationAction(nextForm);
-        if (result.error) {
-          setError(result.error);
-          return;
-        }
-        setForm(nextForm);
-        setPhase("frequency");
-      });
+    if (step === "artists") {
+      submitRegistration(null);
       return;
     }
 
@@ -142,10 +188,12 @@ export function MinimalRegistrationFlow({
           プロフィールのはじまり
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/45">
-          最初は最低限だけ。あとはAIとの会話で、少しずつ育てていきます。
+          {welcomeAnswers
+            ? "Welcomeで選んだ内容はプロフィールに引き継がれます。名前と写真だけ決めましょう。"
+            : "最初は最低限だけ。あとはAIとの会話で、少しずつ育てていきます。"}
         </p>
         <p className="mt-4 text-[12px] uppercase tracking-[0.18em] text-white/30">
-          Step {stepIndex + 1} / {STEPS.length}
+          Step {stepIndex + 1} / {steps.length}
         </p>
       </div>
 
@@ -153,9 +201,16 @@ export function MinimalRegistrationFlow({
         {step === "photo" ? (
           <OnboardingPhotoPicker
             memberId={memberId}
-            value={form.photo ?? ""}
-            onChange={(url) => setForm((current) => ({ ...current, photo: url }))}
-            required
+            value={form.photo}
+            skipped={photoSkipped}
+            onChange={(url) => {
+              setPhotoSkipped(false);
+              setForm((current) => ({ ...current, photo: url }));
+            }}
+            onSkip={() => {
+              setPhotoSkipped(true);
+              setForm((current) => ({ ...current, photo: NO_PHOTO_URL }));
+            }}
           />
         ) : null}
 
@@ -168,6 +223,18 @@ export function MinimalRegistrationFlow({
               placeholder="ニックネーム"
               className="h-12 w-full rounded-full border border-border bg-white/[0.04] px-5 text-[15px] text-white outline-none placeholder:text-white/30 focus:border-border"
             />
+            {welcomeAnswers ? (
+              <div className="rounded-2xl border border-border bg-white/[0.03] px-4 py-4 text-[13px] leading-relaxed text-white/45">
+                <p>引き継ぐ内容</p>
+                <p className="mt-2 text-white/70">
+                  アーティスト {welcomeAnswers.artists.length}組 · パート{" "}
+                  {effectiveWelcomeParts(welcomeAnswers.parts).join(" · ")} · サウンド{" "}
+                  {welcomeAnswers.sounds.length > 0
+                    ? welcomeAnswers.sounds.slice(0, 3).join(" · ")
+                    : "未選択"}
+                </p>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -225,6 +292,8 @@ export function MinimalRegistrationFlow({
               <FrequencySpinner size={16} />
               保存中...
             </span>
+          ) : step === "name" && welcomeAnswers ? (
+            "次へ（カラー選択）"
           ) : step === "artists" ? (
             "次へ（カラー選択）"
           ) : (

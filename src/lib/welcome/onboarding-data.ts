@@ -59,7 +59,7 @@ export const WELCOME_ARTIST_CATALOG = [
   "X JAPAN",
   "ONE OK ROCK",
   "MAN WITH A MISSION",
-  "スカパラ",
+  "東京スカパラダイスオーケストラ",
   "SiM",
   "Crossfaith",
   "w.o.d.",

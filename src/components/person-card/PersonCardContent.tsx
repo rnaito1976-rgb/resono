@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
+import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
+import { hasProfilePhoto } from "@/lib/onboarding/status";
 import { HOME_LCP_IMAGE_WIDTH } from "@/lib/images/lcp";
 import { getPlayingParts } from "@/lib/resonance/dialogue";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -60,17 +62,21 @@ export function PersonCardContent({
     <article className="overflow-hidden rounded-[28px] bg-subtle">
       <ProfilePhotoRing color={ringColor} className="rounded-[28px]">
         <div className="relative aspect-square w-full">
-          <Image
-            key={photoSrc}
-            src={photoSrc}
-            alt={member.name}
-            fill
-            className="object-cover"
-            sizes={getProfilePhotoSizes(isAmbient ? "ambient" : "card")}
-            priority={shouldPrioritize}
-            fetchPriority={shouldPrioritize ? "high" : undefined}
-            loading={shouldPrioritize ? undefined : "lazy"}
-          />
+          {hasProfilePhoto(member.photo) ? (
+            <Image
+              key={photoSrc}
+              src={photoSrc}
+              alt={member.name}
+              fill
+              className="object-cover"
+              sizes={getProfilePhotoSizes(isAmbient ? "ambient" : "card")}
+              priority={shouldPrioritize}
+              fetchPriority={shouldPrioritize ? "high" : undefined}
+              loading={shouldPrioritize ? undefined : "lazy"}
+            />
+          ) : (
+            <ProfilePhotoPlaceholder />
+          )}
           <div
             className={`absolute inset-0 bg-gradient-to-t via-black/20 to-transparent ${
               isOwnCard ? "from-black/85" : "from-black/80"

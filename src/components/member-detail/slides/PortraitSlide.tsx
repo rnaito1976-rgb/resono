@@ -1,11 +1,13 @@
 import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ProfileItemsView } from "@/components/profile/ProfileItemsView";
+import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
+import { hasProfilePhoto } from "@/lib/onboarding/status";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { Member } from "@/types/member";
@@ -55,15 +57,19 @@ export function PortraitSlide({
 
       <ProfilePhotoRing color={ringColor} className="mb-10 w-full shrink-0 rounded-[32px]">
         <div className="relative h-72 w-full overflow-hidden rounded-[32px] sm:h-80">
-          <Image
-            src={getProfilePhotoSrc(member.photo, 720)}
-            alt={member.name}
-            fill
-            className="object-cover"
-            sizes={getProfilePhotoSizes("detail")}
-            priority={priorityPhoto || isOwnProfile}
-            loading={priorityPhoto || isOwnProfile ? undefined : "lazy"}
-          />
+          {hasProfilePhoto(member.photo) ? (
+            <Image
+              src={getProfilePhotoSrc(member.photo, 720)}
+              alt={member.name}
+              fill
+              className="object-cover"
+              sizes={getProfilePhotoSizes("detail")}
+              priority={priorityPhoto || isOwnProfile}
+              loading={priorityPhoto || isOwnProfile ? undefined : "lazy"}
+            />
+          ) : (
+            <ProfilePhotoPlaceholder className="rounded-[32px]" />
+          )}
         </div>
       </ProfilePhotoRing>
 

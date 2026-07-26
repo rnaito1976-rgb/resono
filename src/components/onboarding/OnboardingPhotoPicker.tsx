@@ -2,21 +2,24 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import { uploadMemberPhoto } from "@/lib/storage";
-import { DEFAULT_PHOTO_URL, hasCustomPhotoUrl } from "@/lib/onboarding/status";
+import { hasCustomPhotoUrl } from "@/lib/onboarding/status";
 
 type OnboardingPhotoPickerProps = {
   memberId: string;
-  value: string;
+  value: string | undefined;
   onChange: (url: string) => void;
-  required?: boolean;
+  onSkip?: () => void;
+  skipped?: boolean;
 };
 
 export function OnboardingPhotoPicker({
   memberId,
   value,
   onChange,
-  required = false,
+  onSkip,
+  skipped = false,
 }: OnboardingPhotoPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -44,7 +47,7 @@ export function OnboardingPhotoPicker({
     }
   }
 
-  const hasPhoto = hasCustomPhotoUrl(value);
+  const hasPhoto = hasCustomPhotoUrl(value ?? "");
 
   return (
     <div className="space-y-6">
@@ -54,13 +57,17 @@ export function OnboardingPhotoPicker({
         onClick={() => inputRef.current?.click()}
         className="group relative mx-auto block aspect-square w-full max-w-[280px] overflow-hidden rounded-[32px] bg-subtle transition-transform active:scale-[0.99]"
       >
-        <Image
-          src={value || DEFAULT_PHOTO_URL}
-          alt="プロフィール写真"
-          fill
-          className="object-cover"
-          sizes="280px"
-        />
+        {hasPhoto ? (
+          <Image
+            src={value ?? ""}
+            alt="プロフィール写真"
+            fill
+            className="object-cover"
+            sizes="280px"
+          />
+        ) : (
+          <ProfilePhotoPlaceholder className="rounded-[32px]" />
+        )}
         <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-black/10 to-transparent p-6">
           <span className="rounded-full border border-border bg-black/40 px-5 py-2.5 text-[14px] font-medium text-white backdrop-blur-sm">
             {isUploading ? "アップロード中..." : hasPhoto ? "写真を変更" : "写真を選ぶ"}
@@ -76,10 +83,22 @@ export function OnboardingPhotoPicker({
         className="hidden"
       />
 
+      {onSkip ? (
+        <button
+          type="button"
+          onClick={onSkip}
+          className={`mx-auto block rounded-full border px-5 py-2.5 text-[14px] transition-quiet ${
+            skipped
+              ? "border-primary/40 bg-[var(--frequency-color-soft)] text-foreground"
+              : "border-border text-white/55 active:opacity-80"
+          }`}
+        >
+          No image
+        </button>
+      ) : null}
+
       <p className="text-center text-[13px] leading-relaxed text-white/40">
-        {required
-          ? "プロフィール写真は必須です。あなたらしい1枚を選んでください。"
-          : "写真は任意です。あとから追加できます。"}
+        写真は任意です。No image を選べば、あとから追加できます。
       </p>
 
       {error ? <p className="text-center text-[13px] text-red-300">{error}</p> : null}

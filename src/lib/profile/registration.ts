@@ -1,23 +1,35 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import { createMusicDnaItem } from "@/lib/profile/items";
+import { NO_PHOTO_URL } from "@/lib/onboarding/status";
 import type { Member } from "@/types/member";
 
 export type MinimalRegistrationInput = {
   name: string;
   photo: string;
   part: string;
+  parts?: string[];
   favoriteArtists: string[];
+  sounds?: string[];
 };
+
+function resolveInstruments(input: Partial<MinimalRegistrationInput>): string[] {
+  if (input.parts?.length) {
+    return input.parts.map((part) => part.trim()).filter(Boolean);
+  }
+
+  return input.part?.trim() ? [input.part.trim()] : [];
+}
 
 export function isMinimalRegistrationInputComplete(
   input: Partial<MinimalRegistrationInput>
 ): input is MinimalRegistrationInput {
+  const artists = input.favoriteArtists?.map((artist) => artist.trim()).filter(Boolean) ?? [];
+
   return Boolean(
     input.name?.trim() &&
-      input.photo?.trim() &&
-      input.part?.trim() &&
-      input.favoriteArtists &&
-      input.favoriteArtists.length === 3
+      input.photo !== undefined &&
+      resolveInstruments(input).length >= 1 &&
+      artists.length >= 3
   );
 }
 
@@ -26,12 +38,15 @@ export function buildMemberFromMinimalRegistration(
   input: MinimalRegistrationInput
 ): Member {
   const artists = input.favoriteArtists.map((artist) => artist.trim()).filter(Boolean);
+  const instruments = resolveInstruments(input);
+  const genres = (input.sounds ?? []).map((sound) => sound.trim()).filter(Boolean);
   const musicDnaItem = createMusicDnaItem(artists);
+  const photo = input.photo.trim() || NO_PHOTO_URL;
 
   return applyProfileAiComment({
     ...member,
     name: input.name.trim(),
-    photo: input.photo.trim(),
+    photo,
     tags: artists.slice(0, 3),
     portrait: {
       ...member.portrait,
@@ -44,8 +59,9 @@ export function buildMemberFromMinimalRegistration(
     },
     music: {
       ...member.music,
-      instruments: [input.part.trim()],
+      instruments,
       favoriteArtists: artists,
+      genres,
     },
   });
 }
