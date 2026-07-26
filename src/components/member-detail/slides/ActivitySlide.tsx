@@ -11,7 +11,7 @@ export function ActivitySlide({ activities }: ActivitySlideProps) {
     <div className="flex h-full flex-col space-y-6 px-6 pb-8 pt-4">
       <SectionBlock label="Activity">
         <p className="mb-5 text-[15px] leading-relaxed text-white/50">
-          共鳴・Band結成・投稿の履歴が時系列で残ります。
+          あなたの共鳴・Band結成・投稿の履歴です。
         </p>
         <MemberActivityFeed activities={activities} />
       </SectionBlock>

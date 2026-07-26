@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMutualResonateMembers } from "@/lib/bands/queries";
 import { getMemberById } from "@/lib/members";
-import { getMemberActivityFeed } from "@/lib/members/activity-feed";
+import { getOwnMemberActivityFeed } from "@/lib/members/activity-feed";
 import { requireViewer } from "@/lib/navigation/require-viewer";
 import { MemberDetail } from "@/components/MemberDetail";
 
@@ -15,7 +15,7 @@ export default async function MyPage() {
 
   const [mutualMembers, memberActivities] = await Promise.all([
     getMutualResonateMembers(memberId),
-    getMemberActivityFeed(memberId),
+    getOwnMemberActivityFeed(memberId),
   ]);
 
   return (
