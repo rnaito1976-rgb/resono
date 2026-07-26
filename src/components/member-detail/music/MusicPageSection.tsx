@@ -20,7 +20,7 @@ function SectionResonancePoints({ points }: { points: string[] }) {
       <ul className="mt-2 space-y-1">
         {points.map((point) => (
           <li key={point} className="text-[14px] text-foreground/80">
-            · {point}
+            {point}
           </li>
         ))}
       </ul>
@@ -76,10 +76,7 @@ export function MusicResonanceSummary({ points }: { points: string[] }) {
         </p>
         <ul className="mt-3 space-y-2">
           {points.map((point) => (
-            <li key={point} className="flex items-center gap-2 text-[15px] text-foreground/85">
-              <span className="text-[var(--frequency-color)]" aria-hidden>
-                ·
-              </span>
+            <li key={point} className="text-[15px] text-foreground/85">
               {point}
             </li>
           ))}

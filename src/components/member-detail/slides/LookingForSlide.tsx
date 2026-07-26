@@ -59,7 +59,7 @@ export function LookingForSlide({
                         {resonateMember.name}
                       </Link>
                       <p className="mt-1 text-[13px] text-white/45">
-                        {resonateMember.music.instruments.join(" · ") || "パート未設定"}
+                        {resonateMember.music.instruments.join(", ") || "パート未設定"}
                       </p>
                     </div>
                     {conversationId ? (

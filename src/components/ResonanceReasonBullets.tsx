@@ -26,7 +26,7 @@ export function ResonanceReasonBullets({
               compact ? "text-[14px]" : "text-[15px]"
             }`}
           >
-            ・{point}
+            {point}
           </li>
         ))}
       </ul>

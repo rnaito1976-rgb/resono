@@ -26,7 +26,7 @@ export function ProfileItemsView({
       <div className="space-y-3 px-1">
         {playingParts.length > 0 ? (
           <p className="text-[13px] font-medium tracking-[0.18em] text-white/45">
-            {playingParts.join(" · ")}
+            {playingParts.join(", ")}
           </p>
         ) : null}
         <h2 className="text-[34px] font-light tracking-tight text-white">{member.name}</h2>
