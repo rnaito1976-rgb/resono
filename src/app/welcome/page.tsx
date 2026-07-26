@@ -1,23 +1,16 @@
-import { WelcomeHero } from "@/components/welcome/WelcomeHero";
-import { WelcomeProfileBackdrop } from "@/components/welcome/WelcomeProfileBackdrop";
+import { WelcomeFlow } from "@/components/welcome/WelcomeFlow";
 import { getMembersPage } from "@/lib/members";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function WelcomePage() {
-  const [supabase, membersPage] = await Promise.all([
-    createClient(),
-    getMembersPage(0, 6),
+  const [user, membersPage] = await Promise.all([
+    getAuthSession(),
+    getMembersPage(0, 12),
   ]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   return (
-    <WelcomeHero
-      initialUser={user}
-      backdrop={<WelcomeProfileBackdrop members={membersPage.members} />}
-    />
+    <WelcomeFlow initialUser={user} members={membersPage.members} />
   );
 }
