@@ -7,7 +7,7 @@ export type MemberActivityMilestone = {
   occurredAt: string;
 };
 
-/** Own-profile Activity feed: newest first. */
+/** Own-profile Activity feed: newest first (index 0 = newest). */
 export const INITIAL_MEMBER_ACTIVITY_TITLES = [
   "共鳴する仲間を探し始めました",
   "Music DNA を作成しました",
@@ -44,17 +44,20 @@ export function attachInitialMemberActivities(member: Member): Member {
 }
 
 export function getMemberActivityMilestones(
-  member: Member | undefined
+  member: Member | undefined,
+  registeredAt?: string
 ): MemberActivityMilestone[] {
   if (!member?.portrait.dialogueCompleted) {
     return [];
   }
 
   if (member.portrait.activityMilestones?.length) {
-    return member.portrait.activityMilestones;
+    return [...member.portrait.activityMilestones].sort(
+      (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
+    );
   }
 
-  return buildInitialMemberActivities();
+  return buildInitialMemberActivities(registeredAt ?? new Date().toISOString());
 }
 
 export function memberActivityMilestonesToFeedItems(

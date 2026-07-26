@@ -107,8 +107,12 @@ export async function getOwnMemberActivityFeed(
   }
 
   const supabase = await createClient();
-  const member = await getMemberById(memberId);
+  const [{ data: memberMeta }, member] = await Promise.all([
+    supabase.from("members").select("created_at").eq("id", memberId).maybeSingle(),
+    getMemberById(memberId),
+  ]);
   const viewerName = memberName ?? member?.name;
+  const registeredAt = memberMeta?.created_at;
 
   const { data: memberships } = await supabase
     .from("band_members")
@@ -159,7 +163,9 @@ export async function getOwnMemberActivityFeed(
 
   const partnerMap = await getMembersByIds([...partnerIds]);
   const items = [
-    ...memberActivityMilestonesToFeedItems(getMemberActivityMilestones(member)),
+    ...memberActivityMilestonesToFeedItems(
+      getMemberActivityMilestones(member, registeredAt)
+    ),
     ...buildResonanceItems(outgoing, incoming, partnerMap),
   ];
 

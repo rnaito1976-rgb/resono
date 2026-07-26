@@ -58,11 +58,7 @@ export const OWN_PROFILE_DETAIL_SECTIONS: {
 
 const ACTIVITY_SECTION = { id: "activity" as const, label: "Activity" };
 
-/** Activity に表示があるときは先頭、なければ末尾 */
-export function getOwnProfileDetailSections(hasActivityContent: boolean) {
-  if (hasActivityContent) {
-    return [ACTIVITY_SECTION, ...DETAIL_SECTIONS];
-  }
-
+/** Activity は常に末尾（About / Music / Band の後） */
+export function getOwnProfileDetailSections(_hasActivityContent = false) {
   return [...DETAIL_SECTIONS, ACTIVITY_SECTION];
 }
