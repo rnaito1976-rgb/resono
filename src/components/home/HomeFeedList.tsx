@@ -16,9 +16,9 @@ import { queryKeys } from "@/lib/query/keys";
 
 const PersonCardClient = dynamic(
   () =>
-    import("@/components/person-card/PersonCardClient").then(
-      (module) => module.PersonCardClient
-    ),
+    import("@/components/person-card/PersonCardClient").then((module) => ({
+      default: module.PersonCardClient,
+    })),
   { loading: () => <PersonCardSkeleton /> }
 );
 

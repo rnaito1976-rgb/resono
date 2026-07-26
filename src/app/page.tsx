@@ -7,12 +7,17 @@ import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { buildMembersFeedPage } from "@/lib/members/feed-builder";
 import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
+import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export default async function HomePage() {
   const { user, member, frequencyColor, needsOnboarding } = await getHomeViewer();
 
+  if (user && !member) {
+    redirect(buildWelcomeOnboardingHref());
+  }
+
   if (needsOnboarding) {
-    redirect("/onboarding");
+    redirect(buildWelcomeOnboardingHref());
   }
 
   const initialFeedPage =

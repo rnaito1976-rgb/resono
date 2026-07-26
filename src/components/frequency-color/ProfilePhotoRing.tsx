@@ -18,7 +18,7 @@ export function ProfilePhotoRing({
       style={
         color
           ? {
-              boxShadow: `0 0 0 2px ${withAlpha(color, 0.35)}, 0 0 24px ${withAlpha(color, 0.18)}`,
+              boxShadow: `0 0 0 2px ${withAlpha(color, 0.35)}`,
             }
           : undefined
       }

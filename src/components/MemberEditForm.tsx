@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -414,14 +413,6 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             onUpdate={updateProfileItemField}
           />
         </section>
-
-        <Link
-          href="/discover"
-          className="flex items-center justify-between rounded-2xl border border-border bg-white/[0.04] px-5 py-4 text-[15px] text-white/80 transition-colors active:bg-white/[0.07]"
-        >
-          <span>Discover a Story</span>
-          <span aria-hidden>→</span>
-        </Link>
       </div>
 
       <div className="sticky bottom-0 border-t border-border bg-background px-5 pb-8 pt-4">

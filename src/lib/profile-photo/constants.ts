@@ -17,13 +17,13 @@ export const RECOMMENDED_PHOTO_SAMPLES = [
     id: "instrument",
     label: "楽器を持った写真",
     image:
-      "https://images.unsplash.com/photo-1511379938549-c1f69419868d?w=400&q=80&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400&q=80&auto=format&fit=crop",
   },
   {
     id: "studio",
     label: "スタジオでの自然な写真",
     image:
-      "https://images.unsplash.com/photo-1516280440614-379379bb347d?w=400&q=80&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80&auto=format&fit=crop",
   },
 ] as const;
 

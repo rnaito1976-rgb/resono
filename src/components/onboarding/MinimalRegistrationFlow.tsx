@@ -27,18 +27,38 @@ import { WELCOME_ARTIST_MAX } from "@/types/welcome-onboarding";
 type MinimalRegistrationFlowProps = {
   memberId: string;
   initialPhase?: "registration" | "frequency";
+  skipPhoto?: boolean;
 };
 
 type RegistrationStep = "photo" | "name" | "part" | "artists";
 
 const DEFAULT_STEPS: RegistrationStep[] = ["photo", "name", "part", "artists"];
 
+function resolveRegistrationSteps(
+  welcomeAnswers: ReturnType<typeof readValidWelcomeOnboardingAnswers>,
+  skipPhoto: boolean
+): RegistrationStep[] {
+  if (welcomeAnswers) {
+    return skipPhoto ? ["name"] : ["photo", "name"];
+  }
+
+  if (skipPhoto) {
+    return DEFAULT_STEPS.filter((step) => step !== "photo");
+  }
+
+  return DEFAULT_STEPS;
+}
+
 export function MinimalRegistrationFlow({
   memberId,
   initialPhase = "registration",
+  skipPhoto = false,
 }: MinimalRegistrationFlowProps) {
   const welcomeAnswers = useMemo(() => readValidWelcomeOnboardingAnswers(), []);
-  const steps = welcomeAnswers ? (["photo", "name"] as RegistrationStep[]) : DEFAULT_STEPS;
+  const steps = useMemo(
+    () => resolveRegistrationSteps(welcomeAnswers, skipPhoto),
+    [skipPhoto, welcomeAnswers]
+  );
 
   const [phase, setPhase] = useState<"registration" | "frequency">(initialPhase);
   const [stepIndex, setStepIndex] = useState(0);
@@ -207,8 +227,12 @@ export function MinimalRegistrationFlow({
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-white/45">
           {welcomeAnswers
-            ? "Welcomeで選んだ内容はプロフィールに引き継がれます。名前と写真だけ決めましょう。"
-            : "最初は最低限だけ。あとはAIとの会話で、少しずつ育てていきます。"}
+            ? skipPhoto
+              ? "Welcomeで選んだ内容はプロフィールに引き継がれます。名前だけ決めましょう。"
+              : "Welcomeで選んだ内容はプロフィールに引き継がれます。名前と写真だけ決めましょう。"
+            : skipPhoto
+              ? "最初は最低限だけ。写真はあとから追加できます。"
+              : "最初は最低限だけ。あとはAIとの会話で、少しずつ育てていきます。"}
         </p>
         <p className="mt-4 text-[12px] uppercase tracking-[0.18em] text-white/30">
           Step {stepIndex + 1} / {steps.length}

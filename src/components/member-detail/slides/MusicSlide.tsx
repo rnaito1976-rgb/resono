@@ -1,5 +1,6 @@
 import { CoverSongCard } from "@/components/member-detail/music/CoverSongCard";
 import { MusicDnaChart } from "@/components/member-detail/music/MusicDnaChart";
+import { ProfileTabHeading } from "@/components/member-detail/ProfileTabHeading";
 import {
   MusicEmptyHint,
   MusicPageSection,
@@ -20,6 +21,14 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
 
   return (
     <div className="flex h-full flex-col space-y-10 px-6 pb-10 pt-4">
+      {isOwnProfile ? (
+        <ProfileTabHeading
+          eyebrow="Music"
+          title="Music"
+          description="好きなアーティストや音楽の傾向。"
+        />
+      ) : null}
+
       {resonance ? (
         <MusicResonanceSummary
           points={[

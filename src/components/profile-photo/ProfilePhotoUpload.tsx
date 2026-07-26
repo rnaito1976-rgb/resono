@@ -7,10 +7,12 @@ import { ProfilePhotoClarity } from "@/components/profile-photo/ProfilePhotoClar
 import { ProfilePhotoRingFrame } from "@/components/profile-photo/ProfilePhotoRingFrame";
 import { ProfilePhotoSamples } from "@/components/profile-photo/ProfilePhotoSamples";
 import { ProfilePhotoTips } from "@/components/profile-photo/ProfilePhotoTips";
+import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
+import { hasProfilePhoto } from "@/lib/onboarding/status";
 import {
   OPTIMIZING_MESSAGE,
   optimizeProfilePhoto,
@@ -40,12 +42,15 @@ export function ProfilePhotoUpload({
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [clarity, setClarity] = useState<PhotoClarityResult | null>(null);
-  const [ringVisible, setRingVisible] = useState(Boolean(value));
+  const [ringVisible, setRingVisible] = useState(hasProfilePhoto(value));
   const [error, setError] = useState<string | null>(null);
 
-  const displayUrl = previewUrl ?? (value ? getProfilePhotoSrc(value, 800) : null);
+  const hasPhoto = Boolean(previewUrl) || hasProfilePhoto(value);
+  const displayUrl =
+    previewUrl ?? (hasProfilePhoto(value) ? getProfilePhotoSrc(value, 800) : null);
+  const showRing = !hasPhoto || ringVisible;
   const isBusy = phase === "optimizing" || phase === "uploading";
-  const showGuidance = !displayUrl;
+  const showGuidance = !hasPhoto;
 
   useEffect(() => {
     return () => {
@@ -107,8 +112,7 @@ export function ProfilePhotoUpload({
   return (
     <div className="space-y-8">
       <ProfilePhotoRingFrame
-        color={frequencyColor}
-        visible={ringVisible}
+        visible={showRing}
         className="mx-auto w-full max-w-[320px] rounded-[32px]"
       >
         <div className="relative aspect-square w-full overflow-hidden rounded-[32px] bg-white/[0.04]">
@@ -123,11 +127,7 @@ export function ProfilePhotoUpload({
               priority
             />
           ) : (
-            <div className="flex h-full items-center justify-center px-8 text-center">
-              <p className="text-[14px] leading-relaxed text-white/40">
-                あなたの世界観が伝わる一枚を選びましょう
-              </p>
-            </div>
+            <ProfilePhotoPlaceholder className="rounded-[32px]" />
           )}
 
           {isBusy ? (
@@ -155,7 +155,7 @@ export function ProfilePhotoUpload({
         onClick={() => inputRef.current?.click()}
         className="flex h-12 w-full items-center justify-center rounded-full border border-border bg-white/[0.03] text-[15px] font-medium text-[#F6F6F6] transition-opacity disabled:opacity-40"
       >
-        {isBusy ? "処理しています..." : displayUrl ? "別の写真を選ぶ" : "写真を選ぶ"}
+        {isBusy ? "処理しています..." : hasPhoto ? "別の写真を選ぶ" : "写真を選ぶ"}
       </button>
 
       <p className="text-center text-[12px] text-white/40">

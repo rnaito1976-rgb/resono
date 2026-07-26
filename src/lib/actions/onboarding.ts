@@ -24,7 +24,10 @@ import {
   isMinimalRegistrationInputComplete,
   type MinimalRegistrationInput,
 } from "@/lib/profile/registration";
+import { NO_PHOTO_URL } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
+import type { WelcomeOnboardingAnswers } from "@/types/welcome-onboarding";
+import { effectiveWelcomeParts } from "@/lib/welcome/onboarding-registration";
 
 export async function completeMinimalRegistrationAction(
   input: Partial<MinimalRegistrationInput>
@@ -159,6 +162,65 @@ export async function saveFrequencyColorAction(color: FrequencyColorHex) {
     return { success: true };
   } catch (error) {
     console.error("[saveFrequencyColorAction]", error);
+    return { error: "保存中に問題が発生しました。もう一度お試しください。" };
+  }
+}
+
+export async function startResonoFromWelcomeAction(
+  answers: WelcomeOnboardingAnswers
+) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "ログインが必要です" };
+    }
+
+    let member = await getMemberByUserId(user.id);
+    if (!member) {
+      member = (await ensureMemberForUser(user.id, user.email)) ?? undefined;
+    }
+
+    if (!member) {
+      return {
+        error:
+          "プロフィールの作成に失敗しました。時間をおいて再度お試しください。",
+      };
+    }
+
+    const parts = effectiveWelcomeParts(answers.parts);
+    const input: MinimalRegistrationInput = {
+      name: member.name.trim() || "Member",
+      photo: NO_PHOTO_URL,
+      part: parts[0] ?? "",
+      parts,
+      favoriteArtists: answers.artists,
+      sounds: answers.sounds,
+    };
+
+    const registrationResult = await completeMinimalRegistrationAction(input);
+    if (registrationResult.error) {
+      return registrationResult;
+    }
+
+    if (answers.frequencyColor && isValidFrequencyColor(answers.frequencyColor)) {
+      const colorResult = await saveFrequencyColorAction(answers.frequencyColor);
+      if (colorResult.error) {
+        return colorResult;
+      }
+
+      return { success: true, redirectTo: "/" as const };
+    }
+
+    return {
+      success: true,
+      redirectTo: "/onboarding?skipPhoto=1&phase=frequency" as const,
+    };
+  } catch (error) {
+    console.error("[startResonoFromWelcomeAction]", error);
     return { error: "保存中に問題が発生しました。もう一度お試しください。" };
   }
 }

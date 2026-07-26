@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { BandActivityFeed } from "@/components/member-detail/BandActivityFeed";
+import { ProfileTabHeading } from "@/components/member-detail/ProfileTabHeading";
 import {
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
@@ -25,6 +26,14 @@ export function LookingForSlide({
 }: LookingForSlideProps) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
+      {isOwnProfile ? (
+        <ProfileTabHeading
+          eyebrow="Band"
+          title="Band"
+          description="募集パートやバンド活動の情報。"
+        />
+      ) : null}
+
       {isOwnProfile ? (
         <SectionBlock label="共鳴した人">
           {mutualMembers.length > 0 ? (

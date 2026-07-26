@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { sanitizeNextPath } from "@/lib/auth/urls";
-import { ensureMemberForUser } from "@/lib/members";
+import { resolvePostAuthRedirect } from "@/lib/auth/post-auth-redirect";
+import { ensureMemberForUser, getMemberByUserId } from "@/lib/members";
+import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
+import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import { getEmailRedirectUrl } from "@/lib/supabase/env";
 
@@ -67,14 +69,25 @@ export async function signInWithEmailAction(
     await ensureMemberForUser(user.id, user.email);
   }
 
+  const member = user ? await getMemberByUserId(user.id) : undefined;
+  const onboarding = member
+    ? await getMemberOnboardingState(user!.id, member.id)
+    : { complete: false };
+
   revalidatePath("/", "layout");
-  redirect(sanitizeNextPath(nextPath));
+  redirect(
+    resolvePostAuthRedirect(
+      nextPath,
+      onboarding.complete,
+      nextPath?.includes("skipPhoto=1")
+    )
+  );
 }
 
 export async function signUpWithEmailAction(email: string, password: string) {
   const supabase = await createClient();
   const trimmedEmail = email.trim();
-  const emailRedirectTo = getEmailRedirectUrl("/welcome");
+  const emailRedirectTo = getEmailRedirectUrl();
 
   const { data, error } = await supabase.auth.signUp({
     email: trimmedEmail,
@@ -119,13 +132,13 @@ export async function signUpWithEmailAction(email: string, password: string) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/welcome");
+  redirect(buildWelcomeOnboardingHref());
 }
 
 export async function resendConfirmationEmailAction(email: string) {
   const supabase = await createClient();
   const trimmedEmail = email.trim();
-  const emailRedirectTo = getEmailRedirectUrl("/welcome");
+  const emailRedirectTo = getEmailRedirectUrl();
 
   const { error } = await supabase.auth.resend({
     type: "signup",

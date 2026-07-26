@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
+import { PostAuthOnboardingRedirect } from "@/components/auth/PostAuthOnboardingRedirect";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
@@ -46,6 +47,7 @@ export default async function RootLayout({
         <QueryProvider>
           <FrequencyColorProvider initialColor={viewerColor}>
             <ProfileSheetProvider>
+              <PostAuthOnboardingRedirect />
               <TabBarWrapper>{children}</TabBarWrapper>
             </ProfileSheetProvider>
           </FrequencyColorProvider>

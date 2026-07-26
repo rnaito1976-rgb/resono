@@ -6,7 +6,7 @@ export function sanitizeNextPath(next: string | null | undefined): string {
     return "/";
   }
 
-  return next;
+  return next.split("?")[0] || "/";
 }
 
 export function getRequestOrigin(request: NextRequest, fallbackOrigin: string): string {
@@ -21,9 +21,21 @@ export function getRequestOrigin(request: NextRequest, fallbackOrigin: string): 
 }
 
 export function getAuthOrigin(request: NextRequest): string {
-  return getSiteUrl() || getRequestOrigin(request, new URL(request.url).origin);
+  const requestOrigin = new URL(request.url).origin;
+
+  if (process.env.NODE_ENV === "development") {
+    return requestOrigin;
+  }
+
+  return getSiteUrl() || requestOrigin;
 }
 
-export function getAuthCallbackUrl(nextPath = "/"): string {
-  return `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(sanitizeNextPath(nextPath))}`;
+type AuthCallbackOptions = {
+  origin?: string;
+};
+
+/** Bare callback URL so Supabase redirect allowlists match exactly. */
+export function getAuthCallbackUrl(options: AuthCallbackOptions = {}): string {
+  const base = (options.origin ?? getSiteUrl()).replace(/\/$/, "");
+  return `${base}/auth/callback`;
 }

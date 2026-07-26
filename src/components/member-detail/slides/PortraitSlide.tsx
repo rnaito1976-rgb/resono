@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
+import { ProfileTabHeading } from "@/components/member-detail/ProfileTabHeading";
 import { ProfileItemsView } from "@/components/profile/ProfileItemsView";
 import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
@@ -44,15 +45,11 @@ export function PortraitSlide({
   return (
     <div className="flex h-full flex-col px-5 pb-8 pt-4">
       {isOwnProfile ? (
-        <div className="mb-8 shrink-0 px-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-            Profile
-          </p>
-          <h1 className="mt-1 text-[28px] font-light tracking-tight">プロフィール</h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            あなたの音楽活動をまとめて見る。
-          </p>
-        </div>
+        <ProfileTabHeading
+          eyebrow="Profile"
+          title="プロフィール"
+          description="あなたの音楽活動をまとめて見る。"
+        />
       ) : null}
 
       <ProfilePhotoRing color={ringColor} className="mb-10 w-full shrink-0 rounded-[32px]">

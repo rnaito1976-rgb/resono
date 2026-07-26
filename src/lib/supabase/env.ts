@@ -15,6 +15,16 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function getSiteUrl(): string {
+  if (process.env.NODE_ENV === "development") {
+    const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (explicit) {
+      return explicit.replace(/\/$/, "");
+    }
+
+    const port = process.env.PORT?.trim() || "3001";
+    return `http://localhost:${port}`;
+  }
+
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (explicit) {
     return explicit.replace(/\/$/, "");
@@ -29,9 +39,10 @@ export function getSiteUrl(): string {
     return `https://${vercelUrl.replace(/\/$/, "")}`;
   }
 
-  return "http://localhost:3000";
+  const port = process.env.PORT?.trim() || "3000";
+  return `http://localhost:${port}`;
 }
 
-export function getEmailRedirectUrl(nextPath = "/onboarding"): string {
-  return `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+export function getEmailRedirectUrl(): string {
+  return `${getSiteUrl()}/auth/callback`;
 }

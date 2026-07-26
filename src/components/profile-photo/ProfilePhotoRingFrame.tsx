@@ -1,18 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
-import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 
 type ProfilePhotoRingFrameProps = {
-  color?: FrequencyColorHex;
   visible?: boolean;
   className?: string;
   children: ReactNode;
 };
 
 export function ProfilePhotoRingFrame({
-  color,
   visible = true,
   className = "",
   children,
@@ -25,9 +21,11 @@ export function ProfilePhotoRingFrame({
         transitionDuration: "900ms",
       }}
     >
-      <ProfilePhotoRing color={color} className={className}>
+      <div
+        className={`relative overflow-hidden ring-2 ring-primary/35 ${className}`}
+      >
         {children}
-      </ProfilePhotoRing>
+      </div>
     </div>
   );
 }

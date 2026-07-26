@@ -2,21 +2,39 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { markWelcomeSignupIntent } from "@/components/auth/PostAuthOnboardingRedirect";
 
 type GoogleAuthButtonProps = {
   label: string;
   nextPath?: string;
+  skipPhoto?: boolean;
 };
 
 export function GoogleAuthButton({
   label,
   nextPath = "/",
+  skipPhoto = false,
 }: GoogleAuthButtonProps) {
-  const href = `/auth/oauth/google?next=${encodeURIComponent(nextPath)}`;
+  const params = new URLSearchParams({
+    next: nextPath.split("?")[0] || "/",
+  });
+
+  if (skipPhoto || nextPath.includes("skipPhoto=1")) {
+    params.set("skipPhoto", "1");
+  }
+
+  const href = `/auth/oauth/google?${params.toString()}`;
 
   return (
     <Button type="button" variant="outline" className="w-full" asChild>
-      <Link href={href}>
+      <Link
+        href={href}
+        onClick={() => {
+          if (skipPhoto || nextPath.includes("skipPhoto=1")) {
+            markWelcomeSignupIntent();
+          }
+        }}
+      >
         <GoogleIcon />
         {label}
       </Link>

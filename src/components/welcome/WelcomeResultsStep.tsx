@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { markWelcomeSignupIntent } from "@/components/auth/PostAuthOnboardingRedirect";
+import { WelcomeStartResonoButton } from "@/components/welcome/WelcomeStartResonoButton";
 import { getProfilePhotoSrc } from "@/lib/images/profilePhoto";
 import type { Member } from "@/types/member";
 
@@ -100,15 +102,11 @@ export function WelcomeResultsStep({
 
       <div className="space-y-4 border-t border-border pt-6">
         {isLoggedIn ? (
-          <Link
-            href="/onboarding"
-            className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
-          >
-            プロフィールを完成させる
-          </Link>
+          <WelcomeStartResonoButton />
         ) : (
           <Link
             href="/signup?from=welcome"
+            onClick={markWelcomeSignupIntent}
             className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
           >
             無料ではじめる
@@ -120,6 +118,7 @@ export function WelcomeResultsStep({
             <p className="text-[14px] text-white/45">すでにアカウントをお持ちですか？</p>
             <Link
               href="/login?from=welcome"
+              onClick={markWelcomeSignupIntent}
               className="inline-flex text-[15px] font-medium text-primary transition-quiet active:opacity-70"
             >
               ログイン

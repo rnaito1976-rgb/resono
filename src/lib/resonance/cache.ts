@@ -8,6 +8,20 @@ type CacheRow = {
   reason: unknown;
 };
 
+function isMissingResonanceCacheTable(error: {
+  code?: string;
+  message?: string;
+}): boolean {
+  return (
+    error.code === "PGRST205" ||
+    Boolean(error.message?.includes("resonance_match_cache"))
+  );
+}
+
+function logResonanceCacheError(context: string, error: { message?: string }) {
+  console.error(`[Supabase] ${context}:`, error.message);
+}
+
 function parseReason(raw: unknown, score: number): ResonanceReason | undefined {
   if (raw && typeof raw === "object" && "score" in raw) {
     const parsed = raw as ResonanceReason;
@@ -47,7 +61,9 @@ export async function getResonanceReasonsFromCache(
     .in("target_member_id", uniqueTargets);
 
   if (error) {
-    console.error("[Supabase] getResonanceReasonsFromCache:", error.message);
+    if (!isMissingResonanceCacheTable(error)) {
+      logResonanceCacheError("getResonanceReasonsFromCache", error);
+    }
     return result;
   }
 
@@ -84,7 +100,9 @@ export async function saveResonanceReasonsToCache(
     .upsert(rows, { onConflict: "viewer_member_id,target_member_id" });
 
   if (error) {
-    console.error("[Supabase] saveResonanceReasonsToCache:", error.message);
+    if (!isMissingResonanceCacheTable(error)) {
+      logResonanceCacheError("saveResonanceReasonsToCache", error);
+    }
   }
 }
 
@@ -101,6 +119,8 @@ export async function invalidateResonanceCacheForMember(memberId: string): Promi
     .or(`viewer_member_id.eq.${memberId},target_member_id.eq.${memberId}`);
 
   if (error) {
-    console.error("[Supabase] invalidateResonanceCacheForMember:", error.message);
+    if (!isMissingResonanceCacheTable(error)) {
+      logResonanceCacheError("invalidateResonanceCacheForMember", error);
+    }
   }
 }

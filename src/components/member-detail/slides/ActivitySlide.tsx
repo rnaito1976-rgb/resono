@@ -1,6 +1,6 @@
 import { MemberActivityFeed } from "@/components/member-detail/MemberActivityFeed";
+import { ProfileTabHeading } from "@/components/member-detail/ProfileTabHeading";
 import type { MemberActivityFeedItem } from "@/types/activity";
-import { SectionBlock } from "@/components/ui";
 
 type ActivitySlideProps = {
   activities: MemberActivityFeedItem[];
@@ -9,12 +9,12 @@ type ActivitySlideProps = {
 export function ActivitySlide({ activities }: ActivitySlideProps) {
   return (
     <div className="flex h-full flex-col space-y-6 px-6 pb-8 pt-4">
-      <SectionBlock label="Activity">
-        <p className="mb-5 text-[15px] leading-relaxed text-white/50">
-          あなたの共鳴・Band結成・投稿の履歴です。
-        </p>
-        <MemberActivityFeed activities={activities} />
-      </SectionBlock>
+      <ProfileTabHeading
+        eyebrow="Activity"
+        title="Activity"
+        description="あなたの共鳴・Band結成・投稿の履歴です。"
+      />
+      <MemberActivityFeed activities={activities} />
     </div>
   );
 }

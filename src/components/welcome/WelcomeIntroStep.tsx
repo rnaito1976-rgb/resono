@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import { AuthLogo } from "@/components/auth/AuthShell";
 import { WelcomeFade } from "@/components/welcome/WelcomeMotion";
+import { WelcomeStartResonoButton } from "@/components/welcome/WelcomeStartResonoButton";
 import { Button } from "@/components/ui/button";
 import { BRAND_CATCH_COPY, BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
@@ -26,24 +27,30 @@ export function WelcomeIntroStep({ initialUser, onStart }: WelcomeIntroStepProps
       </WelcomeFade>
 
       <WelcomeFade className="w-full space-y-4">
-        <Button
-          type="button"
-          size="lg"
-          className="h-12 w-full rounded-full text-[15px]"
-          onClick={onStart}
-        >
-          はじめる
-        </Button>
         {initialUser ? (
-          <div className="text-center">
-            <Link
-              href="/"
-              className="text-[15px] font-medium text-white/60 transition-colors hover:text-white"
+          <WelcomeStartResonoButton />
+        ) : (
+          <>
+            <Button
+              type="button"
+              size="lg"
+              className="h-12 w-full rounded-full text-[15px]"
+              onClick={onStart}
             >
-              ホームへ
-            </Link>
-          </div>
-        ) : null}
+              はじめる
+            </Button>
+
+            <p className="text-center text-[14px] text-white/45">
+              すでにアカウントをお持ちの方は{" "}
+              <Link
+                href="/login?from=welcome"
+                className="font-medium text-primary transition-quiet active:opacity-70"
+              >
+                ログイン
+              </Link>
+            </p>
+          </>
+        )}
       </WelcomeFade>
     </div>
   );

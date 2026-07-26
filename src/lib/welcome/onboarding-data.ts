@@ -429,7 +429,7 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
   },
   parts: {
     kind: "parts",
-    title: "担当パートを選んでください",
+    title: "担当パートは？",
     presets: WELCOME_PART_PRESETS,
     searchable: false,
     minSelected: 1,

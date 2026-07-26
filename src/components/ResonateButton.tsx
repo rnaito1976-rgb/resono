@@ -1,9 +1,12 @@
 "use client";
 
-import { memo } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { memo } from "react";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { useResonance } from "@/hooks/useResonance";
+import { buildLoginHref } from "@/lib/navigation/login-redirect";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 
 type ResonateButtonProps = {
@@ -17,8 +20,20 @@ export const ResonateButton = memo(function ResonateButton({
   className = "",
   initialStatus,
 }: ResonateButtonProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isLoggedIn } = useAuthUser();
   const { isResonated, isMutual, conversationId, toggle, mounted, isPending } =
     useResonance(memberId, initialStatus);
+
+  function handleToggle() {
+    if (!isLoggedIn) {
+      router.push(buildLoginHref(pathname));
+      return;
+    }
+
+    toggle();
+  }
 
   if (mounted && isMutual && conversationId) {
     return (
@@ -47,7 +62,7 @@ export const ResonateButton = memo(function ResonateButton({
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={handleToggle}
       disabled={isPending}
       aria-pressed={mounted ? isResonated : undefined}
       className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-quiet active:opacity-85 disabled:opacity-60 ${

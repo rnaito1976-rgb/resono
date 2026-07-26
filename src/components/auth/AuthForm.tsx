@@ -8,6 +8,7 @@ import {
   signUpWithEmailAction,
 } from "@/lib/actions/auth";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 import { AuthFadeIn } from "@/components/auth/AuthMotion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -156,7 +157,8 @@ export function AuthForm({
 
       <GoogleAuthButton
         label={isSignup ? "Googleで始める" : "Googleでログイン"}
-        nextPath={isSignup ? "/welcome" : nextPath}
+        nextPath={isSignup ? buildWelcomeOnboardingHref() : nextPath}
+        skipPhoto={isSignup || nextPath.includes("skipPhoto=1")}
       />
 
       {rateLimited ? (

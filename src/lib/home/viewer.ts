@@ -2,7 +2,7 @@ import { cache } from "react";
 import { DEFAULT_FREQUENCY_COLOR } from "@/lib/frequency-color/palette";
 import { getFrequencyColorByUserId } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { getMemberByUserId } from "@/lib/members";
+import { ensureMemberForUser, getMemberByUserId } from "@/lib/members";
 import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
 import { getAuthSession } from "@/lib/supabase/auth";
 import type { Member } from "@/types/member";
@@ -26,9 +26,13 @@ export const getHomeViewer = cache(async (): Promise<HomeViewer> => {
     };
   }
 
-  const [member, onboarding, frequencyColorFromProfile] = await Promise.all([
-    getMemberByUserId(user.id, { columns: "list" }),
-    getMemberOnboardingState(user.id),
+  let member = await getMemberByUserId(user.id, { columns: "list" });
+  if (!member) {
+    member = (await ensureMemberForUser(user.id, user.email)) ?? undefined;
+  }
+
+  const [onboarding, frequencyColorFromProfile] = await Promise.all([
+    getMemberOnboardingState(user.id, member?.id),
     getFrequencyColorByUserId(user.id),
   ]);
 
