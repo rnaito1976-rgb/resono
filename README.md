@@ -82,7 +82,20 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
 2. **Authentication → Providers → Google** を有効化（Google Cloud OAuth クライアント ID / Secret）
 3. **Authentication → URL Configuration** に以下を追加:
    - Site URL: `http://localhost:3000`（本番は Vercel URL）
-   - Redirect URLs: `http://localhost:3000/auth/callback`
+   - Redirect URLs:
+     - `http://localhost:3000/auth/callback`
+     - `https://resono-fwdi.vercel.app/auth/callback`
+4. **メール確認 / 送信上限**（開発・本番）:
+   - Supabase 標準メールは **1時間あたり数通** の上限があります。テスト中に「送信上限」が出た場合は **Google ログイン** を使うか、1時間ほど待ってください。
+   - 開発中にメール確認を省略する: **Authentication → Providers → Email → Confirm email** を OFF
+   - 本番で上限を緩和する: **Authentication → SMTP Settings** で Resend 等の SMTP を設定（`RESEND_API_KEY` 利用可。Host: `smtp.resend.com`, Port: `465`, User: `resend`, Password: API key）
+5. 開発用: 確認メールが届かない既存ユーザーを手動確認する場合:
+
+```bash
+npm run auth:confirm -- user@example.com
+```
+
+（`SUPABASE_SERVICE_ROLE_KEY` が必要）
 
 ### 画面
 

@@ -24,7 +24,7 @@ export const PROFILE_ITEM_LABELS: Record<ProfileItemKind, string> = {
   "favorite-live": "Favorite Live",
   "dream-band": "Dream Band",
   "first-album": "First Album",
-  "fashion-style": "Fashion Style",
+  "fashion-style": "Individuality",
   "live-ritual": "Live Ritual",
   "current-obsession": "Current Obsession",
   "favorite-gear": "Favorite Gear",

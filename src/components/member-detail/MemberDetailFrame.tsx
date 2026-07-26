@@ -6,7 +6,6 @@ import { DETAIL_SECTIONS, getOwnProfileDetailSections, type DetailSection } from
 import { MemberThemeScope } from "@/components/frequency-color/MemberThemeScope";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
-import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { ResonateButton } from "@/components/ResonateButton";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import { TAB_PAGE_HEIGHT } from "@/lib/navigation/tab-page-layout";
@@ -92,6 +91,7 @@ export function MemberDetailFrame({
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";
+  const hidePageNavigation = isOwnProfile && !isSheet;
   const containerStyle = isSheet
     ? undefined
     : isOwnProfile
@@ -155,57 +155,44 @@ export function MemberDetailFrame({
 
   const frameContent = (
     <>
-      <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
-        {headerSlot ?? (
-          <>
-            {isSheet ? (
-              <div className="flex items-center justify-between px-5 pb-2 pt-1">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
-                    Profile
-                  </p>
-                  <h1 className="truncate text-[20px] font-light tracking-tight">
-                    {isOwnProfile ? "プロフィール" : member.name}
-                  </h1>
+      {hidePageNavigation ? null : (
+        <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
+          {headerSlot ?? (
+            <>
+              {isSheet ? (
+                <div className="flex items-center justify-between px-5 pb-2 pt-1">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
+                      Profile
+                    </p>
+                    <h1 className="truncate text-[20px] font-light tracking-tight">
+                      {isOwnProfile ? "プロフィール" : member.name}
+                    </h1>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="閉じる"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground/80"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="閉じる"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground/80"
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div className="px-5 pb-1 pt-4">
-                <AppTopBar
-                  backHref="/"
-                  backLabel="ホームに戻る"
-                  trailing={
-                    isOwnProfile ? (
-                      <>
-                        <HeaderActionLink href={`/member/${member.id}/edit`}>
-                          編集
-                        </HeaderActionLink>
-                        <HeaderActionLink href="/discover" variant="primary">
-                          Discover a Story
-                        </HeaderActionLink>
-                      </>
-                    ) : undefined
-                  }
-                />
-              </div>
-            )}
+              ) : (
+                <div className="px-5 pb-1 pt-4">
+                  <AppTopBar backHref="/" backLabel="ホームに戻る" />
+                </div>
+              )}
 
-            <AppSubNav
-              items={sections}
-              activeIndex={activeIndex}
-              onSelect={scrollToIndex}
-            />
-          </>
-        )}
-      </header>
+              <AppSubNav
+                items={sections}
+                activeIndex={activeIndex}
+                onSelect={scrollToIndex}
+              />
+            </>
+          )}
+        </header>
+      )}
 
       <div
         ref={scrollRef}

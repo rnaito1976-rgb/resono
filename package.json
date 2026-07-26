@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
+    "auth:confirm": "tsx scripts/confirm-auth-user.ts",
     "migrate:017": "tsx scripts/apply-migration-017.ts"
   },
   "dependencies": {

@@ -53,7 +53,7 @@ export const PROFILE_CONVERSATION_STEPS: ProfileConversationStep[] = [
   {
     id: "fashion-style",
     kind: "fashion-style",
-    message: "ステージや日常でのファッションの方向性は？",
+    message: "ステージや日常での個性の方向性は？",
     placeholder: "モノトーンにアクセントカラー",
   },
   {

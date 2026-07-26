@@ -68,7 +68,7 @@ export async function signInWithEmailAction(
   }
 
   revalidatePath("/", "layout");
-  return { success: true, nextPath: sanitizeNextPath(nextPath) };
+  redirect(sanitizeNextPath(nextPath));
 }
 
 export async function signUpWithEmailAction(email: string, password: string) {
@@ -91,9 +91,9 @@ export async function signUpWithEmailAction(email: string, password: string) {
   if (isDuplicateSignup(data.user)) {
     return {
       error:
-        "このメールアドレスはすでに登録されています。ログインするか、確認メールを再送してください。",
+        "このメールアドレスはすでに登録されています。ログインページからお試しください。",
       email: trimmedEmail,
-      canResend: true,
+      canResend: false,
     };
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { OnboardingPhotoPicker } from "@/components/onboarding/OnboardingPhotoPicker";
 import { FrequencyColorPicker } from "@/components/frequency-color/FrequencyColorPicker";
 import { ChipGrid } from "@/components/onboarding/SelectableChip";
@@ -56,6 +57,8 @@ export function MinimalRegistrationFlow({
   const [isPending, startTransition] = useTransition();
 
   const step = steps[stepIndex];
+
+  useScrollToTop(`${phase}:${stepIndex}`);
 
   function toggleArtist(value: string) {
     setArtistSelection((current) => {

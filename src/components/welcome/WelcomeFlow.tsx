@@ -3,6 +3,7 @@
 import { AnimatePresence } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { WelcomeAnalysisStep } from "@/components/welcome/WelcomeAnalysisStep";
 import { WelcomeColorStepView } from "@/components/welcome/WelcomeColorStepView";
 import { WelcomeIntroStep } from "@/components/welcome/WelcomeIntroStep";
@@ -74,6 +75,8 @@ function effectiveParts(parts: string[]): string[] {
 export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
   const [step, setStep] = useState<WelcomeStep>("intro");
   const [answers, setAnswers] = useState<WelcomeOnboardingAnswers>(INITIAL_ANSWERS);
+
+  useScrollToTop(step);
 
   const musicDna = useMemo(() => analyzeMusicDna(answers), [answers]);
   const matchedMembers = useMemo(

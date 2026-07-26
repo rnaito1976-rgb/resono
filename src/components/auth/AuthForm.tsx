@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
 import {
   resendConfirmationEmailAction,
   signInWithEmailAction,
@@ -16,23 +15,55 @@ import { Label } from "@/components/ui/label";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
+const RESEND_COOLDOWN_MS = 60_000;
+
 type AuthFormProps = {
   mode: "signup" | "login";
   initialError?: string | null;
   nextPath?: string;
 };
 
+function isEmailRateLimitMessage(message: string): boolean {
+  return message.includes("送信上限");
+}
+
 export function AuthForm({
   mode,
   initialError,
   nextPath = "/",
 }: AuthFormProps) {
-  const router = useRouter();
   const isSignup = mode === "signup";
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+  const [resendSecondsLeft, setResendSecondsLeft] = useState(0);
   const [isPending, startTransition] = useTransition();
+
+  const rateLimited = error ? isEmailRateLimitMessage(error) : false;
+  const canResend =
+    Boolean(pendingEmail) &&
+    !rateLimited &&
+    !isPending &&
+    (resendAvailableAt === null || Date.now() >= resendAvailableAt);
+
+  useEffect(() => {
+    if (resendAvailableAt === null) {
+      setResendSecondsLeft(0);
+      return;
+    }
+
+    const availableAt = resendAvailableAt;
+
+    function tick() {
+      const remaining = Math.max(0, Math.ceil((availableAt - Date.now()) / 1000));
+      setResendSecondsLeft(remaining);
+    }
+
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendAvailableAt]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,7 +91,7 @@ export function AuthForm({
 
         if (result?.error) {
           setError(result.error);
-          if (result.canResend && result.email) {
+          if (result.canResend && result.email && !isEmailRateLimitMessage(result.error)) {
             setPendingEmail(result.email);
           }
           return;
@@ -68,6 +99,7 @@ export function AuthForm({
 
         if (result?.needsConfirmation) {
           setPendingEmail(result.email ?? email);
+          setResendAvailableAt(Date.now() + RESEND_COOLDOWN_MS);
           if (result.message) {
             setMessage(result.message);
           }
@@ -80,21 +112,15 @@ export function AuthForm({
 
       if (result?.error) {
         setError(result.error);
-        if (result.error.includes("確認")) {
+        if (result.error.includes("確認") && !isEmailRateLimitMessage(result.error)) {
           setPendingEmail(email);
         }
-        return;
-      }
-
-      if (result?.success) {
-        router.push(result.nextPath ?? "/");
-        router.refresh();
       }
     });
   }
 
   function handleResend() {
-    if (!pendingEmail || isPending) {
+    if (!canResend || !pendingEmail) {
       return;
     }
 
@@ -108,6 +134,8 @@ export function AuthForm({
         setError(result.error);
         return;
       }
+
+      setResendAvailableAt(Date.now() + RESEND_COOLDOWN_MS);
 
       if (result?.message) {
         setMessage(result.message);
@@ -130,6 +158,12 @@ export function AuthForm({
         label={isSignup ? "Googleで始める" : "Googleでログイン"}
         nextPath={isSignup ? "/onboarding" : nextPath}
       />
+
+      {rateLimited ? (
+        <p className="rounded-2xl border border-border bg-white/[0.03] px-4 py-4 text-[13px] leading-relaxed text-white/60">
+          確認メールの送信回数に上限があります。すぐに始める場合は Google ログインをご利用ください。
+        </p>
+      ) : null}
 
       <div className="flex items-center gap-4">
         <div className="h-px flex-1 bg-white/10" />
@@ -167,15 +201,22 @@ export function AuthForm({
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
         {message ? <p className="text-[13px] text-white/70">{message}</p> : null}
 
-        {pendingEmail ? (
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={isPending}
-            className="text-[13px] text-primary transition-opacity disabled:opacity-50"
-          >
-            確認メールを再送する
-          </button>
+        {pendingEmail && !rateLimited ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={!canResend}
+              className="text-[13px] text-primary transition-opacity disabled:opacity-50"
+            >
+              {canResend
+                ? "確認メールを再送する"
+                : `確認メールを再送する（${resendSecondsLeft}秒後）`}
+            </button>
+            <p className="text-[12px] leading-relaxed text-white/40">
+              再送は1分に1回までです。届かない場合は迷惑メールフォルダもご確認ください。
+            </p>
+          </div>
         ) : null}
 
         <Button type="submit" className="w-full" disabled={isPending}>
