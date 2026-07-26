@@ -29,13 +29,9 @@ function isUnreadTimelineEvent(
   return true;
 }
 
-export async function getBandUnreadSummaryForMember(
+async function getBandUnreadSummaryLegacy(
   memberId: string
 ): Promise<BandUnreadSummary> {
-  if (!isSupabaseConfigured()) {
-    return { total: 0, byBandId: {} };
-  }
-
   const supabase = await createClient();
   const { data: memberships, error: membershipError } = await supabase
     .from("band_members")
@@ -124,7 +120,56 @@ export async function getBandUnreadSummaryForMember(
   return { total, byBandId };
 }
 
+export async function getBandUnreadSummaryForMember(
+  memberId: string
+): Promise<BandUnreadSummary> {
+  if (!isSupabaseConfigured()) {
+    return { total: 0, byBandId: {} };
+  }
+
+  const supabase = await createClient();
+  const { data: rows, error } = await supabase.rpc("get_band_unread_summary", {
+    p_member_id: memberId,
+  });
+
+  if (error) {
+    console.error("[Supabase] get_band_unread_summary:", error.message);
+    return getBandUnreadSummaryLegacy(memberId);
+  }
+
+  const byBandId: Record<string, number> = {};
+  let total = 0;
+
+  for (const row of rows ?? []) {
+    const bandId = String(row.band_id);
+    const unreadCount = Number(row.unread_count);
+    if (unreadCount > 0) {
+      byBandId[bandId] = unreadCount;
+      total += unreadCount;
+    }
+  }
+
+  return { total, byBandId };
+}
+
 export async function getBandUnreadCountForMember(memberId: string): Promise<number> {
+  if (!isSupabaseConfigured()) {
+    return 0;
+  }
+
+  const supabase = await createClient();
+  const { data: rpcCount, error } = await supabase.rpc("get_band_unread_count", {
+    p_member_id: memberId,
+  });
+
+  if (!error && typeof rpcCount === "number") {
+    return rpcCount;
+  }
+
+  if (error) {
+    console.error("[Supabase] get_band_unread_count:", error.message);
+  }
+
   const summary = await getBandUnreadSummaryForMember(memberId);
   return summary.total;
 }

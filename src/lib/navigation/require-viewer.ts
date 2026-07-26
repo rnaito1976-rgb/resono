@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { getAuthSession } from "@/lib/supabase/auth";
@@ -13,14 +14,11 @@ export type TabViewer = {
   memberId: string;
 };
 
-/** Fast auth gate for tab routes (session cookie + member id only). */
-export async function requireViewer(
-  options: RequireViewerOptions = {}
-): Promise<TabViewer> {
+const resolveTabViewer = cache(async (): Promise<TabViewer> => {
   const user = await getAuthSession();
 
   if (!user) {
-    redirect(options.loginNext ? `/login?next=${options.loginNext}` : "/login");
+    redirect("/login");
   }
 
   const memberId = await resolveCurrentMemberId();
@@ -34,4 +32,22 @@ export async function requireViewer(
   }
 
   return { user, memberId };
+});
+
+/** Cached viewer load shared across tab routes in one request. */
+export async function getTabViewer(): Promise<TabViewer> {
+  return resolveTabViewer();
+}
+
+/** Fast auth gate for tab routes (session cookie + member id only). */
+export async function requireViewer(
+  options: RequireViewerOptions = {}
+): Promise<TabViewer> {
+  const user = await getAuthSession();
+
+  if (!user) {
+    redirect(options.loginNext ? `/login?next=${options.loginNext}` : "/login");
+  }
+
+  return resolveTabViewer();
 }

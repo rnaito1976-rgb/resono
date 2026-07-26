@@ -28,6 +28,7 @@ const FEED_CACHE_TTL_MS = 3 * 60 * 1000;
 type HomeFeedListProps = {
   viewerId?: string;
   showSectionHeader?: boolean;
+  initialFeedPage?: MembersFeedPage;
 };
 
 function getFeedCacheKey(viewerId?: string) {
@@ -83,10 +84,11 @@ async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeed
 export function HomeFeedList({
   viewerId,
   showSectionHeader = false,
+  initialFeedPage,
 }: HomeFeedListProps) {
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const cachedFirstPage = useRef(readFeedCache(viewerId));
+  const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -102,6 +104,7 @@ export function HomeFeedList({
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
       staleTime: 5 * 60 * 1000,
+      refetchOnMount: initialFeedPage ? false : true,
     });
 
   const feedItems = data?.pages.flatMap((page) => page.items) ?? [];

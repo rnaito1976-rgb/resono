@@ -184,20 +184,19 @@ export async function getUnreadCountAction(): Promise<number> {
     return 0;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { getAuthSession } = await import("@/lib/supabase/auth");
+  const { resolveCurrentMemberId } = await import("@/lib/members/resolve");
+  const user = await getAuthSession();
 
   if (!user) {
     return 0;
   }
 
-  const member = await getMemberByUserId(user.id);
-  if (!member) {
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
     return 0;
   }
 
   const { getUnreadCountForMember } = await import("@/lib/messages/conversations");
-  return getUnreadCountForMember(member.id);
+  return getUnreadCountForMember(memberId);
 }

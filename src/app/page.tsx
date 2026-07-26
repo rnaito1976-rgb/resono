@@ -5,6 +5,8 @@ import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
+import { buildMembersFeedPage } from "@/lib/members/feed-builder";
+import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
 
 export default async function HomePage() {
   const { user, member, frequencyColor, needsOnboarding } = await getHomeViewer();
@@ -12,6 +14,15 @@ export default async function HomePage() {
   if (needsOnboarding) {
     redirect("/onboarding");
   }
+
+  const initialFeedPage =
+    member || user
+      ? await buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
+          viewer: member,
+          userId: user?.id,
+          fast: true,
+        })
+      : undefined;
 
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
@@ -28,6 +39,7 @@ export default async function HomePage() {
           <HomeFeedList
             viewerId={member?.id ?? user?.id}
             showSectionHeader={Boolean(member)}
+            initialFeedPage={initialFeedPage}
           />
         </div>
       </main>

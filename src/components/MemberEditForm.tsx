@@ -236,7 +236,6 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               <FormField
                 key={item.kind}
                 label={getProfileItemLabel(item.kind)}
-                hint="後から編集できます"
               >
                 <FormInput
                   value={formatProfileItemForEdit(item)}

@@ -5,8 +5,9 @@ import {
 } from "@/lib/frequency-color/palette";
 import { getFrequencyColorByUserId } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { getMemberByUserId } from "@/lib/members";
-import { getAuthUser } from "@/lib/supabase/auth";
+import { getMemberListById } from "@/lib/members";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
+import { getAuthSession } from "@/lib/supabase/auth";
 import type { Member } from "@/types/member";
 
 export type ViewerContext = {
@@ -17,7 +18,7 @@ export type ViewerContext = {
 
 /** Single cached viewer load for layout + home (auth, member, theme color). */
 export const getViewerContext = cache(async (): Promise<ViewerContext> => {
-  const user = await getAuthUser();
+  const user = await getAuthSession();
 
   if (!user) {
     return {
@@ -27,8 +28,9 @@ export const getViewerContext = cache(async (): Promise<ViewerContext> => {
     };
   }
 
+  const memberId = await resolveCurrentMemberId();
   const [member, frequencyColorFromProfile] = await Promise.all([
-    getMemberByUserId(user.id, { columns: "list" }),
+    memberId ? getMemberListById(memberId) : Promise.resolve(undefined),
     getFrequencyColorByUserId(user.id),
   ]);
   const frequencyColor: FrequencyColorHex =

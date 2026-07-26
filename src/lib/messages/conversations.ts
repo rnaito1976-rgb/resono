@@ -13,6 +13,17 @@ import {
 } from "@/lib/supabase/member-columns";
 import type { Member } from "@/types/member";
 
+type ConversationSummaryRow = {
+  conversation_id: string;
+  partner_id: string;
+  last_message_id: string | null;
+  last_message_body: string | null;
+  last_message_sender_id: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+  conversation_created_at: string;
+};
+
 function buildSummaries(
   memberId: string,
   conversations: {
@@ -77,7 +88,30 @@ function buildSummaries(
     );
 }
 
-export async function getConversationsForMember(
+function mapSummaryRow(
+  row: ConversationSummaryRow,
+  partner: Member
+): ConversationSummary {
+  const lastMessage: MessageRow | null = row.last_message_id
+    ? {
+        id: row.last_message_id,
+        conversation_id: row.conversation_id,
+        sender_member_id: row.last_message_sender_id ?? "",
+        body: row.last_message_body ?? "",
+        created_at: row.last_message_at ?? row.conversation_created_at,
+      }
+    : null;
+
+  return {
+    id: row.conversation_id,
+    partner,
+    lastMessage,
+    unreadCount: row.unread_count,
+    updatedAt: row.last_message_at ?? row.conversation_created_at,
+  };
+}
+
+async function getConversationsForMemberLegacy(
   memberId: string
 ): Promise<ConversationSummary[]> {
   const supabase = await createClient();
@@ -129,6 +163,40 @@ export async function getConversationsForMember(
   );
 }
 
+export async function getConversationsForMember(
+  memberId: string
+): Promise<ConversationSummary[]> {
+  const supabase = await createClient();
+
+  const { data: rows, error } = await supabase.rpc("get_conversation_summaries", {
+    p_member_id: memberId,
+  });
+
+  if (error) {
+    console.error("[Supabase] get_conversation_summaries:", error.message);
+    return getConversationsForMemberLegacy(memberId);
+  }
+
+  const summaries = (rows ?? []) as ConversationSummaryRow[];
+  if (summaries.length === 0) {
+    return [];
+  }
+
+  const partnerIds = summaries.map((row) => row.partner_id);
+  const partnerMap = await getMembersByIds(partnerIds);
+
+  return summaries
+    .map((row) => {
+      const partner = partnerMap.get(row.partner_id);
+      if (!partner) {
+        return null;
+      }
+
+      return mapSummaryRow(row, partner);
+    })
+    .filter((summary): summary is ConversationSummary => summary !== null);
+}
+
 export async function getUnreadCountForMember(memberId: string): Promise<number> {
   const supabase = await createClient();
 
@@ -141,41 +209,8 @@ export async function getUnreadCountForMember(memberId: string): Promise<number>
     return rpcCount;
   }
 
-  const { data: conversations } = await supabase
-    .from("conversations")
-    .select("id")
-    .or(`member_a_id.eq.${memberId},member_b_id.eq.${memberId}`);
-
-  if (!conversations?.length) {
-    return 0;
-  }
-
-  const conversationIds = conversations.map((conversation) => conversation.id);
-  const [{ data: reads }, { data: messages }] = await Promise.all([
-    supabase
-      .from("conversation_reads")
-      .select("conversation_id, last_read_at")
-      .eq("member_id", memberId)
-      .in("conversation_id", conversationIds),
-    supabase
-      .from("messages")
-      .select("conversation_id, sender_member_id, created_at")
-      .in("conversation_id", conversationIds)
-      .neq("sender_member_id", memberId),
-  ]);
-
-  const readMap = new Map(
-    (reads ?? []).map((read) => [read.conversation_id, read.last_read_at])
-  );
-
-  return (messages ?? []).reduce((total, message) => {
-    const lastReadAt = readMap.get(message.conversation_id);
-    if (lastReadAt && message.created_at <= lastReadAt) {
-      return total;
-    }
-
-    return total + 1;
-  }, 0);
+  console.error("[Supabase] get_unread_message_count:", rpcError?.message);
+  return 0;
 }
 
 export async function getConversationById(

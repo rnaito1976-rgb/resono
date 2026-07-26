@@ -1,13 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ChatRoom } from "@/components/messages/ChatRoom";
-import { getMemberByUserId } from "@/lib/members";
+import { getMemberById } from "@/lib/members";
 import { getConversationById } from "@/lib/messages/conversations";
+import { requireViewer } from "@/lib/navigation/require-viewer";
 import {
   buildConversationStarters,
   buildResonanceReason,
 } from "@/lib/resonance/matching";
-import { isOnboardingComplete } from "@/lib/onboarding/status";
-import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,22 +16,16 @@ type MessageRoomPageProps = {
 
 export default async function MessageRoomPage({ params }: MessageRoomPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { memberId } = await requireViewer({ loginNext: `/messages/${id}` });
 
-  if (!user) {
-    redirect("/login");
+  const [member, conversation] = await Promise.all([
+    getMemberById(memberId),
+    getConversationById(id, memberId),
+  ]);
+
+  if (!member) {
+    notFound();
   }
-
-  const member = await getMemberByUserId(user.id);
-
-  if (!member || !isOnboardingComplete(member)) {
-    redirect("/onboarding");
-  }
-
-  const conversation = await getConversationById(id, member.id);
 
   if (!conversation) {
     notFound();
