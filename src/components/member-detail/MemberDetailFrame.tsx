@@ -216,8 +216,16 @@ export function MemberDetailFrame({
         ))}
       </div>
 
-      <div className="px-5 pb-8 pt-4">
-        <div className="mb-4 flex justify-center gap-1.5">
+      <div
+        className={
+          showResonateButton
+            ? "shrink-0 px-5 pb-8 pt-4"
+            : "shrink-0 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1"
+        }
+      >
+        <div
+          className={`flex justify-center gap-1.5 ${showResonateButton ? "mb-4" : ""}`}
+        >
           {sections.map((section, index) => (
             <button
               key={section.id}
