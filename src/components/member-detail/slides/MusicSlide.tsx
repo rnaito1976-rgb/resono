@@ -44,7 +44,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
 
       <MusicPageSection
         title="Want to Cover"
-        description="今コピーしたい曲 — 一緒にバンドでやりたい音の起点です"
+        description="コピーしたい曲"
         resonancePoints={resonance?.coverSongs}
       >
         {view.coverSongs.length > 0 ? (
