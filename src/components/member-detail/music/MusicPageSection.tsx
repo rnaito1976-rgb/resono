@@ -36,12 +36,12 @@ export function MusicPageSection({
 }: MusicPageSectionProps) {
   return (
     <section className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
+      <div className="space-y-2">
+        <h2 className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">
           {title}
         </h2>
         {description ? (
-          <p className="text-[14px] leading-relaxed text-muted">{description}</p>
+          <p className="text-[14px] leading-relaxed text-white/55">{description}</p>
         ) : null}
       </div>
       {resonancePoints ? <SectionResonancePoints points={resonancePoints} /> : null}
@@ -65,11 +65,9 @@ export function MusicResonanceSummary({ points }: { points: string[] }) {
 
   return (
     <section className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
-          共鳴するポイント
-        </h2>
-      </div>
+      <h2 className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">
+        共鳴するポイント
+      </h2>
       <div className="rounded-[22px] bg-[var(--frequency-color-soft)] px-5 py-5">
         <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-[var(--frequency-color)]">
           あなたと共通
