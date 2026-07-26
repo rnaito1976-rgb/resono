@@ -5,7 +5,7 @@ import { getSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 
 const COOLDOWN_MINUTES = 30;
 
-type BadgeEmailKind = "message" | "band";
+type BadgeEmailKind = "message" | "band" | "resonance";
 
 async function getEmailForMember(memberId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -158,6 +158,37 @@ export async function notifyBandBadgeEmail(input: {
     `Resono: バンド「${input.bandName}」に新しいActivity`,
     `バンド「${input.bandName}」に新しいActivityがあります。${input.preview}`,
     `${getSiteUrl()}/bands/${input.bandId}`
+  );
+}
+
+export async function notifyResonanceBadgeEmail(input: {
+  recipientMemberId: string;
+  senderMemberId: string;
+  isMutual: boolean;
+  conversationId?: string | null;
+}): Promise<void> {
+  const sender = await getMemberById(input.senderMemberId);
+  const senderName = sender?.name ?? "メンバー";
+
+  if (input.isMutual && input.conversationId) {
+    await sendBadgeEmail(
+      input.recipientMemberId,
+      "resonance",
+      input.senderMemberId,
+      `Resono: ${senderName}さんとお互いに共鳴`,
+      `${senderName}さんとお互いに共鳴しました。メッセージを送れます。`,
+      `${getSiteUrl()}/messages/${input.conversationId}`
+    );
+    return;
+  }
+
+  await sendBadgeEmail(
+    input.recipientMemberId,
+    "resonance",
+    input.senderMemberId,
+    `Resono: ${senderName}さんから共鳴`,
+    `${senderName}さんから共鳴が届きました。`,
+    `${getSiteUrl()}/member/${input.senderMemberId}`
   );
 }
 

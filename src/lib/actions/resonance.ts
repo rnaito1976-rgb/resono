@@ -170,7 +170,19 @@ export async function toggleResonanceAction(targetMemberId: string) {
   revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/member/${targetMemberId}`);
+  revalidatePath(`/member/${memberId}`);
   revalidatePath("/messages");
+
+  void import("@/lib/notifications/badge-email").then(({ notifyResonanceBadgeEmail }) =>
+    notifyResonanceBadgeEmail({
+      recipientMemberId: targetMemberId,
+      senderMemberId: memberId,
+      isMutual,
+      conversationId,
+    }).catch((error) => {
+      console.error("[BadgeEmail] resonance notification:", error);
+    })
+  );
 
   return {
     isResonated: true,
