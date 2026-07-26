@@ -436,7 +436,8 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
   },
   sounds: {
     kind: "sounds",
-    title: "どんな音楽を演奏したい？",
+    title: "好きなジャンルは？",
+    subtitle: "好きな音楽の方向性から、共鳴が深まります。",
     presets: WELCOME_SOUND_PRESETS,
     searchable: true,
     placeholder: "ジャンルを検索",
@@ -446,7 +447,7 @@ export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfi
 
 export const WELCOME_ANALYSIS_STEPS = [
   "音楽の好みを分析",
-  "演奏スタイルを整理",
+  "好きなジャンルを整理",
   "共鳴する仲間を探しています…",
 ] as const;
 

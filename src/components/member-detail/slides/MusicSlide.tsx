@@ -25,7 +25,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
           points={[
             ...resonance.favoriteArtists,
             ...resonance.coverSongs,
-            ...resonance.playingStyle,
+            ...resonance.favoriteGenres,
           ]}
         />
       ) : null}
@@ -71,14 +71,14 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       </MusicPageSection>
 
       <MusicPageSection
-        title="Playing Style"
-        description="演奏スタイル"
-        resonancePoints={resonance?.playingStyle}
+        title="Favorite Genres"
+        description="好きなジャンル"
+        resonancePoints={resonance?.favoriteGenres}
       >
-        {view.playingStyle.length > 0 ? (
-          <MusicTagGrid items={view.playingStyle} />
+        {view.favoriteGenres.length > 0 ? (
+          <MusicTagGrid items={view.favoriteGenres} />
         ) : (
-          <MusicEmptyHint>まだ演奏スタイルが登録されていません。</MusicEmptyHint>
+          <MusicEmptyHint>まだ好きなジャンルが登録されていません。</MusicEmptyHint>
         )}
       </MusicPageSection>
 

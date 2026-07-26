@@ -32,14 +32,14 @@ export type MusicPageView = {
   favoriteArtists: string[];
   coverSongs: CoverSong[];
   dreamBands: string[];
-  playingStyle: string[];
+  favoriteGenres: string[];
   musicDna: MusicDnaBar[];
   /** Per-section shared points with the viewer (dummy until matching is wired). */
   sectionResonance: {
     favoriteArtists: string[];
     coverSongs: string[];
     dreamBands: string[];
-    playingStyle: string[];
+    favoriteGenres: string[];
     musicDna: string[];
   } | null;
 };

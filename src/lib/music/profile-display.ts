@@ -12,7 +12,7 @@ const DEMO_SECTION_RESONANCE = {
   favoriteArtists: ["Radiohead"],
   coverSongs: ["No Surprises"],
   dreamBands: ["羊文学"],
-  playingStyle: ["空間系ギター"],
+  favoriteGenres: ["Shoegaze", "Alternative"],
   musicDna: ["Alternative"],
 };
 
@@ -31,16 +31,13 @@ function deriveMusicDna(genres: string[]): MusicDnaBar[] {
   }));
 }
 
-function derivePlayingStyle(member: Member): string[] {
-  const fromProfile = member.music.playingStyle ?? [];
-  if (fromProfile.length > 0) {
-    return fromProfile;
+function deriveFavoriteGenres(member: Member): string[] {
+  const fromGenres = member.music.genres ?? [];
+  if (fromGenres.length > 0) {
+    return uniqueStrings(fromGenres);
   }
 
-  const fromGenres = member.music.genres.slice(0, 4);
-  const fromMood = member.music.listeningMood ? [member.music.listeningMood] : [];
-
-  return uniqueStrings([...fromGenres, ...fromMood]);
+  return uniqueStrings(member.music.playingStyle ?? []);
 }
 
 function resolveCoverSongs(member: Member): CoverSong[] {
@@ -63,7 +60,7 @@ export function buildMusicPageView(
   const favoriteArtists = uniqueStrings(member.music.favoriteArtists);
   const coverSongs = resolveCoverSongs(member);
   const dreamBands = uniqueStrings(resolveDreamBands(member));
-  const playingStyle = uniqueStrings(derivePlayingStyle(member));
+  const favoriteGenres = deriveFavoriteGenres(member);
   const musicDna =
     member.music.musicDna && member.music.musicDna.length > 0
       ? member.music.musicDna
@@ -73,7 +70,7 @@ export function buildMusicPageView(
     favoriteArtists,
     coverSongs,
     dreamBands,
-    playingStyle,
+    favoriteGenres,
     musicDna,
     sectionResonance: options.showResonance ? DEMO_SECTION_RESONANCE : null,
   };

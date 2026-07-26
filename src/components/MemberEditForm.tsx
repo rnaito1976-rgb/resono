@@ -26,6 +26,7 @@ import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
 import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
 import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
+import { WelcomeSoundsPicker } from "@/components/welcome/WelcomeSoundsPicker";
 import {
   formatProfileItemForEdit,
   getProfileItemLabel,
@@ -81,7 +82,7 @@ type MemberEditFormProps = {
   member: Member;
 };
 
-type PickerKind = "favoriteArtists" | "dreamBands" | "lookingForParts";
+type PickerKind = "favoriteArtists" | "dreamBands" | "favoriteGenres" | "lookingForParts";
 
 function ProfileItemFields({
   member,
@@ -335,6 +336,13 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 onClick={() => setActivePicker("favoriteArtists")}
               />
             </FormField>
+            <FormField label="好きなジャンル" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.genres ?? []}
+                placeholder="ジャンルを選択"
+                onClick={() => setActivePicker("favoriteGenres")}
+              />
+            </FormField>
             <FormField
               label="Influences"
               hint="カンマ区切り・任意（例: 竹内まりや, Cornelius, 羊文学）"
@@ -446,6 +454,18 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         <WelcomeArtistPicker
           selected={member.music.dreamBands ?? []}
           onChange={updateDreamBands}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "favoriteGenres"}
+        title="好きなジャンル"
+        onClose={() => setActivePicker(null)}
+      >
+        <WelcomeSoundsPicker
+          selected={member.music.genres ?? []}
+          placeholder="ジャンルを検索"
+          onChange={(genres) => updateNested("music", "genres", genres)}
         />
       </FormPickerSheet>
 

@@ -246,7 +246,7 @@ export function MinimalRegistrationFlow({
                 <p>引き継ぐ内容</p>
                 <p className="mt-2 text-white/70">
                   アーティスト {welcomeAnswers.artists.length}組 · パート{" "}
-                  {effectiveWelcomeParts(welcomeAnswers.parts).join(" · ")} · サウンド{" "}
+                  {effectiveWelcomeParts(welcomeAnswers.parts).join(" · ")} · ジャンル{" "}
                   {welcomeAnswers.sounds.length > 0
                     ? welcomeAnswers.sounds.slice(0, 3).join(" · ")
                     : "未選択"}
