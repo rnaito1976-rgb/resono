@@ -13,26 +13,60 @@ import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
 import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
-import { FormField, FormInput, FormSection } from "@/components/FormField";
+import {
+  FormField,
+  FormGroupHeading,
+  FormInput,
+  FormSection,
+} from "@/components/FormField";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
 import {
   formatProfileItemForEdit,
   getProfileItemLabel,
-  getProfileItems,
+  getProfileItemsForEditSection,
   parseProfileItemFromEdit,
   prepareMemberForSave,
   setProfileItem,
   syncMemberFromProfileItems,
   syncProfileItemsFromMemberFields,
 } from "@/lib/profile/items";
-import type { ProfileItemKind } from "@/types/profile-item";
+import type { ProfileEditSection, ProfileItemKind } from "@/types/profile-item";
 import type { Member } from "@/types/member";
 
 type MemberEditFormProps = {
   member: Member;
 };
+
+function ProfileItemFields({
+  member,
+  section,
+  onUpdate,
+}: {
+  member: Member;
+  section: ProfileEditSection;
+  onUpdate: (kind: ProfileItemKind, raw: string) => void;
+}) {
+  const items = getProfileItemsForEditSection(member, section);
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <FormSection title="プロフィール項目">
+      {items.map((item) => (
+        <FormField key={item.kind} label={getProfileItemLabel(item.kind)}>
+          <FormInput
+            value={formatProfileItemForEdit(item)}
+            onChange={(event) => onUpdate(item.kind, event.target.value)}
+          />
+        </FormField>
+      ))}
+    </FormSection>
+  );
+}
 
 export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   const router = useRouter();
@@ -144,7 +178,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         />
       </header>
 
-      <div className="flex-1 space-y-10 px-5 py-6 pb-28">
+      <div className="flex-1 space-y-12 px-5 py-6 pb-28">
         <p className="text-[14px] leading-relaxed text-white/45">
           基本情報とプロフィール項目は、いつでもここで編集できます。AIとの会話で新しい項目も追加できます。
         </p>
@@ -155,115 +189,129 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           </div>
         ) : null}
 
-        <FormSection title="Profile Photo">
-          <ProfilePhotoUpload
-            memberId={member.id}
-            value={member.photo}
-            frequencyColor={frequencyColor}
-            onChange={(url) => updateField("photo", url)}
-          />
-        </FormSection>
+        <section className="space-y-6">
+          <FormGroupHeading label="About" />
 
-        <FormSection title="Basic">
-          <FormField label="名前" hint="任意">
-            <FormInput
-              value={member.name}
-              onChange={(event) => updateField("name", event.target.value)}
+          <FormSection title="Profile Photo">
+            <ProfilePhotoUpload
+              memberId={member.id}
+              value={member.photo}
+              frequencyColor={frequencyColor}
+              onChange={(url) => updateField("photo", url)}
             />
-          </FormField>
-          <FormField label="演奏パート" hint="カンマ区切り・任意（例: ギター, ボーカル）">
-            <FormInput
-              value={joinList(member.music.instruments)}
-              onChange={(event) =>
-                updateNested("music", "instruments", splitList(event.target.value))
-              }
-            />
-          </FormField>
-        </FormSection>
-
-        <FormSection title="Frequency Color">
-          <FormField
-            label="あなたのサインカラー"
-            hint="プロフィールやResono全体に静かに反映されます"
-          >
-            <div className="rounded-2xl border border-border bg-white/[0.03] px-4 py-5">
-              <div className="mb-5 flex items-center gap-4">
-                <div
-                  className="size-12 shrink-0 rounded-full transition-quiet"
-                  style={{
-                    backgroundColor: frequencyColor ?? "rgba(255,255,255,0.08)",
-                    boxShadow: frequencyColor
-                      ? `0 0 0 1px ${withAlpha(frequencyColor, 0.35)}, 0 0 24px ${withAlpha(frequencyColor, 0.22)}`
-                      : undefined,
-                  }}
-                />
-                <p className="text-[14px] leading-relaxed text-white/55">
-                  オンボーディングで選んだ色を、いつでも変更できます。
-                </p>
-              </div>
-              <FrequencyColorSwatchGrid
-                selected={frequencyColor}
-                onSelect={setFrequencyColor}
-                columns={8}
-              />
-            </div>
-          </FormField>
-        </FormSection>
-
-        <FormSection title="Music">
-          <FormField label="好きなアーティスト" hint="カンマ区切り・任意">
-            <FormInput
-              value={joinList(member.music.favoriteArtists)}
-              onChange={(event) => updateFavoriteArtists(event.target.value)}
-            />
-          </FormField>
-          <FormField
-            label="Influences"
-            hint="カンマ区切り・任意（例: 竹内まりや, Cornelius, 羊文学）"
-          >
-            <FormInput
-              value={formatInfluencesForEdit(member.portrait.influences)}
-              onChange={(event) =>
-                updateNested("portrait", "influences", splitList(event.target.value))
-              }
-            />
-          </FormField>
-        </FormSection>
-
-        {getProfileItems(member).length > 0 ? (
-          <FormSection title="プロフィール項目" id="profile-items">
-            {getProfileItems(member).map((item) => (
-              <FormField
-                key={item.kind}
-                label={getProfileItemLabel(item.kind)}
-              >
-                <FormInput
-                  value={formatProfileItemForEdit(item)}
-                  onChange={(event) => updateProfileItemField(item.kind, event.target.value)}
-                />
-              </FormField>
-            ))}
           </FormSection>
-        ) : null}
 
-        <FormSection title="Looking For">
-          <FormField label="募集パート" hint="カンマ区切り・任意">
-            <FormInput
-              value={joinList(member.lookingFor.parts)}
-              onChange={(event) =>
-                updateNested("lookingFor", "parts", splitList(event.target.value))
-              }
-            />
-          </FormField>
-          <FormField label="活動頻度" hint="任意（例: 週1リハ、月2ライブ）">
-            <FormInput
-              value={member.lookingFor.commitment}
-              onChange={(event) =>
-                updateNested("lookingFor", "commitment", event.target.value)
-              }
-            />
-          </FormField>
-        </FormSection>
+          <FormSection title="Basic">
+            <FormField label="名前" hint="任意">
+              <FormInput
+                value={member.name}
+                onChange={(event) => updateField("name", event.target.value)}
+              />
+            </FormField>
+            <FormField label="演奏パート" hint="カンマ区切り・任意（例: ギター, ボーカル）">
+              <FormInput
+                value={joinList(member.music.instruments)}
+                onChange={(event) =>
+                  updateNested("music", "instruments", splitList(event.target.value))
+                }
+              />
+            </FormField>
+          </FormSection>
+
+          <FormSection title="Frequency Color">
+            <FormField
+              label="あなたのサインカラー"
+              hint="プロフィールやResono全体に静かに反映されます"
+            >
+              <div className="rounded-2xl border border-border bg-white/[0.03] px-4 py-5">
+                <div className="mb-5 flex items-center gap-4">
+                  <div
+                    className="size-12 shrink-0 rounded-full transition-quiet"
+                    style={{
+                      backgroundColor: frequencyColor ?? "rgba(255,255,255,0.08)",
+                      boxShadow: frequencyColor
+                        ? `0 0 0 1px ${withAlpha(frequencyColor, 0.35)}, 0 0 24px ${withAlpha(frequencyColor, 0.22)}`
+                        : undefined,
+                    }}
+                  />
+                  <p className="text-[14px] leading-relaxed text-white/55">
+                    オンボーディングで選んだ色を、いつでも変更できます。
+                  </p>
+                </div>
+                <FrequencyColorSwatchGrid
+                  selected={frequencyColor}
+                  onSelect={setFrequencyColor}
+                  columns={8}
+                />
+              </div>
+            </FormField>
+          </FormSection>
+
+          <ProfileItemFields
+            member={member}
+            section="about"
+            onUpdate={updateProfileItemField}
+          />
+        </section>
+
+        <section className="space-y-6">
+          <FormGroupHeading label="Music" />
+
+          <FormSection title="Music">
+            <FormField label="好きなアーティスト" hint="カンマ区切り・任意">
+              <FormInput
+                value={joinList(member.music.favoriteArtists)}
+                onChange={(event) => updateFavoriteArtists(event.target.value)}
+              />
+            </FormField>
+            <FormField
+              label="Influences"
+              hint="カンマ区切り・任意（例: 竹内まりや, Cornelius, 羊文学）"
+            >
+              <FormInput
+                value={formatInfluencesForEdit(member.portrait.influences)}
+                onChange={(event) =>
+                  updateNested("portrait", "influences", splitList(event.target.value))
+                }
+              />
+            </FormField>
+          </FormSection>
+
+          <ProfileItemFields
+            member={member}
+            section="music"
+            onUpdate={updateProfileItemField}
+          />
+        </section>
+
+        <section className="space-y-6">
+          <FormGroupHeading label="Band" />
+
+          <FormSection title="Looking For">
+            <FormField label="募集パート" hint="カンマ区切り・任意">
+              <FormInput
+                value={joinList(member.lookingFor.parts)}
+                onChange={(event) =>
+                  updateNested("lookingFor", "parts", splitList(event.target.value))
+                }
+              />
+            </FormField>
+            <FormField label="活動頻度" hint="任意（例: 週1リハ、月2ライブ）">
+              <FormInput
+                value={member.lookingFor.commitment}
+                onChange={(event) =>
+                  updateNested("lookingFor", "commitment", event.target.value)
+                }
+              />
+            </FormField>
+          </FormSection>
+
+          <ProfileItemFields
+            member={member}
+            section="band"
+            onUpdate={updateProfileItemField}
+          />
+        </section>
 
         <Link
           href="/discover"

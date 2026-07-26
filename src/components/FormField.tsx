@@ -9,6 +9,18 @@ type FormSectionProps = {
   children: React.ReactNode;
 };
 
+type FormGroupHeadingProps = {
+  label: string;
+};
+
+export function FormGroupHeading({ label }: FormGroupHeadingProps) {
+  return (
+    <h2 className="border-b border-white/[0.08] pb-3 text-[22px] font-light tracking-tight text-foreground">
+      {label}
+    </h2>
+  );
+}
+
 export function FormSection({ title, id, children }: FormSectionProps) {
   return (
     <section id={id} className="space-y-4">

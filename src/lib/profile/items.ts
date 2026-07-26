@@ -4,8 +4,12 @@ import type {
   LegacyProfileCard,
   ProfileItem,
   ProfileItemKind,
+  ProfileEditSection,
 } from "@/types/profile-item";
-import { PROFILE_ITEM_LABELS } from "@/types/profile-item";
+import {
+  PROFILE_ITEM_EDIT_SECTIONS,
+  PROFILE_ITEM_LABELS,
+} from "@/types/profile-item";
 
 export type ProfileConversationStep = {
   id: string;
@@ -117,6 +121,15 @@ function isValidProfileItem(item: unknown): item is ProfileItem {
 
 export function getProfileItems(member: Member): ProfileItem[] {
   return member.portrait.profileItems ?? [];
+}
+
+export function getProfileItemsForEditSection(
+  member: Member,
+  section: ProfileEditSection
+): ProfileItem[] {
+  return getProfileItems(member).filter(
+    (item) => PROFILE_ITEM_EDIT_SECTIONS[item.kind] === section
+  );
 }
 
 export function hasProfileItemKind(member: Member, kind: ProfileItemKind): boolean {
