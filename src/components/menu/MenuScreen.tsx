@@ -38,7 +38,6 @@ export function MenuScreen() {
       <MenuGroup>
         <MenuRow href="/menu/about" label="About Resono" />
         <MenuRow href="/menu/feedback" label="Feedback" />
-        <MenuRow href="/menu/support" label="Support Resono" />
       </MenuGroup>
 
       <MenuSectionGap />

@@ -1,6 +1,11 @@
 import { Suspense } from "react";
-import { AppPageHeader } from "@/components/navigation/AppPageHeader";
+import { AppTopBar } from "@/components/navigation/AppTopBar";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
+import {
+  ScrollPageIntro,
+  StickyPageTitle,
+  StickyScrollPage,
+} from "@/components/navigation/StickyScrollPage";
 import { BandsEmptyState } from "@/components/bands/BandsEmptyState";
 import { BandsList } from "@/components/bands/BandsList";
 import { getBandsForMember } from "@/lib/bands/queries";
@@ -32,18 +37,24 @@ async function BandsContent() {
 
 export function BandsPageContent() {
   return (
-    <main className="mx-auto min-h-dvh max-w-mobile bg-background">
-      <AppPageHeader
-        backHref="/"
-        backLabel="ホームに戻る"
-        eyebrow="Bands"
-        title="Band"
-        subtitle="共鳴から生まれたバンドたち。"
-        actions={<HeaderActionLink href="/bands/new">作成</HeaderActionLink>}
-      />
+    <StickyScrollPage
+      sticky={
+        <>
+          <div className="px-5 pt-6">
+            <AppTopBar
+              backHref="/"
+              backLabel="ホームに戻る"
+              trailing={<HeaderActionLink href="/bands/new">作成</HeaderActionLink>}
+            />
+          </div>
+          <StickyPageTitle eyebrow="Bands" title="Band" />
+        </>
+      }
+    >
+      <ScrollPageIntro>共鳴から生まれたバンドたち。</ScrollPageIntro>
       <Suspense fallback={<BandsListSkeleton />}>
         <BandsContent />
       </Suspense>
-    </main>
+    </StickyScrollPage>
   );
 }

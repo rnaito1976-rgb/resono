@@ -1,5 +1,10 @@
 import { Suspense } from "react";
-import { AppPageHeader } from "@/components/navigation/AppPageHeader";
+import { AppTopBar } from "@/components/navigation/AppTopBar";
+import {
+  ScrollPageIntro,
+  StickyPageTitle,
+  StickyScrollPage,
+} from "@/components/navigation/StickyScrollPage";
 import { ChatList } from "@/components/messages/ChatList";
 import { getConversationsForMember } from "@/lib/messages/conversations";
 import { requireViewer } from "@/lib/navigation/require-viewer";
@@ -31,17 +36,20 @@ async function MessagesContent() {
 
 export function MessagesPageContent() {
   return (
-    <main className="mx-auto min-h-dvh max-w-mobile bg-background">
-      <AppPageHeader
-        backHref="/"
-        backLabel="ホームに戻る"
-        eyebrow="Messages"
-        title="メッセージ"
-        subtitle="共鳴した人にメッセージをしてみよう"
-      />
+    <StickyScrollPage
+      sticky={
+        <>
+          <div className="px-5 pt-6">
+            <AppTopBar backHref="/" backLabel="ホームに戻る" />
+          </div>
+          <StickyPageTitle eyebrow="Messages" title="メッセージ" />
+        </>
+      }
+    >
+      <ScrollPageIntro>共鳴した人にメッセージをしてみよう</ScrollPageIntro>
       <Suspense fallback={<ChatListSkeleton />}>
         <MessagesContent />
       </Suspense>
-    </main>
+    </StickyScrollPage>
   );
 }

@@ -140,14 +140,6 @@ export const MENU_TERMS = {
       ],
     },
     {
-      id: "messages",
-      heading: "メッセージについて",
-      paragraphs: [
-        "安心してコミュニケーションできる環境を大切にしています。",
-        "迷惑行為や規約違反が確認された場合、運営者は必要な調査を行うことがあります。",
-      ],
-    },
-    {
       id: "account",
       heading: "アカウントについて",
       paragraphs: [

@@ -31,7 +31,6 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       ) : null}
 
       <MusicPageSection
-        emoji="🎧"
         title="Favorite Artists"
         description="好きなアーティスト"
         resonancePoints={resonance?.favoriteArtists}
@@ -44,7 +43,6 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       </MusicPageSection>
 
       <MusicPageSection
-        emoji="🎸"
         title="Want to Cover"
         description="今コピーしたい曲 — 一緒にバンドでやりたい音の起点です"
         resonancePoints={resonance?.coverSongs}
@@ -61,7 +59,6 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       </MusicPageSection>
 
       <MusicPageSection
-        emoji="🎤"
         title="Dream Bands"
         description="コピーしたいバンド"
         resonancePoints={resonance?.dreamBands}
@@ -74,7 +71,6 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       </MusicPageSection>
 
       <MusicPageSection
-        emoji="🎼"
         title="Playing Style"
         description="演奏スタイル"
         resonancePoints={resonance?.playingStyle}
@@ -87,7 +83,6 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       </MusicPageSection>
 
       <MusicPageSection
-        emoji="🎵"
         title="Music DNA"
         resonancePoints={resonance?.musicDna}
       >

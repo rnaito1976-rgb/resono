@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import Image from "next/image";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
+import { TAB_PAGE_HEIGHT } from "@/lib/navigation/tab-page-layout";
 import {
   createBandActivityAction,
   markBandAsSeenAction,
@@ -83,41 +84,26 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
   const videos = detail.activities.filter((item) => item.kind === "video");
 
   return (
-    <div className="mx-auto flex h-dvh max-w-mobile flex-col bg-background">
-      <div className="relative shrink-0 overflow-hidden px-5 pb-6 pt-6" style={gradientStyle}>
-        <AppTopBar backHref="/bands" backLabel="Band一覧に戻る" />
-
-        <div className="mt-8 space-y-5">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/55">
-            {formatBandGradientLabel(detail.gradientColors)}
-          </p>
-          <h1 className="text-[34px] font-light tracking-tight text-white">
-            {detail.band.name}
-          </h1>
-          <div className="flex flex-wrap gap-2 text-[13px] text-white/70">
-            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
-              {STATUS_LABELS[detail.band.activityStatus]}
-            </span>
-            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
-              {new Date(detail.band.createdAt).toLocaleDateString("ja-JP")} 結成
-            </span>
-            <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
-              {detail.members.length} members
-            </span>
-          </div>
+    <div
+      className="mx-auto flex max-w-mobile flex-col bg-background"
+      style={{ height: TAB_PAGE_HEIGHT }}
+    >
+      <header className="sticky top-0 z-10 shrink-0 bg-background/90 backdrop-blur-xl">
+        <div className="px-5 pt-6">
+          <AppTopBar backHref="/bands" backLabel="Band一覧に戻る" />
         </div>
-      </div>
-
-      <div className="sticky top-0 z-10 shrink-0 bg-background/90 backdrop-blur-xl">
         <AppSubNav items={TABS} activeIndex={activeIndex} onSelect={scrollToIndex} />
-      </div>
+      </header>
 
       <div
         ref={scrollRef}
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hide"
       >
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          <TimelineTab events={detail.timeline} />
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain pb-10">
+          <BandHero detail={detail} gradientStyle={gradientStyle} />
+          <div className="px-5 pt-8">
+            <TimelineTab events={detail.timeline} />
+          </div>
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
           <ActivityTab bandId={detail.band.id} activities={detail.activities} />
@@ -133,6 +119,36 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
             addableMembers={addableMembers}
           />
         </section>
+      </div>
+    </div>
+  );
+}
+
+function BandHero({
+  detail,
+  gradientStyle,
+}: {
+  detail: BandDetail;
+  gradientStyle: ReturnType<typeof buildBandGradientStyle>;
+}) {
+  return (
+    <div className="relative overflow-hidden px-5 pb-6 pt-2" style={gradientStyle}>
+      <div className="space-y-5">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-white/55">
+          {formatBandGradientLabel(detail.gradientColors)}
+        </p>
+        <h1 className="text-[34px] font-light tracking-tight text-white">{detail.band.name}</h1>
+        <div className="flex flex-wrap gap-2 text-[13px] text-white/70">
+          <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
+            {STATUS_LABELS[detail.band.activityStatus]}
+          </span>
+          <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
+            {new Date(detail.band.createdAt).toLocaleDateString("ja-JP")} 結成
+          </span>
+          <span className="rounded-full border border-border bg-black/20 px-3 py-1 backdrop-blur-sm">
+            {detail.members.length} members
+          </span>
+        </div>
       </div>
     </div>
   );

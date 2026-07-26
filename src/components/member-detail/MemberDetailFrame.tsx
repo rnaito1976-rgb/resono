@@ -4,11 +4,12 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DETAIL_SECTIONS, getOwnProfileDetailSections, type DetailSection } from "@/types/member";
 import { MemberThemeScope } from "@/components/frequency-color/MemberThemeScope";
-import { AppPageHeader } from "@/components/navigation/AppPageHeader";
+import { AppTopBar } from "@/components/navigation/AppTopBar";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { ResonateButton } from "@/components/ResonateButton";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
+import { TAB_PAGE_HEIGHT } from "@/lib/navigation/tab-page-layout";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
@@ -90,7 +91,12 @@ export function MemberDetailFrame({
     : DETAIL_SECTIONS;
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
-    : "flex h-dvh flex-col bg-background";
+    : "flex flex-col bg-background";
+  const containerStyle = isSheet
+    ? undefined
+    : isOwnProfile
+      ? { height: TAB_PAGE_HEIGHT }
+      : { height: "100dvh" };
   const memberAccentColor = member.frequencyColor as FrequencyColorHex | undefined;
   const useMemberTheme = !isOwnProfile && Boolean(memberAccentColor);
 
@@ -167,29 +173,25 @@ export function MemberDetailFrame({
                   ×
                 </button>
               </div>
-            ) : isOwnProfile ? (
-              <AppPageHeader
-                backHref="/"
-                backLabel="ホームに戻る"
-                eyebrow="Profile"
-                title="マイページ"
-                subtitle="あなたの音楽活動をまとめて見る。"
-                actions={
-                  <>
-                    <HeaderActionLink href={`/member/${member.id}/edit`}>編集</HeaderActionLink>
-                <HeaderActionLink href="/discover" variant="primary">
-                  Discover a Story
-                </HeaderActionLink>
-                  </>
-                }
-              />
             ) : (
-              <AppPageHeader
-                backHref="/"
-                backLabel="ホームに戻る"
-                eyebrow="Profile"
-                title={member.name}
-              />
+              <div className="px-5 pb-1 pt-4">
+                <AppTopBar
+                  backHref="/"
+                  backLabel="ホームに戻る"
+                  trailing={
+                    isOwnProfile ? (
+                      <>
+                        <HeaderActionLink href={`/member/${member.id}/edit`}>
+                          編集
+                        </HeaderActionLink>
+                        <HeaderActionLink href="/discover" variant="primary">
+                          Discover a Story
+                        </HeaderActionLink>
+                      </>
+                    ) : undefined
+                  }
+                />
+              </div>
             )}
 
             <AppSubNav
@@ -240,13 +242,17 @@ export function MemberDetailFrame({
 
   if (useMemberTheme && !isSheet) {
     return (
-      <MemberThemeScope color={memberAccentColor} className={containerClass}>
+      <MemberThemeScope color={memberAccentColor} className={containerClass} style={containerStyle}>
         {frameContent}
       </MemberThemeScope>
     );
   }
 
-  return <div className={containerClass}>{frameContent}</div>;
+  return (
+    <div className={containerClass} style={containerStyle}>
+      {frameContent}
+    </div>
+  );
 }
 
 export function MemberDetailFrameLoading({ variant = "page" }: { variant?: "page" | "sheet" }) {

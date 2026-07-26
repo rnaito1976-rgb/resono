@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 type MusicPageSectionProps = {
-  emoji: string;
   title: string;
   description?: string;
   resonancePoints?: string[];
@@ -16,7 +15,7 @@ function SectionResonancePoints({ points }: { points: string[] }) {
   return (
     <div className="rounded-[16px] bg-[var(--frequency-color-soft)] px-4 py-3">
       <p className="text-[12px] font-medium tracking-[0.12em] text-[var(--frequency-color)]">
-        ✨ 共鳴するポイント
+        共鳴するポイント
       </p>
       <ul className="mt-2 space-y-1">
         {points.map((point) => (
@@ -30,7 +29,6 @@ function SectionResonancePoints({ points }: { points: string[] }) {
 }
 
 export function MusicPageSection({
-  emoji,
   title,
   description,
   resonancePoints,
@@ -40,9 +38,6 @@ export function MusicPageSection({
     <section className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
-          <span className="mr-2" aria-hidden>
-            {emoji}
-          </span>
           {title}
         </h2>
         {description ? (
@@ -72,9 +67,6 @@ export function MusicResonanceSummary({ points }: { points: string[] }) {
     <section className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
-          <span className="mr-2" aria-hidden>
-            ✨
-          </span>
           共鳴するポイント
         </h2>
       </div>

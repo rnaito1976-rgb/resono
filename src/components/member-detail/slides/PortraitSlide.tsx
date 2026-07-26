@@ -41,6 +41,18 @@ export function PortraitSlide({
 
   return (
     <div className="flex h-full flex-col px-5 pb-8 pt-4">
+      {isOwnProfile ? (
+        <div className="mb-8 shrink-0 px-1">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
+            Profile
+          </p>
+          <h1 className="mt-1 text-[28px] font-light tracking-tight">マイページ</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">
+            あなたの音楽活動をまとめて見る。
+          </p>
+        </div>
+      ) : null}
+
       <ProfilePhotoRing color={ringColor} className="mb-10 w-full shrink-0 rounded-[32px]">
         <div className="relative h-72 w-full overflow-hidden rounded-[32px] sm:h-80">
           <Image

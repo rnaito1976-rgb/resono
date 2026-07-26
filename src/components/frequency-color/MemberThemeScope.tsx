@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import {
   applyFrequencyColorVariables,
   clearFrequencyColorVariables,
@@ -10,11 +10,17 @@ import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 type MemberThemeScopeProps = {
   color?: FrequencyColorHex;
   className?: string;
+  style?: CSSProperties;
   children: ReactNode;
 };
 
 /** Scopes frequency / primary tokens to a member's color (e.g. profile sheet). */
-export function MemberThemeScope({ color, className, children }: MemberThemeScopeProps) {
+export function MemberThemeScope({
+  color,
+  className,
+  style,
+  children,
+}: MemberThemeScopeProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +41,7 @@ export function MemberThemeScope({ color, className, children }: MemberThemeScop
   }, [color]);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={className} style={style}>
       {children}
     </div>
   );
