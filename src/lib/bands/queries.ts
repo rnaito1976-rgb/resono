@@ -74,42 +74,45 @@ export async function getMutualResonateMembers(
     return [];
   }
 
-  const resolvedViewerId = (await resolveCurrentMemberId()) ?? viewerMemberId;
+  const resolvedViewerId = viewerMemberId ?? (await resolveCurrentMemberId());
   if (!resolvedViewerId) {
     return [];
   }
 
   const supabase = await createClient();
-  const [outgoingResult, incomingResult] = await Promise.all([
-    supabase
-      .from("resonances")
-      .select("to_member_id, created_at")
-      .eq("from_member_id", resolvedViewerId),
-    supabase
-      .from("resonances")
-      .select("from_member_id, created_at")
-      .eq("to_member_id", resolvedViewerId),
-  ]);
+  const { data: incoming, error: incomingError } = await supabase
+    .from("resonances")
+    .select("from_member_id, created_at")
+    .eq("to_member_id", resolvedViewerId);
 
-  if (outgoingResult.error) {
-    console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingResult.error.message);
+  if (incomingError) {
+    console.error("[Supabase] getMutualResonateMembers incoming:", incomingError.message);
     return [];
   }
 
-  if (incomingResult.error) {
-    console.error("[Supabase] getMutualResonateMembers incoming:", incomingResult.error.message);
+  if (!incoming?.length) {
     return [];
   }
 
-  const outgoing = outgoingResult.data ?? [];
-  const incoming = incomingResult.data ?? [];
+  const incomingIds = incoming.map((row) => row.from_member_id);
+  const { data: outgoing, error: outgoingError } = await supabase
+    .from("resonances")
+    .select("to_member_id, created_at")
+    .eq("from_member_id", resolvedViewerId)
+    .in("to_member_id", incomingIds);
 
-  if (!outgoing.length) {
+  if (outgoingError) {
+    console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingError.message);
     return [];
   }
 
-  const incomingSet = new Set(incoming.map((row) => row.from_member_id));
-  const mutualRows = outgoing.filter((row) => incomingSet.has(row.to_member_id));
+  const outgoingRows = outgoing ?? [];
+  if (!outgoingRows.length) {
+    return [];
+  }
+
+  const incomingMap = new Map(incoming.map((row) => [row.from_member_id, row.created_at]));
+  const mutualRows = outgoingRows.filter((row) => incomingMap.has(row.to_member_id));
 
   if (mutualRows.length === 0) {
     return [];
@@ -261,24 +264,25 @@ export async function getBandDetail(
   }
 
   const supabase = await createClient();
-  const viewer = await getMemberById(viewerMemberId);
-
-  const { data: bandRow, error: bandError } = await supabase
-    .from("bands")
-    .select(BAND_DETAIL_COLUMNS)
-    .eq("id", bandId)
-    .maybeSingle();
+  const [{ data: bandRow, error: bandError }, viewer, { data: membership }] =
+    await Promise.all([
+      supabase
+        .from("bands")
+        .select(BAND_DETAIL_COLUMNS)
+        .eq("id", bandId)
+        .maybeSingle(),
+      getMemberById(viewerMemberId),
+      supabase
+        .from("band_members")
+        .select("member_id")
+        .eq("band_id", bandId)
+        .eq("member_id", viewerMemberId)
+        .maybeSingle(),
+    ]);
 
   if (bandError || !bandRow) {
     return null;
   }
-
-  const { data: membership } = await supabase
-    .from("band_members")
-    .select("member_id")
-    .eq("band_id", bandId)
-    .eq("member_id", viewerMemberId)
-    .maybeSingle();
 
   if (!membership) {
     return null;
@@ -295,7 +299,8 @@ export async function getBandDetail(
       .from("band_activities")
       .select(BAND_ACTIVITY_COLUMNS)
       .eq("band_id", bandId)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   const timeline = (timelineResult.data ?? []).map(

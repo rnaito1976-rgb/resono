@@ -142,7 +142,15 @@ export function HomeFeedList({
       void prefetchMemberProfile(queryClient, memberId);
     }
 
-    void getResonanceStatusBatchAction(memberIds).then((statusMap) => {
+    const missingStatusIds = feedItems
+      .filter((item) => item.resonanceStatus === undefined)
+      .map((item) => item.member.id);
+
+    if (missingStatusIds.length === 0) {
+      return;
+    }
+
+    void getResonanceStatusBatchAction(missingStatusIds).then((statusMap) => {
       for (const [memberId, status] of Object.entries(statusMap)) {
         queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
       }

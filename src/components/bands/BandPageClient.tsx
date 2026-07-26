@@ -14,7 +14,7 @@ import {
   buildBandGradientStyle,
   formatBandGradientLabel,
 } from "@/lib/bands/gradient";
-import type { BandDetail, BandModuleId, MutualResonateMember } from "@/types/band";
+import type { BandDetail, BandModuleId } from "@/types/band";
 import { AddBandMembersPanel } from "@/components/bands/AddBandMembersPanel";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -36,10 +36,9 @@ const STATUS_LABELS = {
 
 type BandPageClientProps = {
   detail: BandDetail;
-  addableMembers: MutualResonateMember[];
 };
 
-export function BandPageClient({ detail, addableMembers }: BandPageClientProps) {
+export function BandPageClient({ detail }: BandPageClientProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const gradientStyle = useMemo(
@@ -82,6 +81,10 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
 
   const videos = detail.activities.filter((item) => item.kind === "video");
 
+  function shouldRenderTab(index: number) {
+    return Math.abs(index - activeIndex) <= 1;
+  }
+
   return (
     <div className="mx-auto flex max-w-mobile flex-col bg-background" style={{ height: "100dvh" }}>
       <header className="sticky top-0 z-10 shrink-0 bg-background/90 backdrop-blur-xl">
@@ -96,24 +99,31 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hide"
       >
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain pb-10">
-          <BandHero detail={detail} gradientStyle={gradientStyle} />
-          <div className="px-5 pt-8">
-            <TimelineTab events={detail.timeline} />
-          </div>
+          {shouldRenderTab(0) ? (
+            <>
+              <BandHero detail={detail} gradientStyle={gradientStyle} />
+              <div className="px-5 pt-8">
+                <TimelineTab events={detail.timeline} />
+              </div>
+            </>
+          ) : null}
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-8 pt-8">
-          <ActivityTab bandId={detail.band.id} activities={detail.activities} />
+          {shouldRenderTab(1) ? (
+            <ActivityTab bandId={detail.band.id} activities={detail.activities} />
+          ) : null}
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          <VideosTab videos={videos} />
+          {shouldRenderTab(2) ? <VideosTab videos={videos} /> : null}
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          <MembersTab
-            bandId={detail.band.id}
-            bandName={detail.band.name}
-            members={detail.members}
-            addableMembers={addableMembers}
-          />
+          {shouldRenderTab(3) ? (
+            <MembersTab
+              bandId={detail.band.id}
+              bandName={detail.band.name}
+              members={detail.members}
+            />
+          ) : null}
         </section>
       </div>
     </div>
@@ -339,20 +349,14 @@ function MembersTab({
   bandId,
   bandName,
   members,
-  addableMembers,
 }: {
   bandId: string;
   bandName: string;
   members: BandDetail["members"];
-  addableMembers: MutualResonateMember[];
 }) {
   return (
     <div className="space-y-6">
-      <AddBandMembersPanel
-        bandId={bandId}
-        bandName={bandName}
-        addableMembers={addableMembers}
-      />
+      <AddBandMembersPanel bandId={bandId} bandName={bandName} />
 
       <div className="space-y-4">
         {members.map((item) => {

@@ -18,7 +18,7 @@ export function ProfileItemsView({
   isOwnProfile = false,
   resonanceSection,
 }: ProfileItemsViewProps) {
-  const items = getProfileItems(member);
+  const items = getProfileItems(member).filter((item) => item.kind !== "music-dna");
   const playingParts = member.music.instruments.filter(Boolean);
 
   return (

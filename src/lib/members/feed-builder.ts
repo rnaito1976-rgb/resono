@@ -132,8 +132,7 @@ export async function buildMembersFeedPage(
     const items = await buildResonanceFeedItems(
       feedViewer,
       viewerMemberId,
-      feedMembers,
-      feedMembers.length
+      feedMembers
     );
 
     return {

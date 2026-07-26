@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { blendFrequencyColors } from "@/lib/frequency-color/utils";
 import { getMemberByUserId } from "@/lib/members";
-import { getMutualResonateMembers } from "@/lib/bands/queries";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
+import { getMutualResonateMembers, getAddableMutualMembersForBand } from "@/lib/bands/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { BandActivityKind } from "@/types/band";
@@ -444,4 +445,18 @@ export async function markBandAsSeenAction(bandId: string): Promise<void> {
   revalidatePath("/bands");
   revalidatePath("/me");
   revalidatePath(`/bands/${bandId}`);
+}
+
+export async function getAddableMutualMembersForBandAction(bandId: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabaseが設定されていません。", members: [] };
+  }
+
+  const memberId = await resolveCurrentMemberId();
+  if (!memberId) {
+    return { error: "ログインが必要です。", members: [] };
+  }
+
+  const members = await getAddableMutualMembersForBand(bandId, memberId);
+  return { members };
 }

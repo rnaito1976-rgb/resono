@@ -8,10 +8,13 @@ import { MemberDetail } from "@/components/MemberDetail";
 export default async function MyPage() {
   const { memberId } = await requireViewer({ loginNext: "/me" });
 
+  const memberPromise = getMemberById(memberId);
   const [member, mutualMembers, memberActivities] = await Promise.all([
-    getMemberById(memberId),
+    memberPromise,
     getMutualResonateMembers(memberId),
-    getOwnMemberActivityFeed(memberId, 40),
+    memberPromise.then((loaded) =>
+      loaded ? getOwnMemberActivityFeed(memberId, 40, loaded) : []
+    ),
   ]);
 
   if (!member) {

@@ -100,18 +100,18 @@ function buildResonanceItems(
 export async function getOwnMemberActivityFeed(
   memberId: string,
   limit = 40,
-  memberName?: string
+  member?: Member
 ): Promise<MemberActivityFeedItem[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
 
   const supabase = await createClient();
-  const [{ data: memberMeta }, member] = await Promise.all([
+  const [{ data: memberMeta }, resolvedMember] = await Promise.all([
     supabase.from("members").select("created_at").eq("id", memberId).maybeSingle(),
-    getMemberById(memberId),
+    member ? Promise.resolve(member) : getMemberById(memberId),
   ]);
-  const viewerName = memberName ?? member?.name;
+  const viewerName = resolvedMember?.name;
   const registeredAt = memberMeta?.created_at;
 
   const { data: memberships } = await supabase
@@ -126,11 +126,15 @@ export async function getOwnMemberActivityFeed(
       supabase
         .from("resonances")
         .select("to_member_id, created_at")
-        .eq("from_member_id", memberId),
+        .eq("from_member_id", memberId)
+        .order("created_at", { ascending: false })
+        .limit(50),
       supabase
         .from("resonances")
         .select("from_member_id, created_at")
-        .eq("to_member_id", memberId),
+        .eq("to_member_id", memberId)
+        .order("created_at", { ascending: false })
+        .limit(50),
       bandIds.length > 0
         ? supabase
             .from("band_timeline_events")
@@ -164,7 +168,7 @@ export async function getOwnMemberActivityFeed(
   const partnerMap = await getMembersByIds([...partnerIds]);
   const items = [
     ...memberActivityMilestonesToFeedItems(
-      getMemberActivityMilestones(member, registeredAt)
+      getMemberActivityMilestones(resolvedMember, registeredAt)
     ),
     ...buildResonanceItems(outgoing, incoming, partnerMap),
   ];
@@ -244,11 +248,15 @@ export async function getMemberActivityFeed(
       supabase
         .from("resonances")
         .select("to_member_id, created_at")
-        .eq("from_member_id", memberId),
+        .eq("from_member_id", memberId)
+        .order("created_at", { ascending: false })
+        .limit(50),
       supabase
         .from("resonances")
         .select("from_member_id, created_at")
-        .eq("to_member_id", memberId),
+        .eq("to_member_id", memberId)
+        .order("created_at", { ascending: false })
+        .limit(50),
       bandIds.length > 0
         ? supabase
             .from("band_timeline_events")

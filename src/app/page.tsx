@@ -1,12 +1,12 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { HomeFeedList } from "@/components/home/HomeFeedList";
+import { HomeFeedSection } from "@/components/home/HomeFeedSection";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
+import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
-import { buildMembersFeedPage } from "@/lib/members/feed-builder";
-import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export default async function HomePage() {
@@ -15,15 +15,6 @@ export default async function HomePage() {
   if (user && !member) {
     redirect(buildWelcomeOnboardingHref());
   }
-
-  const initialFeedPage =
-    member || user
-      ? await buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
-          viewer: member,
-          userId: user?.id,
-          fast: true,
-        })
-      : undefined;
 
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
@@ -37,11 +28,13 @@ export default async function HomePage() {
         <AppHeader initialUser={user} />
         <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
           {member ? <PersonCard member={member} isOwnCard priority /> : null}
-          <HomeFeedList
-            viewerId={member?.id ?? user?.id}
-            showSectionHeader={Boolean(member)}
-            initialFeedPage={initialFeedPage}
-          />
+          <Suspense fallback={<HomeFeedSkeleton count={member ? 2 : 3} />}>
+            <HomeFeedSection
+              member={member}
+              userId={user?.id}
+              showSectionHeader={Boolean(member)}
+            />
+          </Suspense>
         </div>
       </main>
     </>
