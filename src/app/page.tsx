@@ -10,13 +10,9 @@ import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export default async function HomePage() {
-  const { user, member, frequencyColor, needsOnboarding } = await getHomeViewer();
+  const { user, member, frequencyColor } = await getHomeViewer();
 
   if (user && !member) {
-    redirect(buildWelcomeOnboardingHref());
-  }
-
-  if (needsOnboarding) {
     redirect(buildWelcomeOnboardingHref());
   }
 

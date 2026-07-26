@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { resolvePostAuthRedirect } from "@/lib/auth/post-auth-redirect";
-import { ensureMemberForUser, getMemberByUserId } from "@/lib/members";
-import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
+import { ensureMemberForUser } from "@/lib/members";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import { getEmailRedirectUrl } from "@/lib/supabase/env";
@@ -69,16 +68,10 @@ export async function signInWithEmailAction(
     await ensureMemberForUser(user.id, user.email);
   }
 
-  const member = user ? await getMemberByUserId(user.id) : undefined;
-  const onboarding = member
-    ? await getMemberOnboardingState(user!.id, member.id)
-    : { complete: false };
-
   revalidatePath("/", "layout");
   redirect(
     resolvePostAuthRedirect(
       nextPath,
-      onboarding.complete,
       nextPath?.includes("skipPhoto=1")
     )
   );

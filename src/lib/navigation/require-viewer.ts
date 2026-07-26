@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { getAuthSession } from "@/lib/supabase/auth";
 import type { User } from "@supabase/supabase-js";
@@ -23,11 +22,6 @@ const resolveTabViewer = cache(async (): Promise<TabViewer> => {
 
   const memberId = await resolveCurrentMemberId();
   if (!memberId) {
-    redirect("/onboarding");
-  }
-
-  const onboarding = await getMemberOnboardingState(user.id, memberId);
-  if (!onboarding.complete) {
     redirect("/onboarding");
   }
 

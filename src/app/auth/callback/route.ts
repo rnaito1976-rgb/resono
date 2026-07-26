@@ -11,7 +11,6 @@ import {
 } from "@/lib/auth/urls";
 import { resolvePostAuthRedirect } from "@/lib/auth/post-auth-redirect";
 import { ensureMemberForUser } from "@/lib/members";
-import { getMemberOnboardingState } from "@/lib/members/onboarding-state";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 export async function GET(request: NextRequest) {
@@ -50,13 +49,10 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    const member = await ensureMemberForUser(user.id, user.email);
-    const onboarding = member
-      ? await getMemberOnboardingState(user.id, member.id)
-      : { complete: false };
+    await ensureMemberForUser(user.id, user.email);
     const destination = resolveWelcomeSignupDestination(
       request,
-      resolvePostAuthRedirect(next, onboarding.complete, skipPhoto)
+      resolvePostAuthRedirect(next, skipPhoto)
     );
 
     const response = NextResponse.redirect(`${origin}${destination}`);

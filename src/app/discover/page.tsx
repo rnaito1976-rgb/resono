@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { DiscoverConversationLoader } from "@/components/discover/DiscoverDialogueLoader";
 import { getMemberByUserId } from "@/lib/members";
-import { isOnboardingComplete } from "@/lib/onboarding/status";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +17,7 @@ export default async function DiscoverPage() {
 
   const member = await getMemberByUserId(user.id);
 
-  if (!member || !isOnboardingComplete(member)) {
+  if (!member) {
     redirect("/onboarding");
   }
 

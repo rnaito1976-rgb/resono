@@ -118,7 +118,6 @@ export function WelcomeResultsStep({
             <p className="text-[14px] text-white/45">すでにアカウントをお持ちですか？</p>
             <Link
               href="/login?from=welcome"
-              onClick={markWelcomeSignupIntent}
               className="inline-flex text-[15px] font-medium text-primary transition-quiet active:opacity-70"
             >
               ログイン
