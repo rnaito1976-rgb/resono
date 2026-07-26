@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type WelcomeShellProps = {
@@ -9,22 +9,6 @@ type WelcomeShellProps = {
 };
 
 export function WelcomeShell({ children, className }: WelcomeShellProps) {
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: light)");
-
-    function applyTheme() {
-      document.documentElement.classList.toggle("light-ready", media.matches);
-    }
-
-    applyTheme();
-    media.addEventListener("change", applyTheme);
-
-    return () => {
-      media.removeEventListener("change", applyTheme);
-      document.documentElement.classList.remove("light-ready");
-    };
-  }, []);
-
   return (
     <div
       className={cn(

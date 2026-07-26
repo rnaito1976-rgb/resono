@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import { AuthLogo } from "@/components/auth/AuthShell";
 import { WelcomeFade } from "@/components/welcome/WelcomeMotion";
-import { WelcomeIllustration } from "@/components/welcome/WelcomeIllustration";
 import { Button } from "@/components/ui/button";
+import { BRAND_CATCH_COPY, BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
 type WelcomeIntroStepProps = {
   initialUser?: User | null;
@@ -13,46 +14,32 @@ type WelcomeIntroStepProps = {
 
 export function WelcomeIntroStep({ initialUser, onStart }: WelcomeIntroStepProps) {
   return (
-    <div className="flex min-h-dvh flex-col px-6 pb-10 pt-14">
-      <WelcomeFade className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
-          Resono
+    <div className="flex min-h-dvh flex-col px-5 pb-10 pt-10">
+      <WelcomeFade className="flex flex-1 flex-col">
+        <AuthLogo />
+        <p className="mt-6 max-w-[320px] whitespace-pre-line text-[22px] font-light leading-[1.65] tracking-tight">
+          {BRAND_CATCH_COPY}
         </p>
-        <h1 className="mt-5 max-w-[320px] text-[30px] font-light leading-[1.35] tracking-tight">
-          共鳴する仲間と、バンドを始めよう。
-        </h1>
-        <p className="mt-5 max-w-[320px] text-[16px] leading-[1.8] text-muted">
-          音楽も、ファッションも、価値観も。
-          <br />
-          共鳴でつながる、新しいバンドメンバー募集サービス。
+        <p className="mt-5 max-w-[320px] whitespace-pre-line text-[15px] leading-[1.85] text-white/45">
+          {BRAND_DESCRIPTION}
         </p>
-
-        <div className="my-10">
-          <WelcomeIllustration />
-        </div>
       </WelcomeFade>
 
-      <WelcomeFade className="space-y-3">
+      <WelcomeFade className="space-y-4">
         {initialUser ? (
-          <Button asChild size="lg" className="h-14 w-full rounded-full text-[17px]">
+          <Button asChild size="lg" className="h-12 w-full rounded-full text-[15px]">
             <Link href="/">ホームへ</Link>
           </Button>
         ) : (
           <Button
             type="button"
             size="lg"
-            className="h-14 w-full rounded-full text-[17px]"
+            className="h-12 w-full rounded-full text-[15px]"
             onClick={onStart}
           >
             はじめる
           </Button>
         )}
-
-        {!initialUser ? (
-          <p className="text-center text-[13px] text-muted">
-            約30秒であなたに合う仲間を探します
-          </p>
-        ) : null}
       </WelcomeFade>
     </div>
   );

@@ -26,14 +26,14 @@ export function WelcomeQuestionStepView({
   canProceed,
 }: WelcomeQuestionStepViewProps) {
   return (
-    <div className="flex min-h-dvh flex-col px-6 pb-10 pt-8">
+    <div className="flex min-h-dvh flex-col px-5 pb-10 pt-6">
       <WelcomeProgress current={step} />
 
       <div className="flex flex-1 flex-col justify-center py-10">
-        <p className="text-[34px] leading-none" aria-hidden>
-          {config.emoji}
+        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+          Welcome
         </p>
-        <h2 className="mt-5 text-[28px] font-light leading-[1.25] tracking-tight">
+        <h2 className="mt-1 text-[28px] font-light leading-[1.25] tracking-tight">
           {config.title}
         </h2>
 
@@ -53,7 +53,7 @@ export function WelcomeQuestionStepView({
         <Button
           type="button"
           size="lg"
-          className="h-14 w-full rounded-full text-[17px]"
+          className="h-12 w-full rounded-full text-[15px]"
           disabled={!canProceed}
           onClick={onNext}
         >
@@ -62,7 +62,7 @@ export function WelcomeQuestionStepView({
         <button
           type="button"
           onClick={onBack}
-          className="mx-auto block text-[15px] text-muted transition-quiet active:opacity-70"
+          className="mx-auto block text-[15px] text-white/45 transition-quiet active:opacity-70"
         >
           戻る
         </button>

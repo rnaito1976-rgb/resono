@@ -31,9 +31,7 @@ export const WELCOME_BAND_STYLE_OPTIONS = [
 ] as const;
 
 export type WelcomeQuestionConfig = {
-  emoji: string;
   title: string;
-  subtitle?: string;
   presets: readonly string[];
   multi: boolean;
   searchable: boolean;
@@ -45,7 +43,6 @@ export const WELCOME_QUESTIONS: Record<
   WelcomeQuestionConfig
 > = {
   artists: {
-    emoji: "🎧",
     title: "好きなアーティストは？",
     presets: WELCOME_ARTIST_PRESETS,
     multi: true,
@@ -53,7 +50,6 @@ export const WELCOME_QUESTIONS: Record<
     placeholder: "アーティストを検索",
   },
   covers: {
-    emoji: "🎸",
     title: "今コピーしたい曲は？",
     presets: WELCOME_COVER_PRESETS,
     multi: true,
@@ -61,14 +57,12 @@ export const WELCOME_QUESTIONS: Record<
     placeholder: "曲名を検索",
   },
   parts: {
-    emoji: "🎤",
     title: "担当したいパートは？",
     presets: WELCOME_PART_PRESETS,
     multi: true,
     searchable: false,
   },
   "band-style": {
-    emoji: "🎵",
     title: "どんなバンドをやりたい？",
     presets: WELCOME_BAND_STYLE_OPTIONS,
     multi: false,
@@ -77,7 +71,7 @@ export const WELCOME_QUESTIONS: Record<
 };
 
 export const WELCOME_ANALYSIS_STEPS = [
-  { emoji: "🎧", label: "音楽の好みを分析" },
-  { emoji: "🎸", label: "演奏スタイルを整理" },
-  { emoji: "🎵", label: "共鳴する仲間を探しています…" },
+  "音楽の好みを分析",
+  "演奏スタイルを整理",
+  "共鳴する仲間を探しています…",
 ] as const;
