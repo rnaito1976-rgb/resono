@@ -28,10 +28,12 @@ export function WelcomeQuestionStepView({
   canProceed,
 }: WelcomeQuestionStepViewProps) {
   return (
-    <div className="flex min-h-dvh flex-col px-5 pb-10 pt-6">
-      <WelcomeProgress current={step} />
+    <div className="flex min-h-dvh flex-col">
+      <div className="px-5 pt-5">
+        <WelcomeProgress current={step} />
+      </div>
 
-      <div className="flex flex-1 flex-col py-8">
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-36 pt-6">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
           Welcome
         </p>
@@ -42,7 +44,7 @@ export function WelcomeQuestionStepView({
           <p className="mt-3 text-[15px] leading-relaxed text-white/45">{config.subtitle}</p>
         ) : null}
 
-        <div className="mt-8 min-h-0 flex-1">
+        <div className="mt-6 min-h-0 flex-1">
           {config.kind === "artists" ? (
             <WelcomeArtistPicker selected={selected} onChange={onChange} />
           ) : null}
@@ -62,24 +64,27 @@ export function WelcomeQuestionStepView({
         </div>
       </div>
 
-      <div className="space-y-4">
-        <Button
-          type="button"
-          size="lg"
-          className="h-12 w-full rounded-full text-[15px]"
-          disabled={!canProceed}
-          onClick={onNext}
-        >
-          次へ
-        </Button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="mx-auto block text-[15px] text-white/45 transition-quiet active:opacity-70"
-        >
-          戻る
-        </button>
-      </div>
+      <footer className="fixed inset-x-0 bottom-0 z-20">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent" />
+        <div className="relative mx-auto w-full max-w-mobile space-y-4 px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-4">
+          <Button
+            type="button"
+            size="lg"
+            className="h-12 w-full rounded-full text-[15px]"
+            disabled={!canProceed}
+            onClick={onNext}
+          >
+            次へ
+          </Button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="mx-auto block text-[15px] text-white/45 transition-quiet active:opacity-70"
+          >
+            戻る
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

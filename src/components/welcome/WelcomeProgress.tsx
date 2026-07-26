@@ -12,24 +12,18 @@ export function WelcomeProgress({ current }: WelcomeProgressProps) {
   const currentIndex = WELCOME_QUESTION_STEPS.indexOf(current);
 
   return (
-    <div className="flex items-center gap-2 px-1" aria-label="進捗">
+    <div
+      className="flex items-center justify-center gap-1.5"
+      aria-label={`${currentIndex + 1} / ${WELCOME_QUESTION_STEPS.length}`}
+    >
       {WELCOME_QUESTION_STEPS.map((step, index) => (
-        <div key={step} className="flex items-center gap-2">
-          <span
-            className={cn(
-              "block h-2.5 w-2.5 rounded-full transition-quiet",
-              index <= currentIndex ? "bg-primary" : "bg-border"
-            )}
-          />
-          {index < WELCOME_QUESTION_STEPS.length - 1 ? (
-            <span
-              className={cn(
-                "block h-0.5 w-8 rounded-full transition-quiet sm:w-10",
-                index < currentIndex ? "bg-primary/70" : "bg-border"
-              )}
-            />
-          ) : null}
-        </div>
+        <span
+          key={step}
+          className={cn(
+            "block h-1.5 w-1.5 rounded-full transition-quiet",
+            index <= currentIndex ? "bg-primary" : "bg-white/20"
+          )}
+        />
       ))}
     </div>
   );
