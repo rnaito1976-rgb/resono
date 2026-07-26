@@ -1,7 +1,9 @@
 "use client";
 
+import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
+import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
 import { WelcomeProgress } from "@/components/welcome/WelcomeProgress";
-import { WelcomeSearchableOptions } from "@/components/welcome/WelcomeSearchableOptions";
+import { WelcomeTagMultiPicker } from "@/components/welcome/WelcomeTagMultiPicker";
 import type { WelcomeQuestionConfig } from "@/lib/welcome/onboarding-data";
 import type { WelcomeQuestionStep } from "@/types/welcome-onboarding";
 import { Button } from "@/components/ui/button";
@@ -29,23 +31,37 @@ export function WelcomeQuestionStepView({
     <div className="flex min-h-dvh flex-col px-5 pb-10 pt-6">
       <WelcomeProgress current={step} />
 
-      <div className="flex flex-1 flex-col justify-center py-10">
+      <div className="flex flex-1 flex-col py-8">
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
           Welcome
         </p>
         <h2 className="mt-1 text-[28px] font-light leading-[1.25] tracking-tight">
+          <span aria-hidden className="mr-2">
+            {config.emoji}
+          </span>
           {config.title}
         </h2>
+        {config.subtitle ? (
+          <p className="mt-3 text-[15px] leading-relaxed text-white/45">{config.subtitle}</p>
+        ) : null}
 
-        <div className="mt-8">
-          <WelcomeSearchableOptions
-            presets={config.presets}
-            selected={selected}
-            multi={config.multi}
-            searchable={config.searchable}
-            placeholder={config.placeholder}
-            onChange={onChange}
-          />
+        <div className="mt-8 min-h-0 flex-1">
+          {config.kind === "artists" ? (
+            <WelcomeArtistPicker selected={selected} onChange={onChange} />
+          ) : null}
+
+          {config.kind === "parts" ? (
+            <WelcomePartsPicker selected={selected} onChange={onChange} />
+          ) : null}
+
+          {config.kind === "sounds" ? (
+            <WelcomeTagMultiPicker
+              presets={config.presets}
+              selected={selected}
+              placeholder={config.placeholder ?? "検索"}
+              onChange={onChange}
+            />
+          ) : null}
         </div>
       </div>
 

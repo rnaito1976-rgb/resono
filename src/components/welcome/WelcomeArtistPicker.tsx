@@ -1,0 +1,129 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { WELCOME_ARTIST_CATALOG } from "@/lib/welcome/onboarding-data";
+import {
+  WELCOME_ARTIST_MAX,
+  WELCOME_ARTIST_MIN,
+} from "@/types/welcome-onboarding";
+
+type WelcomeArtistPickerProps = {
+  selected: string[];
+  onChange: (next: string[]) => void;
+};
+
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerProps) {
+  const [query, setQuery] = useState("");
+
+  const atMax = selected.length >= WELCOME_ARTIST_MAX;
+
+  const suggestions = useMemo(() => {
+    const normalized = normalize(query);
+    const pool = normalized
+      ? WELCOME_ARTIST_CATALOG.filter((artist) =>
+          artist.toLowerCase().includes(normalized)
+        )
+      : WELCOME_ARTIST_CATALOG;
+
+    return pool.filter((artist) => !selected.includes(artist)).slice(0, 24);
+  }, [query, selected]);
+
+  const customCandidate = useMemo(() => {
+    const value = query.trim();
+    if (!value || atMax) {
+      return null;
+    }
+
+    const exists =
+      WELCOME_ARTIST_CATALOG.some((artist) => normalize(artist) === normalize(value)) ||
+      selected.some((artist) => normalize(artist) === normalize(value));
+
+    return exists ? null : value;
+  }, [atMax, query, selected]);
+
+  function addArtist(name: string) {
+    const value = name.trim();
+    if (!value || selected.includes(value) || selected.length >= WELCOME_ARTIST_MAX) {
+      return;
+    }
+
+    onChange([...selected, value]);
+    setQuery("");
+  }
+
+  function removeArtist(name: string) {
+    onChange(selected.filter((artist) => artist !== name));
+  }
+
+  return (
+    <div className="space-y-4">
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="アーティストを検索"
+        className="w-full rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15"
+      />
+
+      {selected.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {selected.map((artist) => (
+            <button
+              key={artist}
+              type="button"
+              onClick={() => removeArtist(artist)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-[var(--frequency-color-soft)] px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
+            >
+              {artist}
+              <X className="h-3.5 w-3.5 opacity-70" strokeWidth={2} />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="text-[13px] text-white/45">
+        {selected.length}/{WELCOME_ARTIST_MAX} 組選択中
+        {selected.length < WELCOME_ARTIST_MIN
+          ? ` · あと${WELCOME_ARTIST_MIN - selected.length}組以上`
+          : null}
+      </p>
+
+      <div className="max-h-52 space-y-2 overflow-y-auto scrollbar-hide">
+        {customCandidate ? (
+          <button
+            type="button"
+            onClick={() => addArtist(customCandidate)}
+            className="flex w-full items-center rounded-2xl border border-dashed border-primary/40 px-4 py-3 text-left text-[15px] text-primary transition-quiet active:opacity-85"
+          >
+            + {customCandidate} を追加
+          </button>
+        ) : null}
+
+        {suggestions.map((artist) => (
+          <button
+            key={artist}
+            type="button"
+            disabled={atMax}
+            onClick={() => addArtist(artist)}
+            className={cn(
+              "flex w-full items-center rounded-2xl border border-border bg-subtle px-4 py-3 text-left text-[15px] transition-quiet active:opacity-85",
+              atMax ? "cursor-not-allowed opacity-40" : "text-foreground"
+            )}
+          >
+            {artist}
+          </button>
+        ))}
+
+        {suggestions.length === 0 && !customCandidate ? (
+          <p className="px-1 py-2 text-[14px] text-white/45">該当するアーティストが見つかりません</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}

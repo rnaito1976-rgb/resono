@@ -1,8 +1,7 @@
 export type WelcomeOnboardingAnswers = {
   artists: string[];
-  coverSongs: string[];
   parts: string[];
-  bandStyle: string;
+  sounds: string[];
 };
 
 export type MusicDnaResult = {
@@ -13,17 +12,18 @@ export type MusicDnaResult = {
 export type WelcomeStep =
   | "intro"
   | "artists"
-  | "covers"
   | "parts"
-  | "band-style"
+  | "sounds"
   | "analysis"
   | "results";
 
 export const WELCOME_QUESTION_STEPS = [
   "artists",
-  "covers",
   "parts",
-  "band-style",
+  "sounds",
 ] as const satisfies readonly WelcomeStep[];
 
 export type WelcomeQuestionStep = (typeof WELCOME_QUESTION_STEPS)[number];
+
+export const WELCOME_ARTIST_MIN = 3;
+export const WELCOME_ARTIST_MAX = 20;

@@ -22,12 +22,15 @@ import type {
   WelcomeQuestionStep,
   WelcomeStep,
 } from "@/types/welcome-onboarding";
+import {
+  WELCOME_ARTIST_MAX,
+  WELCOME_ARTIST_MIN,
+} from "@/types/welcome-onboarding";
 
 const INITIAL_ANSWERS: WelcomeOnboardingAnswers = {
   artists: [],
-  coverSongs: [],
   parts: [],
-  bandStyle: "",
+  sounds: [],
 };
 
 type WelcomeFlowProps = {
@@ -39,11 +42,9 @@ function getPreviousStep(step: WelcomeStep): WelcomeStep {
   switch (step) {
     case "artists":
       return "intro";
-    case "covers":
-      return "artists";
     case "parts":
-      return "covers";
-    case "band-style":
+      return "artists";
+    case "sounds":
       return "parts";
     default:
       return "intro";
@@ -53,14 +54,16 @@ function getPreviousStep(step: WelcomeStep): WelcomeStep {
 function getNextQuestionStep(step: WelcomeQuestionStep): WelcomeStep {
   switch (step) {
     case "artists":
-      return "covers";
-    case "covers":
       return "parts";
     case "parts":
-      return "band-style";
-    case "band-style":
+      return "sounds";
+    case "sounds":
       return "analysis";
   }
+}
+
+function effectiveParts(parts: string[]): string[] {
+  return parts.filter((part) => part !== "Other");
 }
 
 export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
@@ -83,15 +86,18 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
   }
 
   function canProceedForStep(current: WelcomeQuestionStep): boolean {
+    const config = WELCOME_QUESTIONS[current];
+
     switch (current) {
       case "artists":
-        return answers.artists.length > 0;
-      case "covers":
-        return answers.coverSongs.length > 0;
+        return (
+          answers.artists.length >= WELCOME_ARTIST_MIN &&
+          answers.artists.length <= WELCOME_ARTIST_MAX
+        );
       case "parts":
-        return answers.parts.length > 0;
-      case "band-style":
-        return answers.bandStyle.length > 0;
+        return effectiveParts(answers.parts).length >= (config.minSelected ?? 1);
+      case "sounds":
+        return answers.sounds.length >= (config.minSelected ?? 1);
     }
   }
 
@@ -107,7 +113,7 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
           </WelcomeMotion>
         ) : null}
 
-        {step === "artists" || step === "covers" || step === "parts" || step === "band-style" ? (
+        {step === "artists" || step === "parts" || step === "sounds" ? (
           <WelcomeMotion stepKey={step}>
             <WelcomeQuestionStepView
               step={step}
@@ -115,22 +121,13 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
               selected={
                 step === "artists"
                   ? answers.artists
-                  : step === "covers"
-                    ? answers.coverSongs
-                    : step === "parts"
-                      ? answers.parts
-                      : answers.bandStyle
-                        ? [answers.bandStyle]
-                        : []
+                  : step === "parts"
+                    ? answers.parts
+                    : answers.sounds
               }
               onChange={(next) => {
                 if (step === "artists") {
                   updateAnswers({ artists: next });
-                  return;
-                }
-
-                if (step === "covers") {
-                  updateAnswers({ coverSongs: next });
                   return;
                 }
 
@@ -139,7 +136,7 @@ export function WelcomeFlow({ initialUser = null, members }: WelcomeFlowProps) {
                   return;
                 }
 
-                updateAnswers({ bandStyle: next[0] ?? "" });
+                updateAnswers({ sounds: next });
               }}
               onBack={() => setStep(getPreviousStep(step))}
               onNext={() => {

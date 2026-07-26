@@ -1,17 +1,94 @@
-export const WELCOME_ARTIST_PRESETS = [
-  "Radiohead",
-  "Oasis",
+/** Initial catalog (~100 artists). Additional names can be added via search. */
+export const WELCOME_ARTIST_CATALOG = [
+  "ASIAN KUNG-FU GENERATION",
+  "BUMP OF CHICKEN",
+  "ELLEGARDEN",
+  "ストレイテナー",
+  "ACIDMAN",
+  "9mm Parabellum Bullet",
+  "the HIATUS",
+  "MONOEYES",
+  "Base Ball Bear",
+  "androp",
+  "People In The Box",
+  "凛として時雨",
+  "TK from 凛として時雨",
+  "サカナクション",
   "羊文学",
   "King Gnu",
+  "millennium parade",
+  "Vaundy",
+  "藤井風",
+  "RADWIMPS",
+  "マカロニえんぴつ",
+  "sumika",
+  "SUPER BEAVER",
+  "クリープハイプ",
+  "My Hair is Bad",
+  "04 Limited Sazabys",
+  "KANA-BOON",
+  "フレデリック",
+  "indigo la End",
+  "ゲスの極み乙女",
+  "Mrs. GREEN APPLE",
+  "Official髭男dism",
+  "Creepy Nuts",
+  "ヨルシカ",
+  "ずっと真夜中でいいの。",
+  "Aimer",
+  "YOASOBI",
+  "緑黄色社会",
+  "Saucy Dog",
+  "Hump Back",
+  "リーガルリリー",
+  "Age Factory",
+  "cinema staff",
+  "LITE",
+  "toe",
+  "envy",
+  "tricot",
+  "きのこ帝国",
+  "NUMBER GIRL",
+  "ZAZEN BOYS",
+  "くるり",
+  "スピッツ",
+  "Mr.Children",
+  "L'Arc-en-Ciel",
+  "GLAY",
+  "LUNA SEA",
+  "X JAPAN",
+  "ONE OK ROCK",
+  "MAN WITH A MISSION",
+  "SiM",
+  "Crossfaith",
+  "coldrain",
+  "Pay money To my Pain",
+  "Fear, and Loathing in Las Vegas",
+  "Radiohead",
+  "Oasis",
   "The 1975",
-] as const;
-
-export const WELCOME_COVER_PRESETS = [
-  "No Surprises",
-  "Just",
-  "Creep",
-  "怪獣",
-  "丸ノ内サディスティック",
+  "Coldplay",
+  "Arctic Monkeys",
+  "Muse",
+  "Blur",
+  "The Strokes",
+  "Foo Fighters",
+  "Nirvana",
+  "Red Hot Chili Peppers",
+  "Green Day",
+  "Linkin Park",
+  "My Chemical Romance",
+  "Bring Me The Horizon",
+  "Nothing But Thieves",
+  "Royal Blood",
+  "Paramore",
+  "The Killers",
+  "Phoenix",
+  "The xx",
+  "Bon Iver",
+  "Sigur Rós",
+  "The Smashing Pumpkins",
+  "Pearl Jam",
 ] as const;
 
 export const WELCOME_PART_PRESETS = [
@@ -20,53 +97,80 @@ export const WELCOME_PART_PRESETS = [
   "Bass",
   "Drums",
   "Keyboard",
+  "DJ",
+  "Violin",
+  "Saxophone",
+  "Trumpet",
+  "Percussion",
+  "Composer",
+  "Arranger",
+  "Manipulator",
+  "Sound Engineer",
   "Other",
 ] as const;
 
-export const WELCOME_BAND_STYLE_OPTIONS = [
-  "コピー中心",
-  "オリジナル中心",
-  "どちらも",
-  "まだ決めていない",
+export const WELCOME_SOUND_PRESETS = [
+  "Alternative Rock",
+  "Indie Rock",
+  "UK Rock",
+  "J-Rock",
+  "Shoegaze",
+  "Emo",
+  "Post Rock",
+  "Math Rock",
+  "Punk",
+  "Hard Rock",
+  "Metal",
+  "Pop",
+  "City Pop",
+  "Jazz",
+  "Funk",
+  "Electronic",
+  "Acoustic",
 ] as const;
 
+export type WelcomeQuestionKind = "artists" | "parts" | "sounds";
+
 export type WelcomeQuestionConfig = {
+  kind: WelcomeQuestionKind;
+  emoji: string;
   title: string;
+  subtitle?: string;
   presets: readonly string[];
-  multi: boolean;
   searchable: boolean;
   placeholder?: string;
+  minSelected?: number;
+  maxSelected?: number;
 };
 
-export const WELCOME_QUESTIONS: Record<
-  "artists" | "covers" | "parts" | "band-style",
-  WelcomeQuestionConfig
-> = {
+export const WELCOME_QUESTIONS: Record<WelcomeQuestionKind, WelcomeQuestionConfig> = {
   artists: {
-    title: "好きなアーティストは？",
-    presets: WELCOME_ARTIST_PRESETS,
-    multi: true,
+    kind: "artists",
+    emoji: "🎧",
+    title: "好きなアーティストを選んでください",
+    subtitle: "Resonoで最も重要な入力項目です。",
+    presets: WELCOME_ARTIST_CATALOG,
     searchable: true,
     placeholder: "アーティストを検索",
-  },
-  covers: {
-    title: "今コピーしたい曲は？",
-    presets: WELCOME_COVER_PRESETS,
-    multi: true,
-    searchable: true,
-    placeholder: "曲名を検索",
+    minSelected: 3,
+    maxSelected: 20,
   },
   parts: {
-    title: "担当したいパートは？",
+    kind: "parts",
+    emoji: "🎸",
+    title: "担当パートを選んでください",
     presets: WELCOME_PART_PRESETS,
-    multi: true,
     searchable: false,
+    minSelected: 1,
   },
-  "band-style": {
-    title: "どんなバンドをやりたい？",
-    presets: WELCOME_BAND_STYLE_OPTIONS,
-    multi: false,
-    searchable: false,
+  sounds: {
+    kind: "sounds",
+    emoji: "🎵",
+    title: "一緒に、どんな音を鳴らしたい？",
+    presets: WELCOME_SOUND_PRESETS,
+    searchable: true,
+    placeholder: "ジャンルを検索",
+    minSelected: 1,
   },
 };
 
