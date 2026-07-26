@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import Image from "next/image";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
-import { TAB_PAGE_HEIGHT } from "@/lib/navigation/tab-page-layout";
 import {
   createBandActivityAction,
   markBandAsSeenAction,
@@ -84,10 +83,7 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
   const videos = detail.activities.filter((item) => item.kind === "video");
 
   return (
-    <div
-      className="mx-auto flex max-w-mobile flex-col bg-background"
-      style={{ height: TAB_PAGE_HEIGHT }}
-    >
+    <div className="mx-auto flex max-w-mobile flex-col bg-background" style={{ height: "100dvh" }}>
       <header className="sticky top-0 z-10 shrink-0 bg-background/90 backdrop-blur-xl">
         <div className="px-5 pt-6">
           <AppTopBar backHref="/bands" backLabel="Band一覧に戻る" />
@@ -105,7 +101,7 @@ export function BandPageClient({ detail, addableMembers }: BandPageClientProps) 
             <TimelineTab events={detail.timeline} />
           </div>
         </section>
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-8 pt-8">
           <ActivityTab bandId={detail.band.id} activities={detail.activities} />
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
@@ -224,7 +220,7 @@ function ActivityTab({
 
   return (
     <div className="space-y-10">
-      <section className="space-y-5 rounded-[28px] border border-border bg-subtle px-5 py-6">
+      <section className="space-y-5">
         <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Activity</p>
         <div className="flex gap-2">
           {(["text", "photo", "video"] as const).map((value) => (
