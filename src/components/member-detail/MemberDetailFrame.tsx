@@ -220,11 +220,13 @@ export function MemberDetailFrame({
         className={
           showResonateButton
             ? "shrink-0 px-5 pb-8 pt-4"
-            : "shrink-0 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1"
+            : "shrink-0 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         }
       >
         <div
-          className={`flex justify-center gap-1.5 ${showResonateButton ? "mb-4" : ""}`}
+          className={`flex justify-center gap-1.5 ${
+            showResonateButton ? "mb-4" : "h-6 items-center"
+          }`}
         >
           {sections.map((section, index) => (
             <button
