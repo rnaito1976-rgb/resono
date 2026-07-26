@@ -8,9 +8,16 @@ type CacheRow = {
   reason: unknown;
 };
 
-function parseReason(raw: unknown, score: number): ResonanceReason {
+function parseReason(raw: unknown, score: number): ResonanceReason | undefined {
   if (raw && typeof raw === "object" && "score" in raw) {
-    return raw as ResonanceReason;
+    const parsed = raw as ResonanceReason;
+    if (Number.isFinite(parsed.score)) {
+      return parsed;
+    }
+  }
+
+  if (!Number.isFinite(score)) {
+    return undefined;
   }
 
   return {
@@ -45,7 +52,10 @@ export async function getResonanceReasonsFromCache(
   }
 
   for (const row of (data ?? []) as CacheRow[]) {
-    result.set(row.target_member_id, parseReason(row.reason, row.score));
+    const reason = parseReason(row.reason, row.score);
+    if (reason) {
+      result.set(row.target_member_id, reason);
+    }
   }
 
   return result;

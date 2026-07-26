@@ -156,7 +156,7 @@ export function MemberDetailFrame({
             {isSheet ? (
               <div className="flex items-center justify-between px-5 pb-2 pt-1">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
                     Profile
                   </p>
                   <h1 className="truncate text-[20px] font-light tracking-tight">
@@ -236,7 +236,7 @@ export function MemberDetailFrame({
               aria-label={section.label}
               className={`h-1 rounded-full transition-all ${
                 activeIndex === index
-                  ? "w-6 bg-[var(--frequency-color)]"
+                  ? "w-6 bg-primary"
                   : "w-1.5 bg-foreground/25"
               }`}
             />

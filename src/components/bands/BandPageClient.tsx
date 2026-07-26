@@ -230,7 +230,7 @@ function ActivityTab({
               onClick={() => setKind(value)}
               className={`rounded-full px-3 py-1.5 text-[13px] ${
                 kind === value
-                  ? "bg-[var(--frequency-color-soft)] text-primary"
+                  ? "bg-primary/10 text-primary"
                   : "border border-border text-white/55"
               }`}
             >

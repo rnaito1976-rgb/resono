@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
+import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import { WelcomeProgress } from "@/components/welcome/WelcomeProgress";
-import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
 import { WELCOME_COLOR_QUESTION } from "@/lib/welcome/onboarding-data";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
@@ -24,11 +24,13 @@ export function WelcomeColorStepView({
   onNext,
   canProceed,
 }: WelcomeColorStepViewProps) {
+  const { setColor } = useFrequencyColor();
+
   useEffect(() => {
     if (selected) {
-      applyFrequencyColorVariables(document.documentElement, selected);
+      setColor(selected, { persist: false });
     }
-  }, [selected]);
+  }, [selected, setColor]);
 
   return (
     <div className="flex min-h-dvh flex-col">

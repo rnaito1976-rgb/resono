@@ -22,7 +22,7 @@ const PersonCardClient = dynamic(
   { loading: () => <PersonCardSkeleton /> }
 );
 
-const FEED_CACHE_PREFIX = "resono:home-feed:";
+const FEED_CACHE_PREFIX = "resono:home-feed:v2:";
 const FEED_CACHE_TTL_MS = 3 * 60 * 1000;
 
 type HomeFeedListProps = {
@@ -35,8 +35,12 @@ function getFeedCacheKey(viewerId?: string) {
   return `${FEED_CACHE_PREFIX}${viewerId ?? "anonymous"}`;
 }
 
+function feedItemsHaveReasons(page: MembersFeedPage) {
+  return page.items.every((item) => Number.isFinite(item.reason?.score));
+}
+
 function readFeedCache(viewerId?: string): MembersFeedPage | undefined {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || !viewerId) {
     return undefined;
   }
 
@@ -52,6 +56,11 @@ function readFeedCache(viewerId?: string): MembersFeedPage | undefined {
       return undefined;
     }
 
+    if (!feedItemsHaveReasons(parsed.page)) {
+      sessionStorage.removeItem(getFeedCacheKey(viewerId));
+      return undefined;
+    }
+
     return parsed.page;
   } catch {
     return undefined;
@@ -59,6 +68,10 @@ function readFeedCache(viewerId?: string): MembersFeedPage | undefined {
 }
 
 function writeFeedCache(viewerId: string | undefined, page: MembersFeedPage) {
+  if (!viewerId || !feedItemsHaveReasons(page)) {
+    return;
+  }
+
   try {
     sessionStorage.setItem(
       getFeedCacheKey(viewerId),
@@ -71,7 +84,8 @@ function writeFeedCache(viewerId: string | undefined, page: MembersFeedPage) {
 
 async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeedPage> {
   const response = await fetch(
-    `/api/members/feed?offset=${offset}&limit=${limit}&fast=1`
+    `/api/members/feed?offset=${offset}&limit=${limit}&fast=1`,
+    { credentials: "same-origin" }
   );
 
   if (!response.ok) {
@@ -89,6 +103,7 @@ export function HomeFeedList({
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
+  const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -104,7 +119,8 @@ export function HomeFeedList({
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
       staleTime: 5 * 60 * 1000,
-      refetchOnMount: initialFeedPage ? false : true,
+      refetchOnMount: !initialFeedPage || !initialHasReasons,
+      refetchOnWindowFocus: false,
     });
 
   const feedItems = data?.pages.flatMap((page) => page.items) ?? [];

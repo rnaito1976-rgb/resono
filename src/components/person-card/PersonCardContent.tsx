@@ -100,7 +100,7 @@ export function PersonCardContent({
                 <h2 className="text-[28px] font-light tracking-tight">{member.name}</h2>
               </div>
               {!isOwnCard && score != null ? (
-                <div className="shrink-0 text-right">
+                <div className="shrink-0 text-right text-white">
                   <p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-white/50">
                     共鳴度
                   </p>
@@ -127,7 +127,7 @@ export function PersonCardContent({
                     key={part}
                     className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] ${
                       isHighlighted
-                        ? "border border-primary/40 bg-[var(--frequency-color-soft)] text-white"
+                        ? "border border-primary/40 bg-primary/10 text-white"
                         : "border border-border bg-white/[0.04] text-white/90"
                     }`}
                   >

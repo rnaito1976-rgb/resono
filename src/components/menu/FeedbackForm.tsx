@@ -53,7 +53,7 @@ export function FeedbackForm() {
               className={cn(
                 "flex w-full items-center rounded-[14px] border px-4 py-4 text-left text-[16px] transition-quiet",
                 selected
-                  ? "border-primary/50 bg-[var(--frequency-color-soft)] text-foreground"
+                  ? "border-primary/50 bg-primary/10 text-foreground"
                   : "border-border/80 bg-subtle/60 text-foreground/80 active:bg-white/[0.04]"
               )}
             >

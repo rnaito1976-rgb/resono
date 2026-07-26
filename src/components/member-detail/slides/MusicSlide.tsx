@@ -44,7 +44,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
 
       <MusicPageSection
         title="Want to Cover"
-        description="コピーしたい曲"
+        description="コピーしてみたい曲"
         resonancePoints={resonance?.coverSongs}
       >
         {view.coverSongs.length > 0 ? (
@@ -54,7 +54,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
             ))}
           </div>
         ) : (
-          <MusicEmptyHint>今コピーしたい曲がまだ登録されていません。</MusicEmptyHint>
+          <MusicEmptyHint>まだコピーしてみたい曲が登録されていません。</MusicEmptyHint>
         )}
       </MusicPageSection>
 

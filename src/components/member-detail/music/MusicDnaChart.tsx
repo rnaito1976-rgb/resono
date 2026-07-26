@@ -18,7 +18,7 @@ export function MusicDnaChart({ bars }: MusicDnaChartProps) {
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-foreground/[0.08]">
               <div
-                className="h-full rounded-full bg-[var(--frequency-color)] transition-all duration-500"
+                className="h-full rounded-full bg-primary transition-all duration-500"
                 style={{ width: `${bar.value}%` }}
               />
             </div>

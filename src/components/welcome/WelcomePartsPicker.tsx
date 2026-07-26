@@ -84,7 +84,7 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
                       {customParts.map((part) => (
                         <span
                           key={part}
-                          className="rounded-full border border-primary/35 bg-[var(--frequency-color-soft)] px-3 py-1.5 text-[14px]"
+                          className="rounded-full border border-primary/35 bg-primary/10 px-3 py-1.5 text-[14px]"
                         >
                           {part}
                         </span>

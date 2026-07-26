@@ -52,7 +52,7 @@ export const ResonateButton = memo(function ResonateButton({
       aria-pressed={mounted ? isResonated : undefined}
       className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-medium tracking-wide transition-quiet active:opacity-85 disabled:opacity-60 ${
         mounted && isResonated
-          ? "border border-primary/40 bg-[var(--frequency-color-soft)] text-primary"
+          ? "border border-primary/40 bg-primary/10 text-primary"
           : "bg-primary text-primary-foreground"
       } ${className}`}
     >

@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
+import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { writeStoredThemeColor } from "@/lib/theme/storage";
 
 type HomeThemeSyncProps = {
   color: FrequencyColorHex;
 };
 
 export function HomeThemeSync({ color }: HomeThemeSyncProps) {
+  const { setColor } = useFrequencyColor();
+
   useEffect(() => {
-    writeStoredThemeColor(color);
-    applyFrequencyColorVariables(document.documentElement, color);
-  }, [color]);
+    setColor(color);
+  }, [color, setColor]);
 
   return null;
 }

@@ -49,7 +49,7 @@ export function MutualMemberPicker({
             onClick={() => onToggle(member.id)}
             className={`flex w-full items-center gap-4 rounded-[24px] border px-4 py-4 text-left transition-quiet ${
               selected
-                ? "border-primary/40 bg-[var(--frequency-color-soft)]"
+                ? "border-primary/40 bg-primary/10"
                 : "border-border bg-subtle"
             }`}
           >

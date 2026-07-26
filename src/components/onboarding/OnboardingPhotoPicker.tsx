@@ -89,7 +89,7 @@ export function OnboardingPhotoPicker({
           onClick={onSkip}
           className={`mx-auto block rounded-full border px-5 py-2.5 text-[14px] transition-quiet ${
             skipped
-              ? "border-primary/40 bg-[var(--frequency-color-soft)] text-foreground"
+              ? "border-primary/40 bg-primary/10 text-foreground"
               : "border-border text-white/55 active:opacity-80"
           }`}
         >

@@ -80,7 +80,7 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
               key={artist}
               type="button"
               onClick={() => removeArtist(artist)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-[var(--frequency-color-soft)] px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
             >
               {artist}
               <X className="h-3.5 w-3.5 opacity-70" strokeWidth={2} />

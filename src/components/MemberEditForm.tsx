@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   updateFrequencyColorAction,
   updateMemberAction,
 } from "@/lib/actions/member";
-import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
+import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
 import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
@@ -19,9 +19,13 @@ import {
   FormInput,
   FormSection,
 } from "@/components/FormField";
+import { FormPickerSheet } from "@/components/form/FormPickerSheet";
+import { FormTagPickerTrigger } from "@/components/form/FormTagPickerTrigger";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
+import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
+import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
 import {
   formatProfileItemForEdit,
   getProfileItemLabel,
@@ -34,10 +38,50 @@ import {
 } from "@/lib/profile/items";
 import type { ProfileEditSection, ProfileItemKind } from "@/types/profile-item";
 import type { Member } from "@/types/member";
+import type { CoverSong } from "@/types/music-profile";
+
+function coverSongTitle(member: Member): string {
+  return member.music.coverSongs?.[0]?.title ?? "";
+}
+
+function withCoverSongTitle(member: Member, title: string): Member {
+  const trimmed = title.trim();
+  const rest = member.music.coverSongs?.slice(1) ?? [];
+
+  if (!trimmed) {
+    return {
+      ...member,
+      music: {
+        ...member.music,
+        coverSongs: rest.length > 0 ? rest : undefined,
+      },
+    };
+  }
+
+  const existing = member.music.coverSongs?.[0];
+  const nextSong: CoverSong = {
+    id: existing?.id ?? `cover-${member.id}`,
+    title: trimmed,
+    artist: existing?.artist ?? "",
+    artworkUrl: existing?.artworkUrl,
+    sourceProvider: existing?.sourceProvider,
+    externalUrl: existing?.externalUrl,
+  };
+
+  return {
+    ...member,
+    music: {
+      ...member.music,
+      coverSongs: [nextSong, ...rest],
+    },
+  };
+}
 
 type MemberEditFormProps = {
   member: Member;
 };
+
+type PickerKind = "favoriteArtists" | "dreamBands" | "lookingForParts";
 
 function ProfileItemFields({
   member,
@@ -71,6 +115,8 @@ function ProfileItemFields({
 export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { color: viewerColor, setColor } = useFrequencyColor();
+  const viewerColorRef = useRef(viewerColor);
   const [member, setMember] = useState(initialMember);
   const initialFrequencyColor = initialMember.frequencyColor as
     | FrequencyColorHex
@@ -78,14 +124,27 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
   const [frequencyColor, setFrequencyColor] = useState<
     FrequencyColorHex | undefined
   >(initialFrequencyColor);
+  const [activePicker, setActivePicker] = useState<PickerKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (frequencyColor) {
-      applyFrequencyColorVariables(document.documentElement, frequencyColor);
+    viewerColorRef.current = viewerColor;
+  }, [viewerColor]);
+
+  useEffect(() => {
+    if (!frequencyColor) {
+      return;
     }
-  }, [frequencyColor]);
+
+    setColor(frequencyColor, { persist: false });
+  }, [frequencyColor, setColor]);
+
+  useEffect(() => {
+    return () => {
+      setColor(viewerColorRef.current, { persist: false });
+    };
+  }, [setColor]);
 
   function updateField<T extends keyof Member>(key: T, value: Member[T]) {
     setMember((current) => ({ ...current, [key]: value }));
@@ -111,8 +170,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
     );
   }
 
-  function updateFavoriteArtists(raw: string) {
-    const artists = splitList(raw);
+  function updateFavoriteArtists(artists: string[]) {
     setMember((current) =>
       syncProfileItemsFromMemberFields({
         ...current,
@@ -122,6 +180,16 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         },
       })
     );
+  }
+
+  function updateDreamBands(bands: string[]) {
+    setMember((current) => ({
+      ...current,
+      music: {
+        ...current.music,
+        dreamBands: bands.length > 0 ? bands : undefined,
+      },
+    }));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -138,6 +206,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           setError(colorResult.error);
           return;
         }
+        setColor(frequencyColor);
       }
 
       const payload = prepareMemberForSave(member);
@@ -258,10 +327,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormGroupHeading label="Music" />
 
           <FormSection title="Music">
-            <FormField label="好きなアーティスト" hint="カンマ区切り・任意">
-              <FormInput
-                value={joinList(member.music.favoriteArtists)}
-                onChange={(event) => updateFavoriteArtists(event.target.value)}
+            <FormField label="好きなアーティスト" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.favoriteArtists}
+                placeholder="アーティストを選択"
+                onClick={() => setActivePicker("favoriteArtists")}
               />
             </FormField>
             <FormField
@@ -272,6 +342,30 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 value={formatInfluencesForEdit(member.portrait.influences)}
                 onChange={(event) =>
                   updateNested("portrait", "influences", splitList(event.target.value))
+                }
+              />
+            </FormField>
+          </FormSection>
+
+          <FormSection title="Dream Bands">
+            <p className="text-[14px] leading-relaxed text-white/55">コピーしたいバンド</p>
+            <FormField label="バンド名" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.dreamBands ?? []}
+                placeholder="バンドを選択"
+                onClick={() => setActivePicker("dreamBands")}
+              />
+            </FormField>
+          </FormSection>
+
+          <FormSection title="Want to Cover">
+            <p className="text-[14px] leading-relaxed text-white/55">コピーしてみたい曲</p>
+            <FormField label="曲名">
+              <FormInput
+                value={coverSongTitle(member)}
+                placeholder="ライラック"
+                onChange={(event) =>
+                  setMember((current) => withCoverSongTitle(current, event.target.value))
                 }
               />
             </FormField>
@@ -288,12 +382,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormGroupHeading label="Band" />
 
           <FormSection title="Looking For">
-            <FormField label="募集パート" hint="カンマ区切り・任意">
-              <FormInput
-                value={joinList(member.lookingFor.parts)}
-                onChange={(event) =>
-                  updateNested("lookingFor", "parts", splitList(event.target.value))
-                }
+            <FormField label="募集パート" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.lookingFor.parts}
+                placeholder="パートを選択"
+                onClick={() => setActivePicker("lookingForParts")}
               />
             </FormField>
             <FormField label="活動頻度" hint="任意（例: 週1リハ、月2ライブ）">
@@ -331,6 +424,39 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           {isPending ? "保存中..." : "保存する"}
         </button>
       </div>
+
+      <FormPickerSheet
+        open={activePicker === "favoriteArtists"}
+        title="好きなアーティスト"
+        onClose={() => setActivePicker(null)}
+      >
+        <WelcomeArtistPicker
+          selected={member.music.favoriteArtists}
+          onChange={updateFavoriteArtists}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "dreamBands"}
+        title="コピーしたいバンド"
+        onClose={() => setActivePicker(null)}
+      >
+        <WelcomeArtistPicker
+          selected={member.music.dreamBands ?? []}
+          onChange={updateDreamBands}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "lookingForParts"}
+        title="募集パート"
+        onClose={() => setActivePicker(null)}
+      >
+        <WelcomePartsPicker
+          selected={member.lookingFor.parts}
+          onChange={(parts) => updateNested("lookingFor", "parts", parts)}
+        />
+      </FormPickerSheet>
     </form>
   );
 }

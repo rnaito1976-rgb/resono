@@ -20,7 +20,7 @@ export function AppSubNav({ items, activeIndex, onSelect }: AppSubNavProps) {
             onClick={() => onSelect(index)}
             className={`shrink-0 px-4 py-4 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors ${
               activeIndex === index
-                ? "border-b-2 border-[var(--frequency-color)] text-[var(--frequency-color)]"
+                ? "border-b-2 border-primary text-primary"
                 : "text-muted"
             }`}
           >

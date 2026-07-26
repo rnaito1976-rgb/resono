@@ -30,7 +30,7 @@ type StickyPageTitleProps = {
 export function StickyPageTitle({ eyebrow, title }: StickyPageTitleProps) {
   return (
     <div className="px-5 pb-3">
-      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--frequency-color)]">
+      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
         {eyebrow}
       </p>
       <h1 className="mt-0.5 text-[20px] font-light tracking-tight">{title}</h1>

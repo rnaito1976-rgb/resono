@@ -13,8 +13,8 @@ function SectionResonancePoints({ points }: { points: string[] }) {
   }
 
   return (
-    <div className="rounded-[16px] bg-[var(--frequency-color-soft)] px-4 py-3">
-      <p className="text-[12px] font-medium tracking-[0.12em] text-[var(--frequency-color)]">
+    <div className="rounded-[16px] bg-primary/10 px-4 py-3">
+      <p className="text-[12px] font-medium tracking-[0.12em] text-primary">
         共鳴するポイント
       </p>
       <ul className="mt-2 space-y-1">
@@ -68,8 +68,8 @@ export function MusicResonanceSummary({ points }: { points: string[] }) {
       <h2 className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">
         共鳴するポイント
       </h2>
-      <div className="rounded-[22px] bg-[var(--frequency-color-soft)] px-5 py-5">
-        <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-[var(--frequency-color)]">
+      <div className="rounded-[22px] bg-primary/10 px-5 py-5">
+        <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-primary">
           あなたと共通
         </p>
         <ul className="mt-3 space-y-2">

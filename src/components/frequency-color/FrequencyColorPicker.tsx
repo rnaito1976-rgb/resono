@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
-import { applyFrequencyColorVariables } from "@/lib/frequency-color/css";
+import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
@@ -24,12 +24,24 @@ export function FrequencyColorPicker({
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { color: viewerColor, setColor } = useFrequencyColor();
+  const viewerColorRef = useRef(viewerColor);
+
+  useEffect(() => {
+    viewerColorRef.current = viewerColor;
+  }, [viewerColor]);
 
   useEffect(() => {
     if (selected) {
-      applyFrequencyColorVariables(document.documentElement, selected);
+      setColor(selected, { persist: false });
     }
-  }, [selected]);
+  }, [selected, setColor]);
+
+  useEffect(() => {
+    return () => {
+      setColor(viewerColorRef.current, { persist: false });
+    };
+  }, [setColor]);
 
   function handleConfirm() {
     if (!selected) {

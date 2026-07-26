@@ -31,7 +31,7 @@ export function WelcomeSelectedTags({ items, onRemove }: WelcomeSelectedTagsProp
           key={item}
           type="button"
           onClick={() => onRemove(item)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-[var(--frequency-color-soft)] px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
+          className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1.5 text-[14px] text-foreground transition-quiet active:opacity-80"
         >
           {item}
           <span aria-hidden className="text-white/45">
