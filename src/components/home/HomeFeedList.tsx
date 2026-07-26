@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { PersonCardSkeleton } from "@/components/skeletons/PersonCardSkeleton";
 import { getResonanceStatusBatchAction } from "@/lib/actions/resonance";
+import { prefetchMemberProfile } from "@/lib/profile/prefetch";
 import {
   FEED_PAGE_SIZE,
   INITIAL_FEED_PAGE_SIZE,
@@ -116,6 +117,10 @@ export function HomeFeedList({
     const memberIds = feedItems.map((item) => item.member.id);
     if (memberIds.length === 0) {
       return;
+    }
+
+    for (const memberId of memberIds.slice(0, 6)) {
+      void prefetchMemberProfile(queryClient, memberId);
     }
 
     void getResonanceStatusBatchAction(memberIds).then((statusMap) => {

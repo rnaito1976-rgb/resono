@@ -10,19 +10,19 @@ type OnboardingState = {
 
 /** Lightweight onboarding gate (portrait flag + frequency color only). */
 export const getMemberOnboardingState = cache(
-  async (userId: string): Promise<OnboardingState> => {
+  async (userId: string, memberId?: string): Promise<OnboardingState> => {
     if (!isSupabaseConfigured()) {
       return { complete: false };
     }
 
-    const memberId = await resolveCurrentMemberId();
-    if (!memberId) {
+    const resolvedMemberId = memberId ?? (await resolveCurrentMemberId());
+    if (!resolvedMemberId) {
       return { complete: false };
     }
 
     const supabase = createAnonClient();
     const [{ data: memberRow }, frequencyColor] = await Promise.all([
-      supabase.from("members").select("portrait").eq("id", memberId).maybeSingle(),
+      supabase.from("members").select("portrait").eq("id", resolvedMemberId).maybeSingle(),
       getFrequencyColorByUserId(userId),
     ]);
 

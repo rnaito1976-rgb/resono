@@ -7,16 +7,17 @@ import { MemberDetail } from "@/components/MemberDetail";
 
 export default async function MyPage() {
   const { memberId } = await requireViewer({ loginNext: "/me" });
-  const member = await getMemberById(memberId);
+
+  const [member, mutualMembers] = await Promise.all([
+    getMemberById(memberId),
+    getMutualResonateMembers(memberId),
+  ]);
 
   if (!member) {
     redirect("/onboarding");
   }
 
-  const [mutualMembers, memberActivities] = await Promise.all([
-    getMutualResonateMembers(memberId),
-    getOwnMemberActivityFeed(memberId),
-  ]);
+  const memberActivities = await getOwnMemberActivityFeed(memberId, 40, member.name);
 
   return (
     <main className="mx-auto max-w-mobile bg-background">

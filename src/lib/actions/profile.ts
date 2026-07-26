@@ -4,15 +4,16 @@ import {
   getBandActivityFeedForMember,
   getMutualResonateMembers,
 } from "@/lib/bands/queries";
-import { getMemberById, getMemberByUserId } from "@/lib/members";
+import { getMemberById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
+import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import {
   getResonanceReasonsFromCache,
   saveResonanceReasonsToCache,
 } from "@/lib/resonance/cache";
 import { buildResonanceReason } from "@/lib/resonance/matching";
 import { getResonanceStatusForMember } from "@/lib/resonance/status";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/supabase/auth";
 import type { BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
 import type { ResonanceReason } from "@/lib/resonance/matching";
@@ -31,29 +32,45 @@ export type MemberProfilePayload = {
 export async function getMemberProfileAction(
   memberId: string
 ): Promise<{ data?: MemberProfilePayload; error?: string }> {
-  const [member, supabase] = await Promise.all([
+  const [member, user] = await Promise.all([
     getMemberById(memberId),
-    createClient(),
+    getAuthSession(),
   ]);
 
   if (!member) {
     return { error: "not_found" };
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      data: {
+        member,
+        isOwnProfile: false,
+        showResonateButton: false,
+        mutualMembers: [],
+        bandActivities: [],
+      },
+    };
+  }
 
-  const viewer = user ? await getMemberByUserId(user.id) : undefined;
-  const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
+  const viewerMemberId = await resolveCurrentMemberId();
+  const isOwnProfile = isMemberOwnedByUser(member, user.id);
 
-  const [mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
-    isOwnProfile && viewer
-      ? getMutualResonateMembers(viewer.id)
+  const viewerPromise: Promise<Member | undefined> =
+    viewerMemberId && viewerMemberId === member.id
+      ? Promise.resolve(member)
+      : viewerMemberId
+        ? getMemberById(viewerMemberId)
+        : Promise.resolve(undefined);
+
+  const [viewer, mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
+    viewerPromise,
+    isOwnProfile && viewerMemberId
+      ? getMutualResonateMembers(viewerMemberId)
       : Promise.resolve([]),
-    viewer ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
-    viewer && !isOwnProfile && viewer.id !== member.id
-      ? getResonanceStatusForMember(viewer.id, member.id)
+    viewerMemberId ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
+    viewerMemberId && !isOwnProfile && viewerMemberId !== member.id
+      ? getResonanceStatusForMember(viewerMemberId, member.id)
       : Promise.resolve(undefined),
   ]);
 

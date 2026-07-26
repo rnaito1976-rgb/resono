@@ -80,33 +80,35 @@ export async function getMutualResonateMembers(
   }
 
   const supabase = await createClient();
-  const { data: outgoing, error: outgoingError } = await supabase
-    .from("resonances")
-    .select("to_member_id, created_at")
-    .eq("from_member_id", resolvedViewerId);
+  const [outgoingResult, incomingResult] = await Promise.all([
+    supabase
+      .from("resonances")
+      .select("to_member_id, created_at")
+      .eq("from_member_id", resolvedViewerId),
+    supabase
+      .from("resonances")
+      .select("from_member_id, created_at")
+      .eq("to_member_id", resolvedViewerId),
+  ]);
 
-  if (outgoingError) {
-    console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingError.message);
+  if (outgoingResult.error) {
+    console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingResult.error.message);
     return [];
   }
 
-  if (!outgoing?.length) {
+  if (incomingResult.error) {
+    console.error("[Supabase] getMutualResonateMembers incoming:", incomingResult.error.message);
     return [];
   }
 
-  const targetIds = outgoing.map((row) => row.to_member_id);
-  const { data: incoming, error: incomingError } = await supabase
-    .from("resonances")
-    .select("from_member_id")
-    .eq("to_member_id", resolvedViewerId)
-    .in("from_member_id", targetIds);
+  const outgoing = outgoingResult.data ?? [];
+  const incoming = incomingResult.data ?? [];
 
-  if (incomingError) {
-    console.error("[Supabase] getMutualResonateMembers incoming:", incomingError.message);
+  if (!outgoing.length) {
     return [];
   }
 
-  const incomingSet = new Set((incoming ?? []).map((row) => row.from_member_id));
+  const incomingSet = new Set(incoming.map((row) => row.from_member_id));
   const mutualRows = outgoing.filter((row) => incomingSet.has(row.to_member_id));
 
   if (mutualRows.length === 0) {
@@ -380,10 +382,7 @@ export async function getBandActivityFeedForMember(
   const authorIds = [
     ...new Set((rows ?? []).map((row) => row.author_member_id)),
   ];
-  const authors = await Promise.all(authorIds.map((id) => getMemberById(id)));
-  const authorMap = new Map(
-    authors.filter(Boolean).map((author) => [author!.id, author!])
-  );
+  const authorMap = await getMembersByIds(authorIds);
 
   return (rows ?? []).map((row): BandActivityFeedItem => {
     const band = row.bands as { name: string } | null;

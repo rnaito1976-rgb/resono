@@ -101,7 +101,6 @@ export async function updateMemberAction(member: Member) {
     return { error: result.error ?? "保存に失敗しました" };
   }
 
-  revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/member/${member.id}`);

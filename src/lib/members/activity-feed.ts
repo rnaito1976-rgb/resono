@@ -95,14 +95,17 @@ function buildResonanceItems(
 /** My Page: only the viewer's own actions and milestones. */
 export async function getOwnMemberActivityFeed(
   memberId: string,
-  limit = 40
+  limit = 40,
+  memberName?: string
 ): Promise<MemberActivityFeedItem[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
 
   const supabase = await createClient();
-  const viewer = await getMemberById(memberId);
+  const viewerName =
+    memberName ??
+    (await getMemberById(memberId))?.name;
 
   const { data: memberships } = await supabase
     .from("band_members")
@@ -167,7 +170,7 @@ export async function getOwnMemberActivityFeed(
       }
     } else if (row.kind === "member_joined") {
       const body = row.body ? String(row.body) : "";
-      if (!viewer?.name || !body.includes(viewer.name)) {
+      if (!viewerName || !body.includes(viewerName)) {
         continue;
       }
     } else {

@@ -28,7 +28,7 @@ export async function requireViewer(
     redirect("/onboarding");
   }
 
-  const onboarding = await getMemberOnboardingState(user.id);
+  const onboarding = await getMemberOnboardingState(user.id, memberId);
   if (!onboarding.complete) {
     redirect("/onboarding");
   }

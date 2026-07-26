@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -27,6 +28,10 @@ const ProfileSheetContext = createContext<ProfileSheetContextValue | null>(null)
 
 export function ProfileSheetProvider({ children }: { children: ReactNode }) {
   const [memberId, setMemberId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void import("@/components/profile/ProfileBottomSheet");
+  }, []);
 
   const openProfile = useCallback((id: string) => {
     setMemberId(id);

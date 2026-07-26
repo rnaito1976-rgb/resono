@@ -149,6 +149,10 @@ export function MemberDetailFrame({
     }
   }
 
+  function shouldRenderSlide(index: number) {
+    return Math.abs(index - activeIndex) <= 1;
+  }
+
   const frameContent = (
     <>
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl">
@@ -207,12 +211,12 @@ export function MemberDetailFrame({
         ref={scrollRef}
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-hide"
       >
-        {sections.map((section) => (
+        {sections.map((section, index) => (
           <section
             key={section.id}
             className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
           >
-            {renderSlide(section.id)}
+            {shouldRenderSlide(index) ? renderSlide(section.id) : null}
           </section>
         ))}
       </div>
