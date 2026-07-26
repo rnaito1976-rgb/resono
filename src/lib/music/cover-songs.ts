@@ -1,3 +1,4 @@
+import { formatArtistSongLine, parseArtistSongLine } from "@/lib/form";
 import type { CoverSong } from "@/types/music-profile";
 
 export function createEmptyCoverSong(memberId: string, seed?: number | string): CoverSong {
@@ -21,6 +22,24 @@ export function getCoverSongsForEditor(
   return [createEmptyCoverSong(memberId, 0)];
 }
 
+export function formatCoverSongForEdit(song: CoverSong): string {
+  return formatArtistSongLine(song.artist, song.title);
+}
+
+export function parseCoverSongFromEdit(raw: string, existing: CoverSong): CoverSong {
+  const parsed = parseArtistSongLine(raw);
+
+  return {
+    ...existing,
+    artist: parsed.artist ?? "",
+    title: parsed.title,
+  };
+}
+
+export function hasCoverSongContent(song: CoverSong): boolean {
+  return Boolean(song.title.trim() || song.artist.trim());
+}
+
 export function sanitizeCoverSongs(
   songs: CoverSong[] | undefined
 ): CoverSong[] | undefined {
@@ -34,18 +53,27 @@ export function sanitizeCoverSongs(
       title: song.title.trim(),
       artist: song.artist.trim(),
     }))
-    .filter((song) => song.title);
+    .filter((song) => song.title || song.artist)
+    .map((song) =>
+      song.title
+        ? song
+        : {
+            ...song,
+            title: song.artist,
+            artist: "",
+          }
+    );
 
   return next.length > 0 ? next : undefined;
 }
 
-export function updateCoverSongTitle(
+export function updateCoverSongFromEdit(
   songs: CoverSong[],
   index: number,
-  title: string
+  raw: string
 ): CoverSong[] {
   return songs.map((song, songIndex) =>
-    songIndex === index ? { ...song, title } : song
+    songIndex === index ? parseCoverSongFromEdit(raw, song) : song
   );
 }
 

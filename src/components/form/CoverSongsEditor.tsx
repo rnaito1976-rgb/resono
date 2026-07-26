@@ -3,9 +3,11 @@
 import { FormField, FormInput } from "@/components/FormField";
 import {
   addCoverSongRow,
+  formatCoverSongForEdit,
   getCoverSongsForEditor,
+  hasCoverSongContent,
   removeCoverSongRow,
-  updateCoverSongTitle,
+  updateCoverSongFromEdit,
 } from "@/lib/music/cover-songs";
 import type { CoverSong } from "@/types/music-profile";
 
@@ -26,8 +28,8 @@ export function CoverSongsEditor({
     onChange(nextRows.length > 0 ? nextRows : undefined);
   }
 
-  function handleTitleChange(index: number, title: string) {
-    emit(updateCoverSongTitle(rows, index, title));
+  function handleLineChange(index: number, raw: string) {
+    emit(updateCoverSongFromEdit(rows, index, raw));
   }
 
   function handleAddRow() {
@@ -43,16 +45,19 @@ export function CoverSongsEditor({
       {rows.map((song, index) => (
         <div key={song.id} className="flex items-end gap-3">
           <div className="min-w-0 flex-1">
-            <FormField label={index === 0 ? "曲名" : `曲名 ${index + 1}`}>
+            <FormField
+              label={index === 0 ? "曲" : `曲 ${index + 1}`}
+              hint={index === 0 ? "アーティスト - 曲名" : undefined}
+            >
               <FormInput
-                value={song.title}
-                placeholder="ライラック"
-                onChange={(event) => handleTitleChange(index, event.target.value)}
+                value={formatCoverSongForEdit(song)}
+                placeholder="Muse - Plug in baby"
+                onChange={(event) => handleLineChange(index, event.target.value)}
               />
             </FormField>
           </div>
 
-          {rows.length > 1 || song.title.trim() ? (
+          {rows.length > 1 || hasCoverSongContent(song) ? (
             <button
               type="button"
               onClick={() => handleRemoveRow(index)}

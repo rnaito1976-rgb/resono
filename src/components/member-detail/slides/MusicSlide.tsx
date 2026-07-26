@@ -57,7 +57,7 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
         resonancePoints={resonance?.coverSongs}
       >
         {view.coverSongs.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-6">
             {view.coverSongs.map((song) => (
               <CoverSongCard key={song.id} song={song} />
             ))}

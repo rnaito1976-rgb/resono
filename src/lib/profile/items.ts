@@ -1,4 +1,5 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
+import { formatArtistSongLine, parseArtistSongLine } from "@/lib/form";
 import { sanitizeCoverSongs } from "@/lib/music/cover-songs";
 import type { Member } from "@/types/member";
 import type {
@@ -192,25 +193,12 @@ export function updateProfileItemValue(
 }
 
 export function parseLiveRitualAnswer(raw: string): { value: string; detail?: string } {
-  const trimmed = raw.trim();
-  const dashIndex = trimmed.indexOf(" - ");
-  const hyphenIndex = trimmed.indexOf("-");
+  const parsed = parseArtistSongLine(raw);
 
-  if (dashIndex > 0) {
-    return {
-      detail: trimmed.slice(0, dashIndex).trim(),
-      value: trimmed.slice(dashIndex + 3).trim(),
-    };
-  }
-
-  if (hyphenIndex > 0) {
-    return {
-      detail: trimmed.slice(0, hyphenIndex).trim(),
-      value: trimmed.slice(hyphenIndex + 1).trim(),
-    };
-  }
-
-  return { value: trimmed };
+  return {
+    value: parsed.title,
+    detail: parsed.artist,
+  };
 }
 
 export function buildItemFromConversationAnswer(
@@ -242,7 +230,7 @@ export function formatProfileItemForEdit(item: ProfileItem): string {
   }
 
   if (item.detail) {
-    return `${item.detail} - ${item.value}`;
+    return formatArtistSongLine(item.detail, item.value);
   }
 
   return item.value;

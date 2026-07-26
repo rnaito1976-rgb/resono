@@ -9,6 +9,40 @@ export function joinList(items: string[]): string {
   return items.join(", ");
 }
 
+/** Parse "Artist - Title" lines used by Live Ritual and cover songs. */
+export function parseArtistSongLine(raw: string): { artist?: string; title: string } {
+  const trimmed = raw.trim();
+  const dashIndex = trimmed.indexOf(" - ");
+  const hyphenIndex = trimmed.indexOf("-");
+
+  if (dashIndex > 0) {
+    return {
+      artist: trimmed.slice(0, dashIndex).trim(),
+      title: trimmed.slice(dashIndex + 3).trim(),
+    };
+  }
+
+  if (hyphenIndex > 0) {
+    return {
+      artist: trimmed.slice(0, hyphenIndex).trim(),
+      title: trimmed.slice(hyphenIndex + 1).trim(),
+    };
+  }
+
+  return { title: trimmed };
+}
+
+export function formatArtistSongLine(artist: string | undefined, title: string): string {
+  const trimmedArtist = artist?.trim();
+  const trimmedTitle = title.trim();
+
+  if (trimmedArtist && trimmedTitle) {
+    return `${trimmedArtist} - ${trimmedTitle}`;
+  }
+
+  return trimmedTitle || trimmedArtist || "";
+}
+
 export function formatInfluenceLabel(item: string): string {
   const colonIndex = item.indexOf(":");
   if (colonIndex === -1) {
