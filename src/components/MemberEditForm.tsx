@@ -531,7 +531,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         </section>
       </div>
 
-      <div className="sticky bottom-0 border-t border-border bg-background px-5 pb-8 pt-4">
+      <div className="sticky bottom-0 border-t border-border bg-background px-5 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <button
           type="submit"
           disabled={isPending}

@@ -8,6 +8,7 @@ import { ProfileGrowQuestionInput } from "@/components/discover/ProfileGrowQuest
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { Button } from "@/components/ui/button";
 import { useFocusScrollIntoView } from "@/hooks/useFocusScrollIntoView";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { useVisualViewportHeight } from "@/hooks/useVisualViewportHeight";
 import {
   getProfileGrowMemberAction,
@@ -74,6 +75,7 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const viewportHeight = useVisualViewportHeight();
+  const isKeyboardOpen = useKeyboardOpen();
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLElement>(null);
@@ -93,9 +95,13 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
       return undefined;
     }
 
-    const reserved = viewportHeight > 0 ? viewportHeight * 0.28 : 220;
-    return Math.max(140, Math.min(240, Math.round(reserved)));
-  }, [isSelectQuestion, viewportHeight]);
+    // キーボードが出ている間はヘッダーを畳むぶんリストを広く取れる
+    const ratio = isKeyboardOpen ? 0.46 : 0.28;
+    const reserved = viewportHeight > 0 ? viewportHeight * ratio : 220;
+    const max = isKeyboardOpen ? 320 : 240;
+
+    return Math.max(140, Math.min(max, Math.round(reserved)));
+  }, [isKeyboardOpen, isSelectQuestion, viewportHeight]);
 
   const canSubmit = isSelectQuestion
     ? selectedValues.length > 0
@@ -268,28 +274,47 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
       className="mx-auto flex w-full max-w-mobile flex-col overflow-hidden bg-black"
       style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : "100dvh" }}
     >
-      <div className="shrink-0 px-5 pt-6">
-        <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
+      <div
+        className={`shrink-0 px-5 transition-quiet ${
+          isKeyboardOpen ? "pt-2" : "pt-6"
+        }`}
+      >
+        {isKeyboardOpen ? (
+          <div className="flex items-baseline justify-between gap-3 pb-2">
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+              Discover a Story
+            </p>
+            <p className="text-[12px] uppercase tracking-[0.18em] text-white/30">
+              {progressLabel}
+            </p>
+          </div>
+        ) : (
+          <>
+            <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
 
-        <div className="mb-4 mt-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-            Discover a Story
-          </p>
-          <h1 className="mt-3 text-[24px] font-light tracking-tight text-white sm:text-[28px]">
-            プロフィールを育てる
-          </h1>
-          <p className="mt-2 text-[14px] leading-relaxed text-white/45">
-            今日のテーマは「{theme.label}」。雑談みたいに3問だけ話しましょう。
-          </p>
-          <p className="mt-3 text-[12px] uppercase tracking-[0.18em] text-white/30">
-            {progressLabel}
-          </p>
-        </div>
+            <div className="mb-4 mt-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+                Discover a Story
+              </p>
+              <h1 className="mt-3 text-[24px] font-light tracking-tight text-white sm:text-[28px]">
+                プロフィールを育てる
+              </h1>
+              <p className="mt-2 text-[14px] leading-relaxed text-white/45">
+                今日のテーマは「{theme.label}」。雑談みたいに3問だけ話しましょう。
+              </p>
+              <p className="mt-3 text-[12px] uppercase tracking-[0.18em] text-white/30">
+                {progressLabel}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       <div
         ref={chatScrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4"
+        className={`min-h-0 overflow-y-auto overscroll-contain px-5 pb-4 ${
+          isKeyboardOpen ? "max-h-[22vh] shrink" : "flex-1"
+        }`}
       >
         <div className="space-y-4">
           {turns.map((turn, index) => (
@@ -305,7 +330,11 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
 
       <footer
         ref={composerRef}
-        className="shrink-0 border-t border-border bg-black/95 px-5 pt-3 backdrop-blur-xl pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className={`border-t border-border bg-black/95 px-5 pt-3 backdrop-blur-xl pb-[max(1rem,env(safe-area-inset-bottom))] ${
+          isKeyboardOpen
+            ? "min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            : "shrink-0"
+        }`}
       >
         <div className="space-y-3">
           {currentQuestion ? (
