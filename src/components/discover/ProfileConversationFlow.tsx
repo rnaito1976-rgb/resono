@@ -88,14 +88,18 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
   const isSelectQuestion = currentQuestion?.inputMode === "select";
   const progressLabel = `${Math.min(questionIndex + 1, QUESTIONS_PER_SESSION)} / ${QUESTIONS_PER_SESSION}`;
 
+  // キーボードの開閉やアクセサリバーで数pxずれてもリスト高さが揺れないよう粗く丸める
+  const quantizedViewportHeight = Math.round(viewportHeight / 80) * 80;
+
   const pickerListMaxHeight = useMemo(() => {
     if (!isSelectQuestion) {
       return undefined;
     }
 
-    const reserved = viewportHeight > 0 ? viewportHeight * 0.32 : 220;
+    const reserved =
+      quantizedViewportHeight > 0 ? quantizedViewportHeight * 0.32 : 220;
     return Math.max(140, Math.min(260, Math.round(reserved)));
-  }, [isSelectQuestion, viewportHeight]);
+  }, [isSelectQuestion, quantizedViewportHeight]);
 
   const canSubmit = isSelectQuestion
     ? selectedValues.length > 0
@@ -111,6 +115,15 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
       return;
     }
 
+    // 入力中のスクロールは iOS でキーボードを閉じてしまうので触らない
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLInputElement ||
+      active instanceof HTMLTextAreaElement
+    ) {
+      return;
+    }
+
     // ドキュメント全体をスクロールするので、末尾へ寄せると sticky な入力欄の直上に最新の質問が来る
     window.scrollTo({
       top: document.documentElement.scrollHeight,
@@ -121,12 +134,6 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
   useEffect(() => {
     scrollChatToBottom("auto");
   }, [turns, questionIndex, scrollChatToBottom]);
-
-  useEffect(() => {
-    if (viewportHeight > 0) {
-      scrollChatToBottom("auto");
-    }
-  }, [viewportHeight, scrollChatToBottom]);
 
   function handleSubmitAnswer() {
     if (!currentQuestion || !canSubmit) {

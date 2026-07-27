@@ -126,7 +126,7 @@ export function ProfileGrowSearchPicker({
 
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-hide"
-        style={{ maxHeight: listMaxHeight }}
+        style={{ height: listMaxHeight, maxHeight: listMaxHeight }}
       >
         <div className="space-y-6 pb-2">
           {searchMatch && !selected.includes(searchMatch) ? (
