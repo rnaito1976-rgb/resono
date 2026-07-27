@@ -1,10 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
-import { PersonCardSkeleton } from "@/components/skeletons/PersonCardSkeleton";
+import { PersonCardClient } from "@/components/person-card/PersonCardClient";
 import { getResonanceStatusBatchAction } from "@/lib/actions/resonance";
 import { prefetchMemberProfile } from "@/lib/profile/prefetch";
 import {
@@ -17,15 +16,7 @@ import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { InfiniteData } from "@tanstack/react-query";
 
-const PersonCardClient = dynamic(
-  () =>
-    import("@/components/person-card/PersonCardClient").then((module) => ({
-      default: module.PersonCardClient,
-    })),
-  { loading: () => <PersonCardSkeleton /> }
-);
-
-const FEED_CACHE_PREFIX = "resono:home-feed:v2:";
+const FEED_CACHE_PREFIX = "resono:home-feed:v3:";
 const FEED_CACHE_TTL_MS = 3 * 60 * 1000;
 
 type HomeFeedListProps = {
@@ -105,6 +96,7 @@ export function HomeFeedList({
 }: HomeFeedListProps) {
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const prefetchStartedRef = useRef(false);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
   const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
 
@@ -134,6 +126,20 @@ export function HomeFeedList({
       writeFeedCache(viewerId, firstPage);
     }
   }, [firstPage, viewerId]);
+
+  // Warm the next page as soon as the first page is ready — don't wait for the sentinel.
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage || prefetchStartedRef.current) {
+      return;
+    }
+
+    if ((data?.pages.length ?? 0) < 1) {
+      return;
+    }
+
+    prefetchStartedRef.current = true;
+    void fetchNextPage();
+  }, [data?.pages.length, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     const handleResonanceChange = () => {
@@ -190,8 +196,28 @@ export function HomeFeedList({
       for (const [memberId, status] of Object.entries(statusMap)) {
         queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
       }
+
+      queryClient.setQueryData<InfiniteData<MembersFeedPage>>(
+        queryKeys.members.feed(viewerId),
+        (current) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              items: page.items.map((item) => {
+                const status = statusMap[item.member.id];
+                return status ? { ...item, resonanceStatus: status } : item;
+              }),
+            })),
+          };
+        }
+      );
     });
-  }, [feedItems, queryClient]);
+  }, [feedItems, queryClient, viewerId]);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -210,7 +236,8 @@ export function HomeFeedList({
     }
 
     const observer = new IntersectionObserver(handleObserver, {
-      rootMargin: "240px 0px",
+      // Prefetch well before the user reaches the end.
+      rootMargin: "1200px 0px",
     });
     observer.observe(node);
 
@@ -255,7 +282,7 @@ export function HomeFeedList({
           <div className="flex flex-col gap-14">{cards}</div>
         </section>
         {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
-        <div ref={loadMoreRef} aria-hidden className="h-1" />
+        <div ref={loadMoreRef} aria-hidden className="h-8" />
       </>
     );
   }
@@ -264,7 +291,7 @@ export function HomeFeedList({
     <>
       <div className="flex flex-col gap-14">{cards}</div>
       {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
-      <div ref={loadMoreRef} aria-hidden className="h-1" />
+      <div ref={loadMoreRef} aria-hidden className="h-8" />
     </>
   );
 }

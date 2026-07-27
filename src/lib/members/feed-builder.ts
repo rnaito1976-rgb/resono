@@ -19,6 +19,7 @@ import type { FeedItem, MembersFeedPage } from "@/lib/members/feed";
 const SYNC_REASON_BUILD_LIMIT = 6;
 const FEED_CANDIDATE_LIMIT = 200;
 const FEED_FAST_CANDIDATE_LIMIT = 80;
+const RANK_CACHE_TTL_MS = 45_000;
 
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
@@ -26,6 +27,13 @@ type BuildMembersFeedPageOptions = {
   /** Skip recommendation scoring for faster first paint. */
   fast?: boolean;
 };
+
+type RankedFeedCacheEntry = {
+  expiresAt: number;
+  members: Member[];
+};
+
+const rankedFeedCache = new Map<string, RankedFeedCacheEntry>();
 
 function isValidReason(reason: ResonanceReason | undefined): reason is ResonanceReason {
   return reason != null && Number.isFinite(reason.score);
@@ -101,12 +109,16 @@ async function buildResonanceFeedItems(
   viewerInput: Member,
   viewerMemberId: string,
   feedMembers: Member[],
-  syncLimit = SYNC_REASON_BUILD_LIMIT
+  options: { syncLimit?: number; includeStatus?: boolean } = {}
 ): Promise<FeedItem[]> {
+  const syncLimit = options.syncLimit ?? SYNC_REASON_BUILD_LIMIT;
+  const includeStatus = options.includeStatus ?? true;
   const viewer = (await resolveFeedViewer(viewerInput)) ?? viewerInput;
   const targetIds = feedMembers.map((member) => member.id);
   const [statusMap, cachedReasons] = await Promise.all([
-    getResonanceStatusBatch(viewerMemberId, targetIds),
+    includeStatus
+      ? getResonanceStatusBatch(viewerMemberId, targetIds)
+      : Promise.resolve({} as Awaited<ReturnType<typeof getResonanceStatusBatch>>),
     getResonanceReasonsFromCache(viewerMemberId, targetIds),
   ]);
 
@@ -132,7 +144,7 @@ async function buildResonanceFeedItems(
       member,
       recommendation: undefined,
       reason,
-      resonanceStatus: statusMap[member.id],
+      resonanceStatus: includeStatus ? statusMap[member.id] : undefined,
     };
   });
 
@@ -153,17 +165,54 @@ async function buildResonanceFeedItems(
   return items;
 }
 
+async function getRankedFeedMembers(
+  viewer: Member,
+  viewerMemberId: string,
+  userId: string | undefined,
+  candidateLimit: number
+): Promise<Member[]> {
+  const cacheKey = `${viewerMemberId}:${candidateLimit}`;
+  const cached = rankedFeedCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.members;
+  }
+
+  const { members: allMembers } = await getMembersPage(0, candidateLimit);
+  const candidates = filterFeedMembers(allMembers, viewerMemberId, userId);
+  const feedViewer = (await resolveFeedViewer(viewer)) ?? viewer;
+  const cachedReasons = await getResonanceReasonsFromCache(
+    viewerMemberId,
+    candidates.map((member) => member.id)
+  );
+  const sorted = sortMembersForFeed(candidates, (member) => {
+    const reason = cachedReasons.get(member.id);
+    if (isValidReason(reason)) {
+      return reason.score;
+    }
+
+    return calculateResonanceMatch(feedViewer, member);
+  });
+
+  rankedFeedCache.set(cacheKey, {
+    members: sorted,
+    expiresAt: Date.now() + RANK_CACHE_TTL_MS,
+  });
+
+  return sorted;
+}
+
 export async function buildMembersFeedPage(
   offset: number,
   limit: number,
   options: BuildMembersFeedPageOptions = {}
 ): Promise<MembersFeedPage> {
   const candidateLimit = options.fast ? FEED_FAST_CANDIDATE_LIMIT : FEED_CANDIDATE_LIMIT;
-  const { members: allMembers } = await getMembersPage(0, candidateLimit);
   const viewerMemberId = options.viewer?.id ?? (await resolveCurrentMemberId());
-  const candidates = filterFeedMembers(allMembers, viewerMemberId, options.userId);
+  const isScrollPage = offset > 0;
 
   if (!options.viewer || !viewerMemberId) {
+    const { members: allMembers } = await getMembersPage(0, candidateLimit);
+    const candidates = filterFeedMembers(allMembers, viewerMemberId, options.userId);
     const sorted = sortMembersForFeed(candidates, (member) => member.resonanceRate);
 
     return buildFeedPageResult(
@@ -179,36 +228,29 @@ export async function buildMembersFeedPage(
     );
   }
 
-  const feedViewer = (await resolveFeedViewer(options.viewer)) ?? options.viewer;
-  const cachedReasons = await getResonanceReasonsFromCache(
+  const sorted = await getRankedFeedMembers(
+    options.viewer,
     viewerMemberId,
-    candidates.map((member) => member.id)
+    options.userId,
+    candidateLimit
   );
-  const sorted = sortMembersForFeed(candidates, (member) => {
-    const cached = cachedReasons.get(member.id);
-    if (isValidReason(cached)) {
-      return cached.score;
-    }
-
-    return calculateResonanceMatch(feedViewer, member);
-  });
   const rankedPageMembers = sorted.slice(offset, offset + limit);
+  const feedViewer = (await resolveFeedViewer(options.viewer)) ?? options.viewer;
 
-  if (options.fast) {
-    const items = await buildResonanceFeedItems(
-      feedViewer,
-      viewerMemberId,
-      rankedPageMembers
-    );
-
-    return buildFeedPageResult(items, offset, limit, sorted.length);
-  }
-
+  // Scroll pages: skip heavy status/reason sync — client fills status, cache fills reasons.
   const items = await buildResonanceFeedItems(
     feedViewer,
     viewerMemberId,
-    rankedPageMembers
+    rankedPageMembers,
+    {
+      syncLimit: isScrollPage ? 0 : SYNC_REASON_BUILD_LIMIT,
+      includeStatus: !isScrollPage,
+    }
   );
+
+  if (options.fast || isScrollPage) {
+    return buildFeedPageResult(items, offset, limit, sorted.length);
+  }
 
   return buildFeedPageResult(
     items.map((item) => ({
