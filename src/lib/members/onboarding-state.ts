@@ -21,13 +21,18 @@ export const getMemberOnboardingState = cache(
     }
 
     const supabase = createAnonClient();
+    // portrait は巨大なので、フラグ 1 つだけを JSON パスで取り出す
     const [{ data: memberRow }, frequencyColor] = await Promise.all([
-      supabase.from("members").select("portrait").eq("id", resolvedMemberId).maybeSingle(),
+      supabase
+        .from("members")
+        .select("dialogue_completed:portrait->dialogueCompleted")
+        .eq("id", resolvedMemberId)
+        .maybeSingle(),
       getFrequencyColorByUserId(userId),
     ]);
 
-    const portrait = memberRow?.portrait as { dialogueCompleted?: boolean } | null;
-    const dialogueCompleted = portrait?.dialogueCompleted === true;
+    const dialogueCompleted =
+      (memberRow as { dialogue_completed?: boolean } | null)?.dialogue_completed === true;
 
     return {
       complete: dialogueCompleted && Boolean(frequencyColor),

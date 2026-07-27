@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useFocusScrollIntoView } from "@/hooks/useFocusScrollIntoView";
 import { useVisualViewportHeight } from "@/hooks/useVisualViewportHeight";
 import {
-  getProfileGrowMemberAction,
+  getProfileGrowResonanceInsightAction,
   saveProfileGrowSessionAction,
 } from "@/lib/actions/profile-grow";
 import {
@@ -40,6 +40,7 @@ const ProfileGrowReview = dynamic(
 
 type ProfileConversationFlowProps = {
   memberId: string;
+  initialMember?: Member;
 };
 
 type ChatTurn = {
@@ -51,8 +52,11 @@ type FlowStep = "chat" | "review" | "complete";
 
 const QUESTIONS_PER_SESSION = 3;
 
-export function ProfileConversationFlow({ memberId }: ProfileConversationFlowProps) {
-  const [member, setMember] = useState<Member | null>(null);
+export function ProfileConversationFlow({
+  memberId,
+  initialMember,
+}: ProfileConversationFlowProps) {
+  const [member, setMember] = useState<Member | null>(initialMember ?? null);
   const [session] = useState(() => {
     const theme = pickRandomProfileGrowTheme();
     return {
@@ -71,6 +75,7 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
   const [turns, setTurns] = useState<ChatTurn[]>(session.turns);
   const [candidates, setCandidates] = useState<ProfileGrowCandidate[]>([]);
   const [resonance, setResonance] = useState<ProfileGrowResonanceInsight | null>(null);
+  const [isResonanceLoading, setIsResonanceLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const viewportHeight = useVisualViewportHeight();
@@ -81,8 +86,10 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
   useFocusScrollIntoView(composerRef);
 
   useEffect(() => {
-    void getProfileGrowMemberAction(memberId).then(setMember);
-  }, [memberId]);
+    if (initialMember) {
+      setMember(initialMember);
+    }
+  }, [initialMember]);
 
   const currentQuestion = theme.questions[questionIndex];
   const isSelectQuestion = currentQuestion?.inputMode === "select";
@@ -180,8 +187,19 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
         return;
       }
 
-      setResonance(result.resonance ?? null);
+      if (result.after) {
+        setMember(result.after);
+      }
+
       setFlowStep("complete");
+
+      const beforeSnapshot = member;
+      if (beforeSnapshot && result.after) {
+        setIsResonanceLoading(true);
+        void getProfileGrowResonanceInsightAction(beforeSnapshot, result.after)
+          .then((insight) => setResonance(insight))
+          .finally(() => setIsResonanceLoading(false));
+      }
     });
   }
 
@@ -201,7 +219,12 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
             音楽の話をしていたら、自然とプロフィールが少し厚くなりました。
           </p>
 
-          {resonance ? (
+          {isResonanceLoading ? (
+            <div className="mt-8 rounded-[24px] border border-primary/20 bg-primary/5 px-5 py-5">
+              <div className="h-8 w-20 animate-pulse rounded-full bg-white/10" />
+              <div className="mt-4 h-4 w-48 animate-pulse rounded-full bg-white/10" />
+            </div>
+          ) : resonance ? (
             <div className="mt-8 rounded-[24px] border border-primary/20 bg-primary/5 px-5 py-5">
               {resonance.score != null ? (
                 <p className="text-[32px] font-light tabular-nums tracking-tight text-white">

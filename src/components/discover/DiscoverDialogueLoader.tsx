@@ -2,6 +2,7 @@
 
 import { MinimalRegistrationFlow } from "@/components/onboarding/MinimalRegistrationFlow";
 import dynamic from "next/dynamic";
+import type { Member } from "@/types/member";
 
 const ProfileConversationFlow = dynamic(
   () =>
@@ -45,8 +46,14 @@ export function OnboardingRegistrationLoader({
 
 type DiscoverConversationLoaderProps = {
   memberId: string;
+  initialMember: Member;
 };
 
-export function DiscoverConversationLoader({ memberId }: DiscoverConversationLoaderProps) {
-  return <ProfileConversationFlow memberId={memberId} />;
+export function DiscoverConversationLoader({
+  memberId,
+  initialMember,
+}: DiscoverConversationLoaderProps) {
+  return (
+    <ProfileConversationFlow memberId={memberId} initialMember={initialMember} />
+  );
 }

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getMembersPage, getMemberById } from "@/lib/members";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
@@ -19,7 +20,7 @@ import type { FeedItem, MembersFeedPage } from "@/lib/members/feed";
 /** Build reasons synchronously for the first N cards; defer the rest. */
 const SYNC_REASON_BUILD_LIMIT = 6;
 const FEED_CANDIDATE_LIMIT = 200;
-const FEED_FAST_CANDIDATE_LIMIT = 80;
+const FEED_FAST_CANDIDATE_LIMIT = 24;
 const RANK_CACHE_TTL_MS = 45_000;
 
 type BuildMembersFeedPageOptions = {
@@ -36,7 +37,37 @@ type RankedFeedCacheEntry = {
 
 const rankedFeedCache = new Map<string, RankedFeedCacheEntry>();
 
+type CandidatePoolEntry = {
+  expiresAt: number;
+  promise: Promise<{ members: Member[] }>;
+};
+
+const CANDIDATE_POOL_TTL_MS = 20_000;
+const candidatePoolCache = new Map<number, CandidatePoolEntry>();
+
+/** 候補プールは全閲覧者で共通なので、短時間だけ使い回して重い一覧クエリを減らす */
+function getCandidatePool(candidateLimit: number): Promise<{ members: Member[] }> {
+  const cached = candidatePoolCache.get(candidateLimit);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.promise;
+  }
+
+  const promise = getMembersPage(0, candidateLimit).catch((error) => {
+    candidatePoolCache.delete(candidateLimit);
+    throw error;
+  });
+
+  candidatePoolCache.set(candidateLimit, {
+    promise,
+    expiresAt: Date.now() + CANDIDATE_POOL_TTL_MS,
+  });
+
+  return promise;
+}
+
 export function clearRankedFeedCache(memberId?: string) {
+  candidatePoolCache.clear();
+
   if (!memberId) {
     rankedFeedCache.clear();
     return;
@@ -107,33 +138,29 @@ function buildFeedPageResult(
   };
 }
 
-async function resolveFeedViewer(viewer?: Member): Promise<Member | undefined> {
-  if (!viewer?.id) {
-    return undefined;
-  }
-
-  if (viewer.portrait.influences.length > 0 || viewer.portrait.location) {
-    return viewer;
-  }
-
-  return (await getMemberById(viewer.id)) ?? viewer;
-}
+/** 一覧列の viewer から詳細を 1 回だけ引く（getMemberById も request 内で dedupe） */
+const resolveFeedViewer = cache(async (viewer: Member): Promise<Member> => {
+  const detail = await getMemberById(viewer.id);
+  return detail ?? viewer;
+});
 
 async function buildResonanceFeedItems(
   viewerInput: Member,
   viewerMemberId: string,
   feedMembers: Member[],
-  options: { syncLimit?: number; includeStatus?: boolean } = {}
+  options: { syncLimit?: number; includeStatus?: boolean; cachedReasons?: Map<string, ResonanceReason> } = {}
 ): Promise<FeedItem[]> {
   const syncLimit = options.syncLimit ?? SYNC_REASON_BUILD_LIMIT;
   const includeStatus = options.includeStatus ?? true;
-  const viewer = (await resolveFeedViewer(viewerInput)) ?? viewerInput;
+  const viewer = await resolveFeedViewer(viewerInput);
   const targetIds = feedMembers.map((member) => member.id);
   const [statusMap, cachedReasons] = await Promise.all([
     includeStatus
       ? getResonanceStatusBatch(viewerMemberId, targetIds)
       : Promise.resolve({} as Awaited<ReturnType<typeof getResonanceStatusBatch>>),
-    getResonanceReasonsFromCache(viewerMemberId, targetIds),
+    options.cachedReasons
+      ? Promise.resolve(options.cachedReasons)
+      : getResonanceReasonsFromCache(viewerMemberId, targetIds),
   ]);
 
   const toSave: Array<{
@@ -191,9 +218,13 @@ async function getRankedFeedMembers(
     return cached.members;
   }
 
-  const { members: allMembers } = await getMembersPage(0, candidateLimit);
+  // 候補プールは閲覧者に依存しないので、取得とビューアー解決を同時に走らせる
+  const [{ members: allMembers }, resolvedViewer] = await Promise.all([
+    getCandidatePool(candidateLimit),
+    resolveFeedViewer(viewer),
+  ]);
   const candidates = filterFeedMembers(allMembers, viewerMemberId, userId);
-  const feedViewer = (await resolveFeedViewer(viewer)) ?? viewer;
+  const feedViewer = resolvedViewer ?? viewer;
   const cachedReasons = await getResonanceReasonsFromCache(
     viewerMemberId,
     candidates.map((member) => member.id)
@@ -249,22 +280,23 @@ export async function buildMembersFeedPage(
     candidateLimit
   );
   const rankedPageMembers = sorted.slice(offset, offset + limit);
-  const feedViewer = (await resolveFeedViewer(options.viewer)) ?? options.viewer;
 
-  // Scroll pages: skip heavy status/reason sync — client fills status, cache fills reasons.
+  // 初回もステータスはクライアント側で後追い — SSR を resonance クエリで止めない
   const items = await buildResonanceFeedItems(
-    feedViewer,
+    options.viewer,
     viewerMemberId,
     rankedPageMembers,
     {
       syncLimit: isScrollPage ? 0 : SYNC_REASON_BUILD_LIMIT,
-      includeStatus: !isScrollPage,
+      includeStatus: false,
     }
   );
 
   if (options.fast || isScrollPage) {
     return buildFeedPageResult(items, offset, limit, sorted.length);
   }
+
+  const feedViewer = await resolveFeedViewer(options.viewer);
 
   return buildFeedPageResult(
     items.map((item) => ({

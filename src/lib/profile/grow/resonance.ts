@@ -7,7 +7,7 @@ export async function compareProfileGrowResonance(
   before: Member,
   after: Member
 ): Promise<ProfileGrowResonanceInsight | null> {
-  const page = await getMembersPage(0, 24);
+  const page = await getMembersPage(0, 12);
   const targets = page.members.filter((member) => member.id !== after.id);
 
   let bestDelta = 0;

@@ -39,28 +39,32 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
-    viewerMemberId ? getMemberById(viewerMemberId) : Promise.resolve(undefined),
-    isOwnProfile && viewerMemberId
-      ? getMutualResonateMembers(viewerMemberId)
-      : Promise.resolve([]),
-    viewerMemberId && !isOwnProfile
-      ? getBandActivityFeedForMember(member.id)
-      : Promise.resolve([]),
-    needsResonance
-      ? getResonanceStatusForMember(viewerMemberId!, member.id)
-      : Promise.resolve(undefined),
-  ]);
+  const [viewer, mutualMembers, bandActivities, resonanceStatus, cachedReasons] =
+    await Promise.all([
+      viewerMemberId ? getMemberById(viewerMemberId) : Promise.resolve(undefined),
+      isOwnProfile && viewerMemberId
+        ? getMutualResonateMembers(viewerMemberId)
+        : Promise.resolve([]),
+      viewerMemberId && !isOwnProfile
+        ? getBandActivityFeedForMember(member.id)
+        : Promise.resolve([]),
+      needsResonance
+        ? getResonanceStatusForMember(viewerMemberId!, member.id)
+        : Promise.resolve(undefined),
+      // 閲覧者の詳細取得を待たずに読めるので、同じ波で取りに行く
+      needsResonance
+        ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
+        : Promise.resolve(undefined),
+    ]);
 
   let resonanceReason: ResonanceReason | undefined;
   let musicResonance: MusicPageView["sectionResonance"] | undefined;
 
   if (viewer && !isOwnProfile && viewer.id !== member.id) {
-    const cached = await getResonanceReasonsFromCache(viewer.id, [member.id]);
     resonanceReason =
-      cached.get(member.id) ?? buildResonanceReason(viewer, member);
+      cachedReasons?.get(member.id) ?? buildResonanceReason(viewer, member);
 
-    if (!cached.has(member.id)) {
+    if (!cachedReasons?.has(member.id)) {
       void saveResonanceReasonsToCache(viewer.id, [
         { targetMemberId: member.id, reason: resonanceReason },
       ]);

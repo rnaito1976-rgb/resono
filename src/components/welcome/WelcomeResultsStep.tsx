@@ -109,7 +109,7 @@ export function WelcomeResultsStep({
             onClick={markWelcomeSignupIntent}
             className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-medium text-primary-foreground transition-quiet active:opacity-85"
           >
-            無料ではじめる
+            メンバーを探しに
           </Link>
         )}
 

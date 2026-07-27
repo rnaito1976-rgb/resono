@@ -132,7 +132,9 @@ export async function getMembersByIds(ids: string[]): Promise<Map<string, Member
   }
 }
 
-export async function getMemberListById(id: string): Promise<Member | undefined> {
+export const getMemberListById = cache(async function getMemberListById(
+  id: string
+): Promise<Member | undefined> {
   if (!isSupabaseConfigured()) {
     return fallbackMembers.find((member) => member.id === id);
   }
@@ -160,9 +162,11 @@ export async function getMemberListById(id: string): Promise<Member | undefined>
     console.error("[Supabase] getMemberListById:", error);
     return fallbackMembers.find((member) => member.id === id);
   }
-}
+});
 
-export async function getMemberById(id: string): Promise<Member | undefined> {
+export const getMemberById = cache(async function getMemberById(
+  id: string
+): Promise<Member | undefined> {
   if (!isSupabaseConfigured()) {
     return fallbackMembers.find((member) => member.id === id);
   }
@@ -191,7 +195,7 @@ export async function getMemberById(id: string): Promise<Member | undefined> {
     console.error("[Supabase] getMemberById:", error);
     return fallbackMembers.find((member) => member.id === id);
   }
-}
+});
 
 export async function updateMember(
   member: Member

@@ -90,7 +90,10 @@ export async function publishLiveEvent(input: PublishLiveEventInput): Promise<vo
 
     if (error) {
       console.error("[Live] publishLiveEvent:", error.message);
+      return;
     }
+
+    clearLiveEventsCache();
   } catch (error) {
     console.error("[Live] publishLiveEvent:", error);
   }
@@ -131,10 +134,42 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
   const admin = createAdminClient();
   const reader = admin ?? anon;
 
+  // portrait は巨大な JSON なので、判定に使う 1 フィールドだけ引く
+  const MEMBER_SYNTH_COLUMNS =
+    "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted";
+
+  type MemberSynthRow = {
+    id: string;
+    name: string;
+    photo: string | null;
+    created_at: string;
+    dialogue_completed: boolean | null;
+  };
+
+  function pushMemberEvents(rows: MemberSynthRow[]) {
+    for (const row of rows) {
+      if (row.dialogue_completed !== true) {
+        continue;
+      }
+
+      events.push({
+        id: `synth-member-${row.id}`,
+        kind: "new_member",
+        title: row.name,
+        subtitle: "コミュニティに参加しました",
+        href: `/member/${row.id}`,
+        photo: row.photo || undefined,
+        actorMemberId: row.id,
+        createdAt: row.created_at,
+        isNew: false,
+      });
+    }
+  }
+
   try {
     const { data: members, error: membersError } = await anon
       .from("members")
-      .select("id, name, photo, portrait, user_id, created_at")
+      .select(MEMBER_SYNTH_COLUMNS)
       .not("user_id", "is", null)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
@@ -143,67 +178,44 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
     if (membersError) {
       console.error("[Live] synthesize members:", membersError.message);
     } else {
-      for (const row of members ?? []) {
-        const portrait = row.portrait as { dialogueCompleted?: boolean } | null;
-        if (portrait?.dialogueCompleted !== true) {
-          continue;
-        }
-
-        events.push({
-          id: `synth-member-${row.id}`,
-          kind: "new_member",
-          title: row.name,
-          subtitle: "コミュニティに参加しました",
-          href: `/member/${row.id}`,
-          photo: row.photo || undefined,
-          actorMemberId: row.id,
-          createdAt: row.created_at,
-          isNew: false,
-        });
-      }
+      pushMemberEvents((members ?? []) as unknown as MemberSynthRow[]);
     }
+
     // If nothing happened in 24h, still show a few recent members so Live isn't blank.
     if (events.length === 0) {
       const { data: recentMembers } = await anon
         .from("members")
-        .select("id, name, photo, portrait, user_id, created_at")
+        .select(MEMBER_SYNTH_COLUMNS)
         .not("user_id", "is", null)
         .order("created_at", { ascending: false })
         .limit(8);
 
-      for (const row of recentMembers ?? []) {
-        const portrait = row.portrait as { dialogueCompleted?: boolean } | null;
-        if (portrait?.dialogueCompleted !== true) {
-          continue;
-        }
-
-        events.push({
-          id: `synth-member-${row.id}`,
-          kind: "new_member",
-          title: row.name,
-          subtitle: "コミュニティに参加しました",
-          href: `/member/${row.id}`,
-          photo: row.photo || undefined,
-          actorMemberId: row.id,
-          createdAt: row.created_at,
-          isNew: false,
-        });
-      }
+      pushMemberEvents((recentMembers ?? []) as unknown as MemberSynthRow[]);
     }
   } catch (error) {
     console.error("[Live] synthesize members:", error);
   }
 
   try {
-    const { data: bands, error: bandsError } = await reader
-      .from("bands")
-      .select("id, name, created_at, created_by_member_id")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    const [bandsResult, videosResult] = await Promise.all([
+      reader
+        .from("bands")
+        .select("id, name, created_at, created_by_member_id")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+      reader
+        .from("band_activities")
+        .select("id, band_id, title, body, media_url, created_at")
+        .eq("kind", "video")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ]);
 
-    if (bandsError) {
-      console.error("[Live] synthesize bands:", bandsError.message);
+    const bands = bandsResult.data;
+    if (bandsResult.error) {
+      console.error("[Live] synthesize bands:", bandsResult.error.message);
     } else {
       for (const row of bands ?? []) {
         events.push({
@@ -219,36 +231,38 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
         });
       }
     }
-  } catch (error) {
-    console.error("[Live] synthesize bands:", error);
-  }
 
-  try {
-    const { data: videos, error: videosError } = await reader
-      .from("band_activities")
-      .select("id, band_id, title, body, media_url, created_at")
-      .eq("kind", "video")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (videosError) {
-      console.error("[Live] synthesize videos:", videosError.message);
+    const videos = videosResult.data;
+    if (videosResult.error) {
+      console.error("[Live] synthesize videos:", videosResult.error.message);
     } else if (videos && videos.length > 0) {
-      const bandIds = [...new Set(videos.map((video) => video.band_id))];
-      const { data: bandRows } = await reader
-        .from("bands")
-        .select("id, name")
-        .in("id", bandIds);
-      const bandNames = new Map(
-        (bandRows ?? []).map((band) => [band.id, band.name] as const)
+      const knownBandNames = new Map(
+        (bands ?? []).map((band) => [band.id, band.name] as const)
       );
+      const missingBandIds = [
+        ...new Set(
+          videos
+            .map((video) => video.band_id)
+            .filter((bandId) => !knownBandNames.has(bandId))
+        ),
+      ];
+
+      if (missingBandIds.length > 0) {
+        const { data: bandRows } = await reader
+          .from("bands")
+          .select("id, name")
+          .in("id", missingBandIds);
+
+        for (const band of bandRows ?? []) {
+          knownBandNames.set(band.id, band.name);
+        }
+      }
 
       for (const row of videos) {
         events.push({
           id: `synth-video-${row.id}`,
           kind: "new_video",
-          title: bandNames.get(row.band_id) ?? "Band",
+          title: knownBandNames.get(row.band_id) ?? "Band",
           subtitle: row.title?.trim() || row.body?.trim() || "演奏動画を追加",
           href: `/bands/${row.band_id}`,
           photo: row.media_url || undefined,
@@ -259,10 +273,25 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
       }
     }
   } catch (error) {
-    console.error("[Live] synthesize videos:", error);
+    console.error("[Live] synthesize bands/videos:", error);
   }
 
   return events;
+}
+
+type LiveEventsCacheEntry = {
+  expiresAt: number;
+  events: LiveEvent[];
+};
+
+const LIVE_EVENTS_CACHE_TTL_MS = 30_000;
+/** 合成にはメンバー・バンド・動画で4〜5クエリかかるので、常時は走らせない */
+const SYNTHESIZE_THRESHOLD = 4;
+
+let liveEventsCache: LiveEventsCacheEntry | null = null;
+
+export function clearLiveEventsCache() {
+  liveEventsCache = null;
 }
 
 export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
@@ -270,14 +299,20 @@ export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
     return [];
   }
 
-  const since = new Date(Date.now() - LIVE_EVENT_WINDOW_MS).toISOString();
   const now = Date.now();
 
+  if (liveEventsCache && liveEventsCache.expiresAt > now) {
+    return sortAndLimit(liveEventsCache.events, limit, now);
+  }
+
+  const since = new Date(now - LIVE_EVENT_WINDOW_MS).toISOString();
+
   try {
-    const [stored, synthesized] = await Promise.all([
-      getStoredLiveEvents(since, limit),
-      synthesizeLiveEvents(since, limit),
-    ]);
+    const stored = await getStoredLiveEvents(since, limit);
+    const synthesized =
+      stored.length >= SYNTHESIZE_THRESHOLD
+        ? []
+        : await synthesizeLiveEvents(since, limit);
 
     const seen = new Set<string>();
     const merged: LiveEvent[] = [];
@@ -298,6 +333,11 @@ export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
       seen.add(dedupeKey);
       merged.push(event);
     }
+
+    liveEventsCache = {
+      events: merged,
+      expiresAt: now + LIVE_EVENTS_CACHE_TTL_MS,
+    };
 
     return sortAndLimit(merged, limit, now);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 
 type CookieToSet = {
@@ -8,7 +9,8 @@ type CookieToSet = {
   options: CookieOptions;
 };
 
-export async function createClient() {
+/** 1 リクエスト内で Supabase クライアントを使い回す */
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
@@ -27,4 +29,4 @@ export async function createClient() {
       },
     },
   });
-}
+});

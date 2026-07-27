@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 import { DiscoverConversationLoader } from "@/components/discover/DiscoverDialogueLoader";
 import { getViewerContext } from "@/lib/members/viewer-context";
 
-export const dynamic = "force-dynamic";
-
 export default async function DiscoverPage() {
   const { user, member } = await getViewerContext();
 
@@ -15,5 +13,5 @@ export default async function DiscoverPage() {
     redirect("/onboarding");
   }
 
-  return <DiscoverConversationLoader memberId={member.id} />;
+  return <DiscoverConversationLoader memberId={member.id} initialMember={member} />;
 }

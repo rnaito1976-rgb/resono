@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { MemberEditForm } from "@/components/MemberEditForm";
 import { getMemberById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +12,7 @@ type MemberEditPageProps = {
 
 export default async function MemberEditPage({ params }: MemberEditPageProps) {
   const { id } = await params;
-  const [member, supabase] = await Promise.all([getMemberById(id), createClient()]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [member, user] = await Promise.all([getMemberById(id), getAuthUser()]);
 
   if (!member) {
     notFound();

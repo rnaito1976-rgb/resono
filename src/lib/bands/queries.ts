@@ -80,39 +80,36 @@ export async function getMutualResonateMembers(
   }
 
   const supabase = await createClient();
-  const { data: incoming, error: incomingError } = await supabase
-    .from("resonances")
-    .select("from_member_id, created_at")
-    .eq("to_member_id", resolvedViewerId);
+  const [incomingResult, outgoingResult] = await Promise.all([
+    supabase
+      .from("resonances")
+      .select("from_member_id, created_at")
+      .eq("to_member_id", resolvedViewerId),
+    supabase
+      .from("resonances")
+      .select("to_member_id, created_at")
+      .eq("from_member_id", resolvedViewerId),
+  ]);
+
+  const { data: incoming, error: incomingError } = incomingResult;
+  const { data: outgoing, error: outgoingError } = outgoingResult;
 
   if (incomingError) {
     console.error("[Supabase] getMutualResonateMembers incoming:", incomingError.message);
     return [];
   }
 
-  if (!incoming?.length) {
-    return [];
-  }
-
-  const incomingIds = incoming.map((row) => row.from_member_id);
-  const { data: outgoing, error: outgoingError } = await supabase
-    .from("resonances")
-    .select("to_member_id, created_at")
-    .eq("from_member_id", resolvedViewerId)
-    .in("to_member_id", incomingIds);
-
   if (outgoingError) {
     console.error("[Supabase] getMutualResonateMembers outgoing:", outgoingError.message);
     return [];
   }
 
-  const outgoingRows = outgoing ?? [];
-  if (!outgoingRows.length) {
+  if (!incoming?.length || !outgoing?.length) {
     return [];
   }
 
   const incomingMap = new Map(incoming.map((row) => [row.from_member_id, row.created_at]));
-  const mutualRows = outgoingRows.filter((row) => incomingMap.has(row.to_member_id));
+  const mutualRows = outgoing.filter((row) => incomingMap.has(row.to_member_id));
 
   if (mutualRows.length === 0) {
     return [];
@@ -139,16 +136,9 @@ export async function getMutualResonateMembers(
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
-  const userIds = results
-    .map((item) => item.member.userId)
-    .filter((userId): userId is string => Boolean(userId));
-  const colorMap = await getFrequencyColorsByUserIds(userIds);
-
   return results.map((item) => ({
     ...item,
-    frequencyColor: item.member.userId
-      ? colorMap.get(item.member.userId)
-      : undefined,
+    frequencyColor: item.member.frequencyColor as FrequencyColorHex | undefined,
   }));
 }
 

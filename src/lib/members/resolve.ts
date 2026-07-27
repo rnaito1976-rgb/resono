@@ -15,29 +15,16 @@ export const resolveCurrentMemberId = cache(async function resolveCurrentMemberI
   }
 
   const supabase = await createClient();
-  const { data: byUserId, error: byUserIdError } = await supabase
+  const { data, error } = await supabase
     .from("members")
     .select("id")
-    .eq("user_id", user.id)
+    .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+    .limit(1)
     .maybeSingle();
 
-  if (byUserIdError) {
-    console.error("[Supabase] resolveCurrentMemberId by user_id:", byUserIdError.message);
+  if (error) {
+    console.error("[Supabase] resolveCurrentMemberId:", error.message);
   }
 
-  if (byUserId?.id) {
-    return byUserId.id;
-  }
-
-  const { data: byId, error: byIdError } = await supabase
-    .from("members")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (byIdError) {
-    console.error("[Supabase] resolveCurrentMemberId by id:", byIdError.message);
-  }
-
-  return byId?.id ?? null;
+  return data?.id ?? null;
 });

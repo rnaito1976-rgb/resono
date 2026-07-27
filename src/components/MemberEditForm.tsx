@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
-  updateFrequencyColorAction,
-  updateMemberAction,
+  saveMemberEditAction,
 } from "@/lib/actions/member";
 import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -221,32 +220,32 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
     setError(null);
 
     startTransition(async () => {
-      if (
-        frequencyColor &&
-        frequencyColor !== initialFrequencyColor
-      ) {
-        const colorResult = await updateFrequencyColorAction(frequencyColor);
-        if (colorResult?.error) {
-          setError(colorResult.error);
-          return;
-        }
-        setColor(frequencyColor);
-      }
-
       const payload = prepareMemberForSave(member);
-      const result = await updateMemberAction(payload);
+      const colorChanged =
+        Boolean(frequencyColor) && frequencyColor !== initialFrequencyColor;
+
+      const result = await saveMemberEditAction({
+        member: payload,
+        frequencyColor: colorChanged ? frequencyColor! : undefined,
+      });
+
       if (result?.error) {
         setError(result.error);
         return;
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.members.feed() }),
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.members.profile(payload.id),
-        }),
-      ]);
-      router.refresh();
+      if (colorChanged && frequencyColor) {
+        setColor(frequencyColor);
+      }
+
+      // 保存済みの内容をキャッシュへ先に反映して、遷移先で待たせない
+      queryClient.setQueryData(queryKeys.members.profile(payload.id), (current) =>
+        current && typeof current === "object"
+          ? { ...current, member: payload }
+          : current
+      );
+      void queryClient.invalidateQueries({ queryKey: ["members", "feed"] });
+
       router.replace(`/member/${payload.id}`);
     });
   }
