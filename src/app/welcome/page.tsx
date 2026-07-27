@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { WelcomeFlow } from "@/components/welcome/WelcomeFlow";
 import { getMembersPage } from "@/lib/members";
 import { getAuthSession } from "@/lib/supabase/auth";
@@ -9,6 +10,10 @@ export default async function WelcomePage() {
     getAuthSession(),
     getMembersPage(0, 12),
   ]);
+
+  if (user) {
+    redirect("/");
+  }
 
   return (
     <WelcomeFlow initialUser={user} members={membersPage.members} />
