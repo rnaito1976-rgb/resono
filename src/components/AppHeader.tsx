@@ -10,9 +10,11 @@ type AppHeaderProps = {
 export function AppHeader({ initialUser = null }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-background/85 px-5 pb-5 pt-10 backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-4">
-        <HomeLogoLink>
-          <h1 className="text-xl font-medium tracking-[0.35em] text-white">RESONO</h1>
+      <div className="flex items-center justify-between gap-4">
+        <HomeLogoLink className="flex items-center">
+          <h1 className="text-xl font-medium leading-none tracking-[0.35em] text-white">
+            RESONO
+          </h1>
         </HomeLogoLink>
 
         <div className="flex shrink-0 items-center gap-1">

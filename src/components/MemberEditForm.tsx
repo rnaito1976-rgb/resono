@@ -10,7 +10,7 @@ import {
 import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
-import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
+import { formatInfluencesForEdit, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
 import {
   FormField,
@@ -44,7 +44,12 @@ type MemberEditFormProps = {
   member: Member;
 };
 
-type PickerKind = "favoriteArtists" | "dreamBands" | "favoriteGenres" | "lookingForParts";
+type PickerKind =
+  | "instruments"
+  | "favoriteArtists"
+  | "dreamBands"
+  | "favoriteGenres"
+  | "lookingForParts";
 
 function ProfileItemFields({
   member,
@@ -241,12 +246,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 onChange={(event) => updateField("name", event.target.value)}
               />
             </FormField>
-            <FormField label="演奏パート" hint="カンマ区切り・任意（例: ギター, ボーカル）">
-              <FormInput
-                value={joinList(member.music.instruments)}
-                onChange={(event) =>
-                  updateNested("music", "instruments", splitList(event.target.value))
-                }
+            <FormField label="演奏パート" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.instruments ?? []}
+                placeholder="パートを選択"
+                onClick={() => setActivePicker("instruments")}
               />
             </FormField>
           </FormSection>
@@ -384,6 +388,17 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         </button>
       </div>
       </form>
+
+      <FormPickerSheet
+        open={activePicker === "instruments"}
+        title="演奏パート"
+        onClose={() => setActivePicker(null)}
+      >
+        <WelcomePartsPicker
+          selected={member.music.instruments ?? []}
+          onChange={(parts) => updateNested("music", "instruments", parts)}
+        />
+      </FormPickerSheet>
 
       <FormPickerSheet
         open={activePicker === "favoriteArtists"}

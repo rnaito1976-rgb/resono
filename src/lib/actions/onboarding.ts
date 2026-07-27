@@ -64,6 +64,17 @@ export async function completeMinimalRegistrationAction(
 
     void invalidateResonanceCacheForMember(member.id);
 
+    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
+      publishLiveEvent({
+        kind: "new_member",
+        title: updated.name,
+        subtitle: "コミュニティに参加しました",
+        href: `/member/${updated.id}`,
+        photo: updated.photo,
+        actorMemberId: updated.id,
+      })
+    );
+
     revalidatePath("/");
     revalidatePath("/onboarding");
     revalidatePath("/discover");

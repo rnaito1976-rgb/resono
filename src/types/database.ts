@@ -291,6 +291,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      live_events: {
+        Row: {
+          id: string;
+          kind: string;
+          title: string;
+          subtitle: string | null;
+          href: string;
+          photo: string | null;
+          actor_member_id: string | null;
+          band_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          kind: string;
+          title: string;
+          subtitle?: string | null;
+          href: string;
+          photo?: string | null;
+          actor_member_id?: string | null;
+          band_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          kind?: string;
+          title?: string;
+          subtitle?: string | null;
+          href?: string;
+          photo?: string | null;
+          actor_member_id?: string | null;
+          band_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

@@ -55,6 +55,20 @@ export async function saveProfileGrowSessionAction(candidates: ProfileGrowCandid
   void invalidateResonanceCacheForMember(member.id);
   const resonance = await compareProfileGrowResonance(before, updated);
 
+  const { hasLookingForChanged } = await import("@/lib/live/looking-for");
+  if (hasLookingForChanged(before, updated)) {
+    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
+      publishLiveEvent({
+        kind: "looking_for_updated",
+        title: updated.name,
+        subtitle: "Looking For を更新しました",
+        href: `/member/${updated.id}`,
+        photo: updated.photo,
+        actorMemberId: updated.id,
+      })
+    );
+  }
+
   revalidatePath("/");
   revalidatePath("/discover");
   revalidatePath("/me");

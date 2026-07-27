@@ -95,6 +95,20 @@ export async function updateInstrumentsAction(instruments: string[]) {
 }
 
 export async function updateMemberAction(member: Member) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です" };
+  }
+
+  const existing = await getMemberByUserId(user.id);
+  if (!existing || existing.id !== member.id) {
+    return { error: "プロフィールが見つかりません" };
+  }
+
   const result = await updateMember(member);
 
   if (!result.success) {
@@ -107,6 +121,20 @@ export async function updateMemberAction(member: Member) {
   revalidatePath(`/member/${member.id}/edit`);
 
   void invalidateResonanceCacheForMember(member.id);
+
+  const { hasLookingForChanged } = await import("@/lib/live/looking-for");
+  if (hasLookingForChanged(existing, member)) {
+    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
+      publishLiveEvent({
+        kind: "looking_for_updated",
+        title: member.name,
+        subtitle: "Looking For を更新しました",
+        href: `/member/${member.id}`,
+        photo: member.photo,
+        actorMemberId: member.id,
+      })
+    );
+  }
 
   return { success: true };
 }

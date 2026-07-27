@@ -160,7 +160,29 @@ export async function createBandAction(input: {
     })
   );
 
+  void import("@/lib/live/events").then(({ publishLiveEvent }) =>
+    Promise.all([
+      publishLiveEvent({
+        kind: "new_band",
+        title: name,
+        subtitle: "新しいBandが登場",
+        href: `/bands/${band.id}`,
+        actorMemberId: creatorMemberId,
+        bandId: band.id,
+      }),
+      publishLiveEvent({
+        kind: "band_formed",
+        title: name,
+        subtitle: "Bandが結成されました",
+        href: `/bands/${band.id}`,
+        actorMemberId: creatorMemberId,
+        bandId: band.id,
+      }),
+    ])
+  );
+
   revalidatePath("/bands");
+  revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/bands/${band.id}`);
 
@@ -370,6 +392,21 @@ export async function createBandActivityAction(input: {
     })
   );
 
+  if (input.kind === "video") {
+    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
+      publishLiveEvent({
+        kind: "new_video",
+        title: band?.name ?? "Band",
+        subtitle: activity.title?.trim() || activity.body?.trim() || "演奏動画を追加",
+        href: `/bands/${input.bandId}`,
+        photo: input.mediaUrl?.trim() || undefined,
+        actorMemberId: member.id,
+        bandId: input.bandId,
+      })
+    );
+  }
+
+  revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/bands/${input.bandId}`);
   return { success: true };
