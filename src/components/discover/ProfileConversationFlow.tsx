@@ -34,12 +34,22 @@ type FlowStep = "chat" | "review" | "complete";
 const QUESTIONS_PER_SESSION = 3;
 
 export function ProfileConversationFlow({ member }: ProfileConversationFlowProps) {
-  const [theme] = useState(() => pickRandomProfileGrowTheme());
+  const [session] = useState(() => {
+    const theme = pickRandomProfileGrowTheme();
+    return {
+      theme,
+      turns: [
+        { role: "ai" as const, message: theme.opener },
+        { role: "ai" as const, message: theme.questions[0].message },
+      ],
+    };
+  });
+  const theme = session.theme;
   const [flowStep, setFlowStep] = useState<FlowStep>("chat");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [freeText, setFreeText] = useState("");
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
-  const [turns, setTurns] = useState<ChatTurn[]>([{ role: "ai", message: theme.opener }]);
+  const [turns, setTurns] = useState<ChatTurn[]>(session.turns);
   const [candidates, setCandidates] = useState<ProfileGrowCandidate[]>([]);
   const [resonance, setResonance] = useState<ProfileGrowResonanceInsight | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -234,13 +244,9 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
             <DialogueTurn
               key={`${turn.role}-${index}`}
               message={turn.message}
-              active={false}
               isUser={turn.role === "user"}
             />
           ))}
-          {currentQuestion ? (
-            <DialogueTurn message={currentQuestion.message} active />
-          ) : null}
           <div ref={chatEndRef} className="h-px shrink-0" aria-hidden />
         </div>
       </div>
@@ -286,11 +292,9 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
 
 function DialogueTurn({
   message,
-  active = false,
   isUser = false,
 }: {
   message: string;
-  active?: boolean;
   isUser?: boolean;
 }) {
   if (isUser) {
@@ -308,13 +312,7 @@ function DialogueTurn({
       <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-medium text-primary">
         AI
       </div>
-      <div
-        className={`max-w-[82%] rounded-[22px] px-4 py-3 text-[15px] leading-relaxed ${
-          active
-            ? "border border-border bg-white/[0.05] text-white"
-            : "bg-white/[0.03] text-white/55"
-        }`}
-      >
+      <div className="max-w-[82%] px-1 py-1 text-[15px] leading-relaxed text-white/55">
         {message}
       </div>
     </div>
