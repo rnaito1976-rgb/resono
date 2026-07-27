@@ -1,8 +1,11 @@
 import { getMembersPage, getMemberById } from "@/lib/members";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
-import { rankRecommendations } from "@/lib/recommendation/scoring";
-import { buildResonanceReason } from "@/lib/resonance/matching";
+import { calculateRecommendationScore } from "@/lib/recommendation/scoring";
+import {
+  buildResonanceReason,
+  calculateResonanceMatch,
+} from "@/lib/resonance/matching";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import {
   getResonanceReasonsFromCache,
@@ -14,16 +17,71 @@ import type { FeedItem, MembersFeedPage } from "@/lib/members/feed";
 
 /** Build reasons synchronously for the first N cards; defer the rest. */
 const SYNC_REASON_BUILD_LIMIT = 6;
+const FEED_CANDIDATE_LIMIT = 200;
 
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
   userId?: string;
-  /** Skip recommendation ranking for faster first paint. */
+  /** Skip recommendation scoring for faster first paint. */
   fast?: boolean;
 };
 
 function isValidReason(reason: ResonanceReason | undefined): reason is ResonanceReason {
   return reason != null && Number.isFinite(reason.score);
+}
+
+/** Seed / demo profiles without a linked auth user. */
+function isSeedFeedMember(member: Member): boolean {
+  return !member.userId;
+}
+
+function filterFeedMembers(
+  members: Member[],
+  viewerMemberId?: string | null,
+  userId?: string
+): Member[] {
+  return members.filter((member) => {
+    if (viewerMemberId && member.id === viewerMemberId) {
+      return false;
+    }
+
+    if (userId && isMemberOwnedByUser(member, userId)) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function sortMembersForFeed(
+  members: Member[],
+  getScore: (member: Member) => number
+): Member[] {
+  return [...members].sort((a, b) => {
+    const aSeed = isSeedFeedMember(a);
+    const bSeed = isSeedFeedMember(b);
+
+    if (aSeed !== bSeed) {
+      return aSeed ? 1 : -1;
+    }
+
+    return getScore(b) - getScore(a);
+  });
+}
+
+function buildFeedPageResult(
+  items: FeedItem[],
+  offset: number,
+  limit: number,
+  totalCount: number
+): MembersFeedPage {
+  const nextOffset = offset + limit < totalCount ? offset + limit : null;
+
+  return {
+    items,
+    nextOffset,
+    hasMore: nextOffset != null,
+  };
 }
 
 async function resolveFeedViewer(viewer?: Member): Promise<Member | undefined> {
@@ -99,96 +157,64 @@ export async function buildMembersFeedPage(
   limit: number,
   options: BuildMembersFeedPageOptions = {}
 ): Promise<MembersFeedPage> {
-  const page = await getMembersPage(offset, limit);
+  const { members: allMembers } = await getMembersPage(0, FEED_CANDIDATE_LIMIT);
   const viewerMemberId = options.viewer?.id ?? (await resolveCurrentMemberId());
-  const feedMembers = page.members.filter((member) => {
-    if (viewerMemberId && member.id === viewerMemberId) {
-      return false;
-    }
-
-    if (options.userId && isMemberOwnedByUser(member, options.userId)) {
-      return false;
-    }
-
-    return true;
-  });
+  const candidates = filterFeedMembers(allMembers, viewerMemberId, options.userId);
 
   if (!options.viewer || !viewerMemberId) {
-    return {
-      items: feedMembers.map((member) => ({
+    const sorted = sortMembersForFeed(candidates, (member) => member.resonanceRate);
+
+    return buildFeedPageResult(
+      sorted.slice(offset, offset + limit).map((member) => ({
         member,
         recommendation: undefined,
         reason: undefined,
         resonanceStatus: undefined,
       })),
-      nextOffset: page.hasMore ? offset + limit : null,
-      hasMore: page.hasMore,
-    };
+      offset,
+      limit,
+      sorted.length
+    );
   }
 
   const feedViewer = (await resolveFeedViewer(options.viewer)) ?? options.viewer;
+  const cachedReasons = await getResonanceReasonsFromCache(
+    viewerMemberId,
+    candidates.map((member) => member.id)
+  );
+  const sorted = sortMembersForFeed(candidates, (member) => {
+    const cached = cachedReasons.get(member.id);
+    if (isValidReason(cached)) {
+      return cached.score;
+    }
+
+    return calculateResonanceMatch(feedViewer, member);
+  });
+  const rankedPageMembers = sorted.slice(offset, offset + limit);
 
   if (options.fast) {
     const items = await buildResonanceFeedItems(
       feedViewer,
       viewerMemberId,
-      feedMembers
+      rankedPageMembers
     );
 
-    return {
-      items,
-      nextOffset: page.hasMore ? offset + limit : null,
-      hasMore: page.hasMore,
-    };
+    return buildFeedPageResult(items, offset, limit, sorted.length);
   }
 
-  const targetIds = feedMembers.map((member) => member.id);
-  const [statusMap, cachedReasons] = await Promise.all([
-    getResonanceStatusBatch(viewerMemberId, targetIds),
-    getResonanceReasonsFromCache(viewerMemberId, targetIds),
-  ]);
+  const items = await buildResonanceFeedItems(
+    feedViewer,
+    viewerMemberId,
+    rankedPageMembers
+  );
 
-  const ranked = rankRecommendations(feedViewer, feedMembers);
-  const toSave: Array<{ targetMemberId: string; reason: ReturnType<typeof buildResonanceReason> }> = [];
-  const deferredMembers: Member[] = [];
-
-  const items = ranked.map(({ member, recommendation }, index) => {
-    let reason = cachedReasons.get(member.id);
-
-    if (!isValidReason(reason)) {
-      if (index < SYNC_REASON_BUILD_LIMIT) {
-        reason = buildResonanceReason(feedViewer, member);
-        toSave.push({ targetMemberId: member.id, reason });
-      } else {
-        deferredMembers.push(member);
-      }
-    }
-
-    return {
-      member,
-      recommendation,
-      reason,
-      resonanceStatus: statusMap[member.id],
-    };
-  });
-
-  if (toSave.length > 0) {
-    void saveResonanceReasonsToCache(viewerMemberId, toSave);
-  }
-
-  if (deferredMembers.length > 0) {
-    void (async () => {
-      const entries = deferredMembers.map((member) => ({
-        targetMemberId: member.id,
-        reason: buildResonanceReason(feedViewer, member),
-      }));
-      await saveResonanceReasonsToCache(viewerMemberId, entries);
-    })();
-  }
-
-  return {
-    items,
-    nextOffset: page.hasMore ? offset + limit : null,
-    hasMore: page.hasMore,
-  };
+  return buildFeedPageResult(
+    items.map((item) => ({
+      ...item,
+      recommendation: calculateRecommendationScore(feedViewer, item.member),
+    })),
+    offset,
+    limit,
+    sorted.length
+  );
 }
