@@ -10,13 +10,13 @@ import {
 import { useFrequencyColor } from "@/components/frequency-color/FrequencyColorProvider";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { withAlpha } from "@/lib/frequency-color/utils";
-import { formatInfluencesForEdit, splitList } from "@/lib/form";
 import { queryKeys } from "@/lib/query/keys";
 import {
   FormField,
   FormGroupHeading,
   FormInput,
   FormSection,
+  FormTextarea,
 } from "@/components/FormField";
 import { FormPickerSheet } from "@/components/form/FormPickerSheet";
 import { CoverSongsEditor } from "@/components/form/CoverSongsEditor";
@@ -24,9 +24,21 @@ import { FormTagPickerTrigger } from "@/components/form/FormTagPickerTrigger";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { ProfilePhotoUpload } from "@/components/profile-photo/ProfilePhotoUpload";
+import {
+  ProfileGrowSearchPicker,
+  flattenProfileGrowCatalog,
+} from "@/components/discover/ProfileGrowSearchPicker";
 import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
 import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
 import { WelcomeSoundsPicker } from "@/components/welcome/WelcomeSoundsPicker";
+import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
+import {
+  PROFILE_GROW_FESTIVAL_GROUPS,
+  PROFILE_GROW_GEAR_GROUPS,
+  PROFILE_GROW_LIVE_HOUSE_GROUPS,
+  PROFILE_GROW_SONG_GROUPS,
+  PROFILE_GROW_STUDIO_GROUPS,
+} from "@/lib/profile/grow/catalogs";
 import {
   formatProfileItemForEdit,
   getProfileItemLabel,
@@ -39,6 +51,13 @@ import {
 } from "@/lib/profile/items";
 import type { ProfileEditSection, ProfileItemKind } from "@/types/profile-item";
 import type { Member } from "@/types/member";
+import type { MemberMusicProfile } from "@/types/music-profile";
+
+const SONG_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_SONG_GROUPS);
+const LIVE_HOUSE_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_LIVE_HOUSE_GROUPS);
+const STUDIO_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_STUDIO_GROUPS);
+const FESTIVAL_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_FESTIVAL_GROUPS);
+const GEAR_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_GEAR_GROUPS);
 
 type MemberEditFormProps = {
   member: Member;
@@ -47,9 +66,26 @@ type MemberEditFormProps = {
 type PickerKind =
   | "instruments"
   | "favoriteArtists"
+  | "favoriteSongs"
   | "dreamBands"
   | "favoriteGenres"
+  | "favoriteLiveHouses"
+  | "favoriteStudios"
+  | "favoriteFestivals"
+  | "gear"
   | "lookingForParts";
+
+type MusicListKey = keyof Pick<
+  MemberMusicProfile,
+  | "favoriteSongs"
+  | "favoriteLiveHouses"
+  | "favoriteStudios"
+  | "favoriteFestivals"
+  | "gear"
+  | "videos"
+>;
+
+type LookingForListKey = "setList" | "liveHistory";
 
 function ProfileItemFields({
   member,
@@ -160,6 +196,26 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
     }));
   }
 
+  function updateMusicList(key: MusicListKey, values: string[]) {
+    setMember((current) => ({
+      ...current,
+      music: {
+        ...current.music,
+        [key]: values.length > 0 ? values : undefined,
+      },
+    }));
+  }
+
+  function updateLookingForList(key: LookingForListKey, values: string[]) {
+    setMember((current) => ({
+      ...current,
+      lookingFor: {
+        ...current.lookingFor,
+        [key]: values.length > 0 ? values : undefined,
+      },
+    }));
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -253,6 +309,28 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 onClick={() => setActivePicker("instruments")}
               />
             </FormField>
+            <FormField label="自己紹介 / Bio" hint="任意">
+              <FormTextarea
+                rows={4}
+                value={member.portrait.bio}
+                onChange={(event) =>
+                  updateNested("portrait", "bio", event.target.value)
+                }
+                placeholder="あなたの音楽や活動について"
+              />
+            </FormField>
+            <FormField
+              label="Values / 大切にしていること"
+              hint="カンマ区切り・任意"
+            >
+              <FormInput
+                value={formatInfluencesForEdit(member.portrait.influences)}
+                onChange={(event) =>
+                  updateNested("portrait", "influences", splitList(event.target.value))
+                }
+                placeholder="例: メロディ, ライブ映え, 丁寧な音作り"
+              />
+            </FormField>
           </FormSection>
 
           <FormSection title="Frequency Color">
@@ -302,22 +380,18 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 onClick={() => setActivePicker("favoriteArtists")}
               />
             </FormField>
+            <FormField label="Favorite Songs" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.favoriteSongs ?? []}
+                placeholder="曲を選択"
+                onClick={() => setActivePicker("favoriteSongs")}
+              />
+            </FormField>
             <FormField label="好きなジャンル" hint="タップして選択">
               <FormTagPickerTrigger
                 selected={member.music.genres ?? []}
                 placeholder="ジャンルを選択"
                 onClick={() => setActivePicker("favoriteGenres")}
-              />
-            </FormField>
-            <FormField
-              label="Influences"
-              hint="カンマ区切り・任意（例: 竹内まりや, Cornelius, 羊文学）"
-            >
-              <FormInput
-                value={formatInfluencesForEdit(member.portrait.influences)}
-                onChange={(event) =>
-                  updateNested("portrait", "influences", splitList(event.target.value))
-                }
               />
             </FormField>
           </FormSection>
@@ -342,6 +416,46 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             />
           </FormSection>
 
+          <FormSection title="Places & Gear">
+            <FormField label="Favorite Live Houses" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.favoriteLiveHouses ?? []}
+                placeholder="ライブハウスを選択"
+                onClick={() => setActivePicker("favoriteLiveHouses")}
+              />
+            </FormField>
+            <FormField label="Favorite Studios" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.favoriteStudios ?? []}
+                placeholder="スタジオを選択"
+                onClick={() => setActivePicker("favoriteStudios")}
+              />
+            </FormField>
+            <FormField label="Favorite Festivals" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.favoriteFestivals ?? []}
+                placeholder="フェスを選択"
+                onClick={() => setActivePicker("favoriteFestivals")}
+              />
+            </FormField>
+            <FormField label="Gear" hint="タップして選択">
+              <FormTagPickerTrigger
+                selected={member.music.gear ?? []}
+                placeholder="機材を選択"
+                onClick={() => setActivePicker("gear")}
+              />
+            </FormField>
+            <FormField label="Videos" hint="URLをカンマ区切り・任意">
+              <FormInput
+                value={joinList(member.music.videos ?? [])}
+                onChange={(event) =>
+                  updateMusicList("videos", splitList(event.target.value))
+                }
+                placeholder="https://..."
+              />
+            </FormField>
+          </FormSection>
+
           <ProfileItemFields
             member={member}
             section="music"
@@ -360,12 +474,47 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
                 onClick={() => setActivePicker("lookingForParts")}
               />
             </FormField>
-            <FormField label="活動頻度" hint="任意（例: 週1リハ、月2ライブ）">
+            <FormField label="Band Vision / Style" hint="任意">
+              <FormTextarea
+                rows={3}
+                value={member.lookingFor.bandVision}
+                onChange={(event) =>
+                  updateNested("lookingFor", "bandVision", event.target.value)
+                }
+                placeholder="組みたいバンド像や大切にしたいこと"
+              />
+            </FormField>
+            <FormField label="活動頻度 / Schedule" hint="任意（例: 週1リハ、月2ライブ）">
               <FormInput
                 value={member.lookingFor.commitment}
                 onChange={(event) =>
                   updateNested("lookingFor", "commitment", event.target.value)
                 }
+              />
+            </FormField>
+            <FormField label="Set List" hint="カンマ区切り・任意">
+              <FormInput
+                value={joinList(member.lookingFor.setList ?? [])}
+                onChange={(event) =>
+                  updateLookingForList("setList", splitList(event.target.value))
+                }
+                placeholder="曲名を入力"
+              />
+            </FormField>
+            <FormField label="Live History" hint="カンマ区切り、または改行・任意">
+              <FormTextarea
+                rows={3}
+                value={(member.lookingFor.liveHistory ?? []).join("\n")}
+                onChange={(event) =>
+                  updateLookingForList(
+                    "liveHistory",
+                    event.target.value
+                      .split(/[\n,、]/)
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                  )
+                }
+                placeholder="印象に残っているライブなど"
               />
             </FormField>
           </FormSection>
@@ -412,6 +561,21 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
       </FormPickerSheet>
 
       <FormPickerSheet
+        open={activePicker === "favoriteSongs"}
+        title="Favorite Songs"
+        onClose={() => setActivePicker(null)}
+      >
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_SONG_GROUPS}
+          catalog={SONG_CATALOG}
+          selected={member.music.favoriteSongs ?? []}
+          onChange={(values) => updateMusicList("favoriteSongs", values)}
+          placeholder="曲名やアーティストを検索"
+          listMaxHeight={360}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
         open={activePicker === "dreamBands"}
         title="コピーしたいバンド"
         onClose={() => setActivePicker(null)}
@@ -431,6 +595,66 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           selected={member.music.genres ?? []}
           placeholder="ジャンルを検索"
           onChange={(genres) => updateNested("music", "genres", genres)}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "favoriteLiveHouses"}
+        title="Favorite Live Houses"
+        onClose={() => setActivePicker(null)}
+      >
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_LIVE_HOUSE_GROUPS}
+          catalog={LIVE_HOUSE_CATALOG}
+          selected={member.music.favoriteLiveHouses ?? []}
+          onChange={(values) => updateMusicList("favoriteLiveHouses", values)}
+          placeholder="ライブハウスを検索"
+          listMaxHeight={360}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "favoriteStudios"}
+        title="Favorite Studios"
+        onClose={() => setActivePicker(null)}
+      >
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_STUDIO_GROUPS}
+          catalog={STUDIO_CATALOG}
+          selected={member.music.favoriteStudios ?? []}
+          onChange={(values) => updateMusicList("favoriteStudios", values)}
+          placeholder="スタジオを検索"
+          listMaxHeight={360}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "favoriteFestivals"}
+        title="Favorite Festivals"
+        onClose={() => setActivePicker(null)}
+      >
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_FESTIVAL_GROUPS}
+          catalog={FESTIVAL_CATALOG}
+          selected={member.music.favoriteFestivals ?? []}
+          onChange={(values) => updateMusicList("favoriteFestivals", values)}
+          placeholder="フェスを検索"
+          listMaxHeight={360}
+        />
+      </FormPickerSheet>
+
+      <FormPickerSheet
+        open={activePicker === "gear"}
+        title="Gear"
+        onClose={() => setActivePicker(null)}
+      >
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_GEAR_GROUPS}
+          catalog={GEAR_CATALOG}
+          selected={member.music.gear ?? []}
+          onChange={(values) => updateMusicList("gear", values)}
+          placeholder="機材を検索"
+          listMaxHeight={360}
         />
       </FormPickerSheet>
 

@@ -70,7 +70,7 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
           Live
         </p>
         <h2 className="mt-2 text-[22px] font-light tracking-tight text-white">
-          いま起きていること
+          Latest Activity
         </h2>
       </div>
 
