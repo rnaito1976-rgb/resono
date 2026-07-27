@@ -13,6 +13,9 @@ import {
   type MembersFeedPage,
 } from "@/lib/members/feed";
 import { queryKeys } from "@/lib/query/keys";
+import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
+import type { ResonanceStatus } from "@/lib/resonance/status";
+import type { InfiniteData } from "@tanstack/react-query";
 
 const PersonCardClient = dynamic(
   () =>
@@ -131,6 +134,39 @@ export function HomeFeedList({
       writeFeedCache(viewerId, firstPage);
     }
   }, [firstPage, viewerId]);
+
+  useEffect(() => {
+    const handleResonanceChange = () => {
+      queryClient.setQueryData<InfiniteData<MembersFeedPage>>(
+        queryKeys.members.feed(viewerId),
+        (current) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              items: page.items.map((item) => {
+                const status = queryClient.getQueryData<ResonanceStatus>(
+                  queryKeys.resonance.status(item.member.id)
+                );
+
+                return status ? { ...item, resonanceStatus: status } : item;
+              }),
+            })),
+          };
+        }
+      );
+    };
+
+    window.addEventListener(RESONANCE_CHANGE_EVENT, handleResonanceChange);
+
+    return () => {
+      window.removeEventListener(RESONANCE_CHANGE_EVENT, handleResonanceChange);
+    };
+  }, [queryClient, viewerId]);
 
   useEffect(() => {
     const memberIds = feedItems.map((item) => item.member.id);

@@ -128,7 +128,6 @@ export async function toggleResonanceAction(targetMemberId: string) {
       };
     }
 
-    revalidatePath("/");
     revalidatePath("/me");
     revalidatePath(`/member/${targetMemberId}`);
     revalidatePath(`/member/${memberId}`);
@@ -167,7 +166,6 @@ export async function toggleResonanceAction(targetMemberId: string) {
     ? await ensureConversationForMembers(memberId, targetMemberId)
     : null;
 
-  revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/member/${targetMemberId}`);
   revalidatePath(`/member/${memberId}`);
