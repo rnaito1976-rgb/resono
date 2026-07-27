@@ -34,6 +34,8 @@ export type Member = {
     parts: string[];
     bandVision: string;
     commitment: string;
+    setList?: string[];
+    liveHistory?: string[];
   };
 };
 

@@ -5,6 +5,7 @@ export type MemberActivityMilestone = {
   id: string;
   title: string;
   occurredAt: string;
+  body?: string;
 };
 
 /** Own-profile Activity feed: newest first (index 0 = newest). */
@@ -68,5 +69,6 @@ export function memberActivityMilestonesToFeedItems(
     kind: "profile_milestone",
     occurredAt: milestone.occurredAt,
     title: milestone.title,
+    body: milestone.body,
   }));
 }

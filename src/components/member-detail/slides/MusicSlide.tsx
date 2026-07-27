@@ -97,6 +97,42 @@ export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
       >
         <MusicDnaChart bars={view.musicDna} />
       </MusicPageSection>
+
+      {member.music.favoriteSongs && member.music.favoriteSongs.length > 0 ? (
+        <MusicPageSection title="Favorite Songs" description="好きな曲">
+          <MusicTagGrid items={member.music.favoriteSongs} />
+        </MusicPageSection>
+      ) : null}
+
+      {member.music.favoriteLiveHouses && member.music.favoriteLiveHouses.length > 0 ? (
+        <MusicPageSection title="Favorite Live Houses" description="お気に入りのライブハウス">
+          <MusicTagGrid items={member.music.favoriteLiveHouses} />
+        </MusicPageSection>
+      ) : null}
+
+      {member.music.favoriteStudios && member.music.favoriteStudios.length > 0 ? (
+        <MusicPageSection title="Favorite Studios" description="お気に入りのスタジオ">
+          <MusicTagGrid items={member.music.favoriteStudios} />
+        </MusicPageSection>
+      ) : null}
+
+      {member.music.favoriteFestivals && member.music.favoriteFestivals.length > 0 ? (
+        <MusicPageSection title="Favorite Festivals" description="お気に入りのフェス">
+          <MusicTagGrid items={member.music.favoriteFestivals} />
+        </MusicPageSection>
+      ) : null}
+
+      {member.music.gear && member.music.gear.length > 0 ? (
+        <MusicPageSection title="Gear" description="愛用の機材">
+          <MusicTagGrid items={member.music.gear} />
+        </MusicPageSection>
+      ) : null}
+
+      {member.music.videos && member.music.videos.length > 0 ? (
+        <MusicPageSection title="Videos" description="動画">
+          <MusicTagGrid items={member.music.videos} />
+        </MusicPageSection>
+      ) : null}
     </div>
   );
 }

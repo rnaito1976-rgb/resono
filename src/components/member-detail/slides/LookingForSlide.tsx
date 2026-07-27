@@ -132,6 +132,28 @@ export function LookingForSlide({
           <p>{member.lookingFor.commitment}</p>
         </SectionBlock>
       ) : null}
+      {member.lookingFor.liveHistory && member.lookingFor.liveHistory.length > 0 ? (
+        <SectionBlock label="Live History">
+          <div className="space-y-2">
+            {member.lookingFor.liveHistory.map((entry) => (
+              <p key={entry} className="text-[15px] leading-relaxed text-white/75">
+                {entry}
+              </p>
+            ))}
+          </div>
+        </SectionBlock>
+      ) : null}
+      {member.lookingFor.setList && member.lookingFor.setList.length > 0 ? (
+        <SectionBlock label="Set List">
+          <div className="space-y-2">
+            {member.lookingFor.setList.map((entry) => (
+              <p key={entry} className="text-[15px] leading-relaxed text-white/75">
+                {entry}
+              </p>
+            ))}
+          </div>
+        </SectionBlock>
+      ) : null}
       {!isOwnProfile ? (
         <SectionBlock label="Activity">
           <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />

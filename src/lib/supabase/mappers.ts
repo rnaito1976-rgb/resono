@@ -135,7 +135,8 @@ function normalizeActivityMilestones(raw: unknown): MemberActivityMilestone[] | 
         id: milestone.id,
         title: milestone.title,
         occurredAt: milestone.occurredAt,
-      };
+        ...(typeof milestone.body === "string" ? { body: milestone.body } : {}),
+      } satisfies MemberActivityMilestone;
     })
     .filter((item): item is MemberActivityMilestone => item !== null);
 
@@ -151,6 +152,12 @@ function normalizeLookingFor(raw: unknown): Member["lookingFor"] {
       : [],
     bandVision: typeof value.bandVision === "string" ? value.bandVision : "",
     commitment: typeof value.commitment === "string" ? value.commitment : "",
+    setList: Array.isArray(value.setList)
+      ? value.setList.filter((item): item is string => typeof item === "string")
+      : undefined,
+    liveHistory: Array.isArray(value.liveHistory)
+      ? value.liveHistory.filter((item): item is string => typeof item === "string")
+      : undefined,
   };
 }
 
@@ -176,5 +183,23 @@ function normalizeMusic(raw: unknown): MemberMusicProfile {
       ? value.playingStyle.filter((item): item is string => typeof item === "string")
       : undefined,
     musicDna: Array.isArray(value.musicDna) ? value.musicDna : undefined,
+    favoriteSongs: Array.isArray(value.favoriteSongs)
+      ? value.favoriteSongs.filter((item): item is string => typeof item === "string")
+      : undefined,
+    favoriteLiveHouses: Array.isArray(value.favoriteLiveHouses)
+      ? value.favoriteLiveHouses.filter((item): item is string => typeof item === "string")
+      : undefined,
+    favoriteStudios: Array.isArray(value.favoriteStudios)
+      ? value.favoriteStudios.filter((item): item is string => typeof item === "string")
+      : undefined,
+    favoriteFestivals: Array.isArray(value.favoriteFestivals)
+      ? value.favoriteFestivals.filter((item): item is string => typeof item === "string")
+      : undefined,
+    gear: Array.isArray(value.gear)
+      ? value.gear.filter((item): item is string => typeof item === "string")
+      : undefined,
+    videos: Array.isArray(value.videos)
+      ? value.videos.filter((item): item is string => typeof item === "string")
+      : undefined,
   };
 }

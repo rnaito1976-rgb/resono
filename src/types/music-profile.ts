@@ -26,6 +26,12 @@ export type MemberMusicProfile = {
   playingStyle?: string[];
   musicDna?: MusicDnaBar[];
   /** Future: streamingConnections?, liveHistory?, recentCovers?, performanceVideos? */
+  favoriteSongs?: string[];
+  favoriteLiveHouses?: string[];
+  favoriteStudios?: string[];
+  favoriteFestivals?: string[];
+  gear?: string[];
+  videos?: string[];
 };
 
 export type MusicPageView = {

@@ -1,74 +1,177 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
+import { ProfileGrowReview } from "@/components/discover/ProfileGrowReview";
+import { ProfileGrowQuestionInput } from "@/components/discover/ProfileGrowQuestionInput";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { Button } from "@/components/ui/button";
-import { addProfileItemFromConversationAction } from "@/lib/actions/onboarding";
+import { useFocusScrollIntoView } from "@/hooks/useFocusScrollIntoView";
+import { useVisualViewportHeight } from "@/hooks/useVisualViewportHeight";
+import { saveProfileGrowSessionAction } from "@/lib/actions/profile-grow";
 import {
-  getPendingConversationSteps,
-  type ProfileConversationStep,
-} from "@/lib/profile/items";
+  createCandidatesFromSelection,
+  extractFreeTextCandidates,
+  formatSelectionSummary,
+} from "@/lib/profile/grow/candidates";
+import { dedupeProfileGrowCandidates } from "@/lib/profile/grow/extract";
+import { pickRandomProfileGrowTheme } from "@/lib/profile/grow/themes";
+import type { ProfileGrowCandidate, ProfileGrowResonanceInsight } from "@/types/profile-grow";
 import type { Member } from "@/types/member";
 
 type ProfileConversationFlowProps = {
   member: Member;
 };
 
+type ChatTurn = {
+  role: "ai" | "user";
+  message: string;
+};
+
+type FlowStep = "chat" | "review" | "complete";
+
+const QUESTIONS_PER_SESSION = 3;
+
 export function ProfileConversationFlow({ member }: ProfileConversationFlowProps) {
-  const [answeredStepIds, setAnsweredStepIds] = useState<string[]>([]);
-  const pendingSteps = useMemo(
-    () =>
-      getPendingConversationSteps(member).filter(
-        (step) => !answeredStepIds.includes(step.id)
-      ),
-    [member, answeredStepIds]
-  );
-  const [completedCount, setCompletedCount] = useState(0);
-  const [answer, setAnswer] = useState("");
+  const [theme] = useState(() => pickRandomProfileGrowTheme());
+  const [flowStep, setFlowStep] = useState<FlowStep>("chat");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [freeText, setFreeText] = useState("");
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [turns, setTurns] = useState<ChatTurn[]>([{ role: "ai", message: theme.opener }]);
+  const [candidates, setCandidates] = useState<ProfileGrowCandidate[]>([]);
+  const [resonance, setResonance] = useState<ProfileGrowResonanceInsight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const viewportHeight = useVisualViewportHeight();
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLElement>(null);
 
-  const stepIndex = Math.min(completedCount, Math.max(pendingSteps.length - 1, 0));
-  const step = pendingSteps[stepIndex] as ProfileConversationStep | undefined;
-  const isFinished = pendingSteps.length === 0 || completedCount >= pendingSteps.length;
+  useFocusScrollIntoView(composerRef);
 
-  function handleSubmit() {
-    if (!step || !answer.trim()) {
+  const currentQuestion = theme.questions[questionIndex];
+  const isSelectQuestion = currentQuestion?.inputMode === "select";
+  const progressLabel = `${Math.min(questionIndex + 1, QUESTIONS_PER_SESSION)} / ${QUESTIONS_PER_SESSION}`;
+
+  const pickerListMaxHeight = useMemo(() => {
+    if (!isSelectQuestion) {
+      return undefined;
+    }
+
+    const reserved = viewportHeight > 0 ? viewportHeight * 0.28 : 220;
+    return Math.max(140, Math.min(240, Math.round(reserved)));
+  }, [isSelectQuestion, viewportHeight]);
+
+  const canSubmit = isSelectQuestion
+    ? selectedValues.length > 0
+    : freeText.trim().length > 0;
+
+  const reviewCandidates = useMemo(
+    () => dedupeProfileGrowCandidates(candidates, member),
+    [candidates, member]
+  );
+
+  const scrollChatToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    chatEndRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
+
+  useEffect(() => {
+    scrollChatToBottom("auto");
+  }, [turns, questionIndex, scrollChatToBottom]);
+
+  useEffect(() => {
+    if (viewportHeight > 0) {
+      scrollChatToBottom("auto");
+    }
+  }, [viewportHeight, scrollChatToBottom]);
+
+  function handleSubmitAnswer() {
+    if (!currentQuestion || !canSubmit) {
       return;
     }
 
     setError(null);
 
+    const extracted =
+      currentQuestion.inputMode === "select"
+        ? createCandidatesFromSelection(currentQuestion, selectedValues)
+        : extractFreeTextCandidates(currentQuestion, freeText);
+
+    const userMessage =
+      currentQuestion.inputMode === "select"
+        ? formatSelectionSummary(selectedValues)
+        : freeText.trim();
+
+    setCandidates((current) => [...current, ...extracted]);
+    setTurns((current) => [...current, { role: "user", message: userMessage }]);
+
+    const nextIndex = questionIndex + 1;
+    setFreeText("");
+    setSelectedValues([]);
+
+    if (nextIndex >= QUESTIONS_PER_SESSION) {
+      setFlowStep("review");
+      return;
+    }
+
+    setQuestionIndex(nextIndex);
+    setTurns((current) => [
+      ...current,
+      { role: "ai", message: theme.questions[nextIndex].message },
+    ]);
+  }
+
+  function handleSave(nextCandidates: ProfileGrowCandidate[]) {
+    setError(null);
     startTransition(async () => {
-      const result = await addProfileItemFromConversationAction(step.id, answer.trim());
+      const result = await saveProfileGrowSessionAction(nextCandidates);
       if (result.error) {
         setError(result.error);
         return;
       }
 
-      setAnswer("");
-      setAnsweredStepIds((current) => [...current, step.id]);
-      setCompletedCount((current) => current + 1);
+      setResonance(result.resonance ?? null);
+      setFlowStep("complete");
     });
   }
 
-  if (isFinished) {
+  if (flowStep === "complete") {
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
         <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
 
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="flex flex-1 flex-col justify-center">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-            Profile Updated
+            Saved
           </p>
           <h1 className="mt-4 text-[28px] font-light tracking-tight text-white">
-            新しい項目が追加されました
+            プロフィールが育ちました
           </h1>
-          <p className="mt-4 max-w-[28ch] text-[15px] leading-relaxed text-white/45">
-            プロフィールは、会話を重ねるほど音楽人生のアルバムのように育っていきます。
+          <p className="mt-4 text-[15px] leading-relaxed text-white/45">
+            音楽の話をしていたら、自然とプロフィールが少し厚くなりました。
           </p>
+
+          {resonance ? (
+            <div className="mt-8 rounded-[24px] border border-primary/20 bg-primary/5 px-5 py-5">
+              <p className="text-[14px] font-medium text-primary">
+                共鳴度が{resonance.scoreDelta}%アップしました
+              </p>
+              {resonance.commonPoints.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  <p className="text-[12px] uppercase tracking-[0.16em] text-white/40">
+                    新しい共通点
+                  </p>
+                  {resonance.commonPoints.map((point) => (
+                    <p key={point} className="text-[15px] leading-relaxed text-white/75">
+                      ・{point}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-3">
@@ -76,74 +179,107 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
             <Link href={`/member/${member.id}`}>プロフィールを見る</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="w-full">
-            <Link href="/">ホームへ戻る</Link>
+            <Link href="/discover">もう一度話す</Link>
           </Button>
         </div>
       </div>
     );
   }
 
-  if (!step) {
-    return null;
+  if (flowStep === "review") {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
+        <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
+        <ProfileGrowReview
+          candidates={reviewCandidates}
+          onSave={handleSave}
+          onBack={() => setFlowStep("chat")}
+          isSaving={isPending}
+          error={error}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
-      <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
+    <div
+      className="mx-auto flex w-full max-w-mobile flex-col overflow-hidden bg-black"
+      style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : "100dvh" }}
+    >
+      <div className="shrink-0 px-5 pt-6">
+        <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
 
-      <div className="mb-8 mt-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-          Discover a Story
-        </p>
-        <h1 className="mt-3 text-[28px] font-light tracking-tight text-white">
-          プロフィールを育てる
-        </h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-white/45">
-          質問に答えるたびに、プロフィールに新しい項目が追加されます。
-        </p>
-        <p className="mt-4 text-[12px] uppercase tracking-[0.18em] text-white/30">
-          {completedCount + 1} / {pendingSteps.length}
-        </p>
-      </div>
-
-      <div className="flex-1 space-y-5 overflow-y-auto pb-6">
-        <DialogueTurn message={step.message} active />
-        <div className="pl-8">
-          <input
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                handleSubmit();
-              }
-            }}
-            placeholder={step.placeholder}
-            className="h-12 w-full rounded-full border border-border bg-white/[0.04] px-5 text-[15px] text-white outline-none placeholder:text-white/30 focus:border-border"
-          />
+        <div className="mb-4 mt-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+            Discover a Story
+          </p>
+          <h1 className="mt-3 text-[24px] font-light tracking-tight text-white sm:text-[28px]">
+            プロフィールを育てる
+          </h1>
+          <p className="mt-2 text-[14px] leading-relaxed text-white/45">
+            今日のテーマは「{theme.label}」。雑談みたいに3問だけ話しましょう。
+          </p>
+          <p className="mt-3 text-[12px] uppercase tracking-[0.18em] text-white/30">
+            {progressLabel}
+          </p>
         </div>
       </div>
 
-      <div className="space-y-3 border-t border-border pt-5">
-        {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
-        <Button
-          size="lg"
-          className="w-full"
-          disabled={!answer.trim() || isPending}
-          onClick={handleSubmit}
-        >
-          {isPending ? (
-            <span className="inline-flex items-center gap-2">
-              <FrequencySpinner size={16} />
-              項目を追加中...
-            </span>
-          ) : completedCount + 1 >= pendingSteps.length ? (
-            "項目を追加して完了"
-          ) : (
-            "項目を追加して次へ"
-          )}
-        </Button>
+      <div
+        ref={chatScrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4"
+      >
+        <div className="space-y-4">
+          {turns.map((turn, index) => (
+            <DialogueTurn
+              key={`${turn.role}-${index}`}
+              message={turn.message}
+              active={false}
+              isUser={turn.role === "user"}
+            />
+          ))}
+          {currentQuestion ? (
+            <DialogueTurn message={currentQuestion.message} active />
+          ) : null}
+          <div ref={chatEndRef} className="h-px shrink-0" aria-hidden />
+        </div>
       </div>
+
+      <footer
+        ref={composerRef}
+        className="shrink-0 border-t border-border bg-black/95 px-5 pt-3 backdrop-blur-xl pb-[max(1rem,env(safe-area-inset-bottom))]"
+      >
+        <div className="space-y-3">
+          {currentQuestion ? (
+            <ProfileGrowQuestionInput
+              question={currentQuestion}
+              freeText={freeText}
+              onFreeTextChange={setFreeText}
+              selected={selectedValues}
+              onSelectedChange={setSelectedValues}
+              listMaxHeight={pickerListMaxHeight}
+            />
+          ) : null}
+          {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+          <Button
+            size="lg"
+            className="h-12 w-full touch-manipulation text-[16px]"
+            disabled={!canSubmit || isPending}
+            onClick={handleSubmitAnswer}
+          >
+            {isPending ? (
+              <span className="inline-flex items-center gap-2">
+                <FrequencySpinner size={16} />
+                送信中...
+              </span>
+            ) : questionIndex + 1 >= QUESTIONS_PER_SESSION ? (
+              "回答して確認へ"
+            ) : (
+              "返信する"
+            )}
+          </Button>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -151,10 +287,22 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
 function DialogueTurn({
   message,
   active = false,
+  isUser = false,
 }: {
   message: string;
   active?: boolean;
+  isUser?: boolean;
 }) {
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[82%] rounded-[22px] bg-primary/15 px-4 py-3 text-[15px] leading-relaxed text-white">
+          {message}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-3">
       <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-medium text-primary">

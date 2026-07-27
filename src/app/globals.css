@@ -64,6 +64,21 @@
     @apply transition-all duration-300 ease-out;
   }
 
+  .mobile-touch-input {
+    @apply rounded-2xl border border-border bg-subtle px-4 py-3 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15;
+    font-size: 16px;
+  }
+
+  .mobile-touch-textarea {
+    @apply resize-none rounded-[22px] border border-border bg-white/[0.04] px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-border;
+    font-size: 16px;
+  }
+
+  .mobile-chat-textarea {
+    @apply resize-none rounded-[22px] border border-border bg-white/[0.04] px-4 py-3 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-border;
+    font-size: 16px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-welcome-scroll {
       animation: none;
