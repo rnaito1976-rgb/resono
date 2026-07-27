@@ -3,10 +3,17 @@ import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/ba
 import { getMemberById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
-import { buildResonanceReason } from "@/lib/resonance/matching";
+import {
+  buildResonanceReason,
+} from "@/lib/resonance/matching";
+import {
+  getResonanceReasonsFromCache,
+  saveResonanceReasonsToCache,
+} from "@/lib/resonance/cache";
 import { getResonanceStatusForMember } from "@/lib/resonance/status";
 import { MemberDetail } from "@/components/MemberDetail";
 import { getAuthSession } from "@/lib/supabase/auth";
+import type { ResonanceReason } from "@/lib/resonance/matching";
 
 export const dynamic = "force-dynamic";
 
@@ -35,15 +42,27 @@ export default async function MemberPage({ params }: MemberPageProps) {
     isOwnProfile && viewerMemberId
       ? getMutualResonateMembers(viewerMemberId)
       : Promise.resolve([]),
-    viewerMemberId ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
+    viewerMemberId && !isOwnProfile
+      ? getBandActivityFeedForMember(member.id)
+      : Promise.resolve([]),
     needsResonance
       ? getResonanceStatusForMember(viewerMemberId!, member.id)
       : Promise.resolve(undefined),
   ]);
-  const resonanceReason =
-    viewer && !isOwnProfile && viewer.id !== member.id
-      ? buildResonanceReason(viewer, member)
-      : undefined;
+
+  let resonanceReason: ResonanceReason | undefined;
+
+  if (viewer && !isOwnProfile && viewer.id !== member.id) {
+    const cached = await getResonanceReasonsFromCache(viewer.id, [member.id]);
+    resonanceReason =
+      cached.get(member.id) ?? buildResonanceReason(viewer, member);
+
+    if (!cached.has(member.id)) {
+      void saveResonanceReasonsToCache(viewer.id, [
+        { targetMemberId: member.id, reason: resonanceReason },
+      ]);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-mobile bg-background">

@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
-import { ProfileGrowReview } from "@/components/discover/ProfileGrowReview";
 import { ProfileGrowQuestionInput } from "@/components/discover/ProfileGrowQuestionInput";
 import { FrequencySpinner } from "@/components/frequency-color/FrequencySpinner";
 import { Button } from "@/components/ui/button";
 import { useFocusScrollIntoView } from "@/hooks/useFocusScrollIntoView";
 import { useVisualViewportHeight } from "@/hooks/useVisualViewportHeight";
-import { saveProfileGrowSessionAction } from "@/lib/actions/profile-grow";
+import {
+  getProfileGrowMemberAction,
+  saveProfileGrowSessionAction,
+} from "@/lib/actions/profile-grow";
 import {
   createCandidatesFromSelection,
   extractFreeTextCandidates,
@@ -20,8 +23,23 @@ import { pickRandomProfileGrowTheme } from "@/lib/profile/grow/themes";
 import type { ProfileGrowCandidate, ProfileGrowResonanceInsight } from "@/types/profile-grow";
 import type { Member } from "@/types/member";
 
+const ProfileGrowReview = dynamic(
+  () =>
+    import("@/components/discover/ProfileGrowReview").then((module) => ({
+      default: module.ProfileGrowReview,
+    })),
+  {
+    loading: () => (
+      <div className="flex flex-1 flex-col justify-center">
+        <div className="h-8 w-32 animate-pulse rounded-full bg-white/10" />
+        <div className="mt-6 h-24 animate-pulse rounded-[22px] bg-white/[0.04]" />
+      </div>
+    ),
+  }
+);
+
 type ProfileConversationFlowProps = {
-  member: Member;
+  memberId: string;
 };
 
 type ChatTurn = {
@@ -33,7 +51,8 @@ type FlowStep = "chat" | "review" | "complete";
 
 const QUESTIONS_PER_SESSION = 3;
 
-export function ProfileConversationFlow({ member }: ProfileConversationFlowProps) {
+export function ProfileConversationFlow({ memberId }: ProfileConversationFlowProps) {
+  const [member, setMember] = useState<Member | null>(null);
   const [session] = useState(() => {
     const theme = pickRandomProfileGrowTheme();
     return {
@@ -61,6 +80,10 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
 
   useFocusScrollIntoView(composerRef);
 
+  useEffect(() => {
+    void getProfileGrowMemberAction(memberId).then(setMember);
+  }, [memberId]);
+
   const currentQuestion = theme.questions[questionIndex];
   const isSelectQuestion = currentQuestion?.inputMode === "select";
   const progressLabel = `${Math.min(questionIndex + 1, QUESTIONS_PER_SESSION)} / ${QUESTIONS_PER_SESSION}`;
@@ -79,7 +102,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
     : freeText.trim().length > 0;
 
   const reviewCandidates = useMemo(
-    () => dedupeProfileGrowCandidates(candidates, member),
+    () => (member ? dedupeProfileGrowCandidates(candidates, member) : candidates),
     [candidates, member]
   );
 
@@ -150,7 +173,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
   if (flowStep === "complete") {
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
-        <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
+        <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
 
         <div className="flex flex-1 flex-col justify-center">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
@@ -186,7 +209,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
 
         <div className="space-y-3">
           <Button asChild size="lg" className="w-full">
-            <Link href={`/member/${member.id}`}>プロフィールを見る</Link>
+            <Link href={`/member/${memberId}`}>プロフィールを見る</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="w-full">
             <Link href="/discover">もう一度話す</Link>
@@ -197,9 +220,21 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
   }
 
   if (flowStep === "review") {
+    if (!member) {
+      return (
+        <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
+          <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
+          <div className="flex flex-1 flex-col justify-center gap-4">
+            <div className="h-8 w-40 animate-pulse rounded-full bg-white/10" />
+            <div className="h-24 animate-pulse rounded-[22px] bg-white/[0.04]" />
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-mobile flex-col bg-black px-5 pb-8 pt-6">
-        <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
+        <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
         <ProfileGrowReview
           candidates={reviewCandidates}
           onSave={handleSave}
@@ -217,7 +252,7 @@ export function ProfileConversationFlow({ member }: ProfileConversationFlowProps
       style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : "100dvh" }}
     >
       <div className="shrink-0 px-5 pt-6">
-        <AppTopBar backHref={`/member/${member.id}`} backLabel="プロフィールへ" />
+        <AppTopBar backHref={`/member/${memberId}`} backLabel="プロフィールへ" />
 
         <div className="mb-4 mt-4">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">

@@ -9,7 +9,7 @@ import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-export async function getFrequencyColorByUserId(
+export const getFrequencyColorByUserId = cache(async function getFrequencyColorByUserId(
   userId: string
 ): Promise<FrequencyColorHex | undefined> {
   if (!isSupabaseConfigured()) {
@@ -35,7 +35,7 @@ export async function getFrequencyColorByUserId(
     console.error("[Supabase] getFrequencyColorByUserId:", error);
     return undefined;
   }
-}
+});
 
 export const getFrequencyColorsByUserIds = cache(async function getFrequencyColorsByUserIds(
   userIds: string[]

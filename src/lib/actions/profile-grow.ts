@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getMemberByUserId, updateMember } from "@/lib/members";
+import { getMemberById, getMemberByUserId, updateMember } from "@/lib/members";
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import {
   appendProfileGrowActivity,
@@ -13,6 +13,13 @@ import { syncMemberFromProfileItems, syncProfileItemsFromMemberFields } from "@/
 import { invalidateResonanceCacheForMember } from "@/lib/resonance/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileGrowCandidate } from "@/types/profile-grow";
+import type { Member } from "@/types/member";
+
+export async function getProfileGrowMemberAction(
+  memberId: string
+): Promise<Member | null> {
+  return (await getMemberById(memberId)) ?? null;
+}
 
 export async function saveProfileGrowSessionAction(candidates: ProfileGrowCandidate[]) {
   const supabase = await createClient();

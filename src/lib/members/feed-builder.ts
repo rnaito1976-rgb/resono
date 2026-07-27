@@ -18,6 +18,7 @@ import type { FeedItem, MembersFeedPage } from "@/lib/members/feed";
 /** Build reasons synchronously for the first N cards; defer the rest. */
 const SYNC_REASON_BUILD_LIMIT = 6;
 const FEED_CANDIDATE_LIMIT = 200;
+const FEED_FAST_CANDIDATE_LIMIT = 80;
 
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
@@ -157,7 +158,8 @@ export async function buildMembersFeedPage(
   limit: number,
   options: BuildMembersFeedPageOptions = {}
 ): Promise<MembersFeedPage> {
-  const { members: allMembers } = await getMembersPage(0, FEED_CANDIDATE_LIMIT);
+  const candidateLimit = options.fast ? FEED_FAST_CANDIDATE_LIMIT : FEED_CANDIDATE_LIMIT;
+  const { members: allMembers } = await getMembersPage(0, candidateLimit);
   const viewerMemberId = options.viewer?.id ?? (await resolveCurrentMemberId());
   const candidates = filterFeedMembers(allMembers, viewerMemberId, options.userId);
 

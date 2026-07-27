@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       "lucide-react",
       "@radix-ui/react-label",
       "@radix-ui/react-slot",
+      "@tanstack/react-query",
     ],
   },
   images: {
