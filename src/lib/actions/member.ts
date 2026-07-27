@@ -87,6 +87,8 @@ export async function updateInstrumentsAction(instruments: string[]) {
     revalidatePath(`/member/${member.id}/edit`);
     revalidatePath("/bands");
 
+    void invalidateResonanceCacheForMember(member.id);
+
     return { success: true, instruments: sanitized };
   } catch (error) {
     console.error("[updateInstrumentsAction]", error);
@@ -119,6 +121,7 @@ export async function updateMemberAction(member: Member) {
   revalidatePath("/me");
   revalidatePath(`/member/${member.id}`);
   revalidatePath(`/member/${member.id}/edit`);
+  revalidatePath("/discover");
 
   void invalidateResonanceCacheForMember(member.id);
 

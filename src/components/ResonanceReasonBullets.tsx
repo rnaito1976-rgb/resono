@@ -16,17 +16,20 @@ export function ResonanceReasonBullets({
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
-        共鳴した理由
+        共鳴ポイント
       </p>
       <ul className="space-y-1.5">
         {reason.commonPoints.map((point) => (
           <li
             key={point}
-            className={`leading-relaxed text-white/80 ${
+            className={`flex items-start gap-2 leading-relaxed text-white/80 ${
               compact ? "text-[14px]" : "text-[15px]"
             }`}
           >
-            {point}
+            <span className="mt-[1px] text-primary" aria-hidden>
+              ✓
+            </span>
+            <span>{point}</span>
           </li>
         ))}
       </ul>
@@ -41,7 +44,7 @@ export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
         Resonance
       </p>
       <p className="mt-3 text-[28px] font-light tabular-nums tracking-tight">
-        共鳴度 {reason.score}%
+        {reason.score}%
       </p>
 
       <div className="mt-4">

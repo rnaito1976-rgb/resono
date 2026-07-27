@@ -12,7 +12,6 @@ import { hasProfilePhoto } from "@/lib/onboarding/status";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { Member } from "@/types/member";
-import { ResonanceBadge } from "@/components/ui";
 
 type PortraitSlideProps = {
   member: Member;
@@ -36,7 +35,9 @@ export function PortraitSlide({
           <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
             共鳴度
           </p>
-          <ResonanceBadge rate={resonanceReason.score} size="lg" />
+          <p className="text-[32px] font-light tabular-nums tracking-tight text-white">
+            {resonanceReason.score}%
+          </p>
         </div>
         <ResonanceReasonBullets reason={resonanceReason} />
       </div>

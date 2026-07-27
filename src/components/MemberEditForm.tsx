@@ -31,7 +31,7 @@ import {
 import { WelcomeArtistPicker } from "@/components/welcome/WelcomeArtistPicker";
 import { WelcomePartsPicker } from "@/components/welcome/WelcomePartsPicker";
 import { WelcomeSoundsPicker } from "@/components/welcome/WelcomeSoundsPicker";
-import { formatInfluencesForEdit, joinList, splitList } from "@/lib/form";
+import { formatInfluencesForEdit, joinList, mergePublicInfluences, splitList } from "@/lib/form";
 import {
   PROFILE_GROW_FESTIVAL_GROUPS,
   PROFILE_GROW_GEAR_GROUPS,
@@ -326,7 +326,11 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
               <FormInput
                 value={formatInfluencesForEdit(member.portrait.influences)}
                 onChange={(event) =>
-                  updateNested("portrait", "influences", splitList(event.target.value))
+                  updateNested(
+                    "portrait",
+                    "influences",
+                    mergePublicInfluences(member.portrait.influences, event.target.value)
+                  )
                 }
                 placeholder="例: メロディ, ライブ映え, 丁寧な音作り"
               />

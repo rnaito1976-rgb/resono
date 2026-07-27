@@ -56,6 +56,7 @@ export type MemberDetailFrameProps = {
   member: Member;
   isOwnProfile?: boolean;
   resonanceReason?: import("@/lib/resonance/matching").ResonanceReason;
+  musicResonance?: import("@/types/music-profile").MusicPageView["sectionResonance"];
   resonanceStatus?: ResonanceStatus;
   showResonateButton?: boolean;
   mutualMembers?: import("@/types/band").MutualResonateMember[];
@@ -71,6 +72,7 @@ export function MemberDetailFrame({
   member,
   isOwnProfile = false,
   resonanceReason,
+  musicResonance,
   resonanceStatus,
   showResonateButton = false,
   mutualMembers = [],
@@ -129,7 +131,13 @@ export function MemberDetailFrame({
           />
         );
       case "music":
-        return <MusicSlide member={member} isOwnProfile={isOwnProfile} />;
+        return (
+          <MusicSlide
+            member={member}
+            isOwnProfile={isOwnProfile}
+            musicResonance={musicResonance}
+          />
+        );
       case "lookingFor":
         return (
           <LookingForSlide

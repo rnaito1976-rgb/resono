@@ -1,5 +1,6 @@
 import { createEmptyCoverSong } from "@/lib/music/cover-songs";
 import { PROFILE_GROW_FIELD_LABELS } from "@/lib/profile/grow/labels";
+import { mergeResonanceSignals } from "@/types/resonance-signals";
 import type { ProfileGrowCandidate, ProfileGrowFieldKey } from "@/types/profile-grow";
 import type { Member } from "@/types/member";
 import type { MemberActivityMilestone } from "@/lib/members/initial-activities";
@@ -69,6 +70,9 @@ function applyCandidate(member: Member, candidate: ProfileGrowCandidate): Member
         portrait: {
           ...member.portrait,
           influences: appendUnique(member.portrait.influences, `大切:${candidate.value}`),
+          resonanceSignals: mergeResonanceSignals(member.portrait.resonanceSignals, {
+            bandValues: [candidate.value],
+          }),
         },
       };
 
@@ -203,6 +207,15 @@ function applyCandidate(member: Member, candidate: ProfileGrowCandidate): Member
         lookingFor: {
           ...member.lookingFor,
           bandVision: appendParagraph(member.lookingFor.bandVision, candidate.value),
+        },
+        portrait: {
+          ...member.portrait,
+          resonanceSignals: mergeResonanceSignals(member.portrait.resonanceSignals, {
+            notes: [candidate.value],
+            musicFocus: /コピー|オリジナル|セッション|制作|録音/.test(candidate.value)
+              ? [candidate.value]
+              : undefined,
+          }),
         },
       };
 

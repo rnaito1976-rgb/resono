@@ -1,5 +1,6 @@
 import { applyProfileAiComment, buildProfileAiComment } from "@/lib/profile/ai-comment";
 import { attachInitialMemberActivities } from "@/lib/members/initial-activities";
+import { mergeResonanceSignals } from "@/types/resonance-signals";
 import type { Member } from "@/types/member";
 
 export const SUGGESTED_ARTISTS = [
@@ -263,13 +264,8 @@ export function buildMemberFromDialogue(
   member: Member,
   answers: DialogueAnswers
 ): Member {
-  const influences = [
-    `バンド:${answers.bandGoal}`,
-    `活動:${answers.liveFrequency}`,
-    `スタイル:${answers.musicFocus}`,
-    `大切:${answers.bandValue}`,
-    `メンバー:${answers.idealMember}`,
-  ];
+  // Values のみ公開プロフィールへ。スタイル・メンバー・会話は内部シグナル。
+  const influences = [`大切:${answers.bandValue}`];
 
   const nextMember: Member = {
     ...member,
@@ -281,6 +277,11 @@ export function buildMemberFromDialogue(
       location: answers.location,
       influences,
       dialogueCompleted: true,
+      resonanceSignals: mergeResonanceSignals(member.portrait.resonanceSignals, {
+        musicFocus: [answers.musicFocus],
+        idealMember: [answers.idealMember],
+        bandValues: [answers.bandValue],
+      }),
     },
     music: {
       ...member.music,
@@ -304,10 +305,7 @@ export function enrichMemberFromDiscover(
   member: Member,
   answers: { artists: string[]; tempo: string; values: string[] }
 ): Member {
-  const extraInfluences = [
-    ...answers.values.map((value) => `大切:${value}`),
-    ...(answers.tempo ? [`会話:${answers.tempo}`] : []),
-  ];
+  const extraInfluences = answers.values.map((value) => `大切:${value}`);
 
   return applyProfileAiComment({
     ...member,
@@ -317,6 +315,10 @@ export function enrichMemberFromDiscover(
       influences: Array.from(
         new Set([...member.portrait.influences, ...extraInfluences])
       ),
+      resonanceSignals: mergeResonanceSignals(member.portrait.resonanceSignals, {
+        conversation: answers.tempo ? [answers.tempo] : [],
+        bandValues: answers.values,
+      }),
     },
     music: {
       ...member.music,

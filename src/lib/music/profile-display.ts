@@ -8,16 +8,53 @@ const DEMO_MUSIC_DNA: MusicDnaBar[] = [
   { label: "Pop", value: 30 },
 ];
 
-const DEMO_SECTION_RESONANCE = {
-  favoriteArtists: ["Radiohead"],
-  coverSongs: ["No Surprises"],
-  dreamBands: ["羊文学"],
-  favoriteGenres: ["Shoegaze", "Alternative"],
-  musicDna: ["Alternative"],
-};
-
 function uniqueStrings(items: string[]): string[] {
   return [...new Set(items.map((item) => item.trim()).filter(Boolean))];
+}
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function sharedItems(left: string[], right: string[]): string[] {
+  const normalized = new Set(right.map(normalizeToken));
+  return uniqueStrings(left.filter((item) => normalized.has(normalizeToken(item))));
+}
+
+/** 閲覧者と対象の実データから Music タブの共鳴ポイントを算出 */
+export function buildMusicSectionResonance(
+  viewer: Member,
+  target: Member
+): MusicPageView["sectionResonance"] {
+  const coverTitles = (member: Member) =>
+    uniqueStrings((member.music.coverSongs ?? []).map((song) => song.title));
+
+  const favoriteArtists = sharedItems(
+    target.music.favoriteArtists ?? [],
+    viewer.music.favoriteArtists ?? []
+  );
+  const coverSongs = sharedItems(coverTitles(target), coverTitles(viewer));
+  const dreamBands = sharedItems(
+    target.music.dreamBands ?? [],
+    viewer.music.dreamBands ?? []
+  );
+  const favoriteGenres = sharedItems(target.music.genres ?? [], viewer.music.genres ?? []);
+  const musicDna = sharedItems(
+    (target.music.musicDna ?? []).map((bar) => bar.label),
+    (viewer.music.musicDna ?? []).map((bar) => bar.label)
+  );
+
+  if (
+    favoriteArtists.length === 0 &&
+    coverSongs.length === 0 &&
+    dreamBands.length === 0 &&
+    favoriteGenres.length === 0 &&
+    musicDna.length === 0
+  ) {
+    return null;
+  }
+
+  return { favoriteArtists, coverSongs, dreamBands, favoriteGenres, musicDna };
 }
 
 function deriveMusicDna(genres: string[]): MusicDnaBar[] {
@@ -55,7 +92,10 @@ function resolveDreamBands(member: Member): string[] {
 
 export function buildMusicPageView(
   member: Member,
-  options: { showResonance: boolean }
+  options: {
+    showResonance: boolean;
+    sectionResonance?: MusicPageView["sectionResonance"];
+  }
 ): MusicPageView {
   const favoriteArtists = uniqueStrings(member.music.favoriteArtists);
   const coverSongs = resolveCoverSongs(member);
@@ -72,6 +112,8 @@ export function buildMusicPageView(
     dreamBands,
     favoriteGenres,
     musicDna,
-    sectionResonance: options.showResonance ? DEMO_SECTION_RESONANCE : null,
+    sectionResonance: options.showResonance
+      ? (options.sectionResonance ?? null)
+      : null,
   };
 }

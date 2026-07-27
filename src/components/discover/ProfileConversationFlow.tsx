@@ -188,17 +188,34 @@ export function ProfileConversationFlow({ memberId }: ProfileConversationFlowPro
 
           {resonance ? (
             <div className="mt-8 rounded-[24px] border border-primary/20 bg-primary/5 px-5 py-5">
-              <p className="text-[14px] font-medium text-primary">
-                共鳴度が{resonance.scoreDelta}%アップしました
-              </p>
+              {resonance.score != null ? (
+                <p className="text-[32px] font-light tabular-nums tracking-tight text-white">
+                  {resonance.score}%
+                </p>
+              ) : null}
+              {resonance.scoreDelta > 0 ? (
+                <p className="mt-2 text-[14px] font-medium text-primary">
+                  共鳴度が{resonance.scoreDelta}%アップしました
+                </p>
+              ) : (
+                <p className="mt-2 text-[14px] font-medium text-primary">
+                  新しい共鳴ポイントが見つかりました
+                </p>
+              )}
               {resonance.commonPoints.length > 0 ? (
-                <div className="mt-4 space-y-2">
-                  <p className="text-[12px] uppercase tracking-[0.16em] text-white/40">
-                    新しい共通点
+                <div className="mt-5 space-y-2.5">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/40">
+                    共鳴ポイント
                   </p>
                   {resonance.commonPoints.map((point) => (
-                    <p key={point} className="text-[15px] leading-relaxed text-white/75">
-                      ・{point}
+                    <p
+                      key={point}
+                      className="flex items-start gap-2 text-[15px] leading-relaxed text-white/80"
+                    >
+                      <span className="text-primary" aria-hidden>
+                        ✓
+                      </span>
+                      <span>{point}</span>
                     </p>
                   ))}
                 </div>

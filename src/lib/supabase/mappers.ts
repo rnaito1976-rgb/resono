@@ -95,6 +95,44 @@ export function rowToMember(row: MemberRow): Member {
   };
 }
 
+function normalizeStringList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+
+  const values = raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return values.length > 0 ? values : undefined;
+}
+
+function normalizeResonanceSignals(
+  raw: unknown
+): Member["portrait"]["resonanceSignals"] | undefined {
+  if (!raw || typeof raw !== "object") {
+    return undefined;
+  }
+
+  const value = raw as Record<string, unknown>;
+  const signals = {
+    musicFocus: normalizeStringList(value.musicFocus),
+    conversation: normalizeStringList(value.conversation),
+    idealMember: normalizeStringList(value.idealMember),
+    bandValues: normalizeStringList(value.bandValues),
+    notes: normalizeStringList(value.notes),
+  };
+
+  if (
+    !signals.musicFocus &&
+    !signals.conversation &&
+    !signals.idealMember &&
+    !signals.bandValues &&
+    !signals.notes
+  ) {
+    return undefined;
+  }
+
+  return signals;
+}
+
 function normalizePortrait(raw: unknown): Member["portrait"] {
   const value = (raw ?? {}) as Partial<Member["portrait"]>;
 
@@ -108,6 +146,7 @@ function normalizePortrait(raw: unknown): Member["portrait"] {
     dialogueCompleted: value.dialogueCompleted === true,
     profileItems: normalizeProfileItems(raw),
     activityMilestones: normalizeActivityMilestones(value.activityMilestones),
+    resonanceSignals: normalizeResonanceSignals(value.resonanceSignals),
   };
 }
 

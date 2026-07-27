@@ -1,4 +1,5 @@
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import { isCurrentResonanceReason } from "@/lib/resonance/matching";
 import { isMissingSchemaObject, logSupabaseError } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -12,20 +13,18 @@ type CacheRow = {
 function parseReason(raw: unknown, score: number): ResonanceReason | undefined {
   if (raw && typeof raw === "object" && "score" in raw) {
     const parsed = raw as ResonanceReason;
-    if (Number.isFinite(parsed.score)) {
+    if (isCurrentResonanceReason(parsed)) {
       return parsed;
     }
+    return undefined;
   }
 
   if (!Number.isFinite(score)) {
     return undefined;
   }
 
-  return {
-    score,
-    commonPoints: [],
-    aiComment: "",
-  };
+  // 旧キャッシュは破棄して再計算させる
+  return undefined;
 }
 
 /** ⑬ DBキャッシュから共鳴理由を一括取得（ヒット分のみ返す） */
@@ -93,7 +92,7 @@ export async function saveResonanceReasonsToCache(
   }
 }
 
-/** ⑬ プロフィール更新時に関連キャッシュを無効化 */
+/** プロフィール更新時に関連キャッシュを無効化 */
 export async function invalidateResonanceCacheForMember(memberId: string): Promise<void> {
   if (!isSupabaseConfigured()) {
     return;
@@ -110,4 +109,9 @@ export async function invalidateResonanceCacheForMember(memberId: string): Promi
       logSupabaseError("invalidateResonanceCacheForMember", error);
     }
   }
+
+  // フィードのメモリ上ランキングも捨てて、次回再計算させる
+  void import("@/lib/members/feed-builder").then(({ clearRankedFeedCache }) => {
+    clearRankedFeedCache(memberId);
+  });
 }

@@ -11,9 +11,11 @@ import {
   saveResonanceReasonsToCache,
 } from "@/lib/resonance/cache";
 import { getResonanceStatusForMember } from "@/lib/resonance/status";
+import { buildMusicSectionResonance } from "@/lib/music/profile-display";
 import { MemberDetail } from "@/components/MemberDetail";
 import { getAuthSession } from "@/lib/supabase/auth";
 import type { ResonanceReason } from "@/lib/resonance/matching";
+import type { MusicPageView } from "@/types/music-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
+  let musicResonance: MusicPageView["sectionResonance"] | undefined;
 
   if (viewer && !isOwnProfile && viewer.id !== member.id) {
     const cached = await getResonanceReasonsFromCache(viewer.id, [member.id]);
@@ -62,6 +65,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
         { targetMemberId: member.id, reason: resonanceReason },
       ]);
     }
+
+    musicResonance = buildMusicSectionResonance(viewer, member);
   }
 
   return (
@@ -70,6 +75,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         member={member}
         isOwnProfile={isOwnProfile}
         resonanceReason={resonanceReason}
+        musicResonance={musicResonance}
         resonanceStatus={resonanceStatus}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
         mutualMembers={mutualMembers}

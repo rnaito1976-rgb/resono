@@ -73,5 +73,7 @@ export type ProfileGrowTheme = {
 
 export type ProfileGrowResonanceInsight = {
   scoreDelta: number;
+  /** 更新後の代表的な共鳴度 */
+  score?: number;
   commonPoints: string[];
 };

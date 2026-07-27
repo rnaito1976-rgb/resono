@@ -334,5 +334,7 @@ export async function completeDiscoverDialogueAction(input: {
   revalidatePath("/");
   revalidatePath("/discover");
 
+  void invalidateResonanceCacheForMember(member.id);
+
   return { success: true };
 }

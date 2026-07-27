@@ -1,6 +1,7 @@
 import type { ProfileItem } from "@/types/profile-item";
 import type { MemberMusicProfile } from "@/types/music-profile";
 import type { MemberActivityMilestone } from "@/lib/members/initial-activities";
+import type { MemberResonanceSignals } from "@/types/resonance-signals";
 
 export type Member = {
   id: string;
@@ -22,6 +23,11 @@ export type Member = {
     profileItems?: ProfileItem[];
     /** 初回登録時の Activity マイルストーン */
     activityMilestones?: MemberActivityMilestone[];
+    /**
+     * AI会話由来の内部シグナル。
+     * 共鳴度計算には使うが、プロフィール表示には出さない。
+     */
+    resonanceSignals?: MemberResonanceSignals;
   };
   music: MemberMusicProfile;
   fashion: {

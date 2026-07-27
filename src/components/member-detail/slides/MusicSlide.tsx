@@ -9,14 +9,23 @@ import {
 import { MusicTagGrid } from "@/components/member-detail/music/MusicTagGrid";
 import { buildMusicPageView } from "@/lib/music/profile-display";
 import type { Member } from "@/types/member";
+import type { MusicPageView } from "@/types/music-profile";
 
 type MusicSlideProps = {
   member: Member;
   isOwnProfile?: boolean;
+  musicResonance?: MusicPageView["sectionResonance"];
 };
 
-export function MusicSlide({ member, isOwnProfile = false }: MusicSlideProps) {
-  const view = buildMusicPageView(member, { showResonance: !isOwnProfile });
+export function MusicSlide({
+  member,
+  isOwnProfile = false,
+  musicResonance,
+}: MusicSlideProps) {
+  const view = buildMusicPageView(member, {
+    showResonance: !isOwnProfile,
+    sectionResonance: musicResonance,
+  });
   const resonance = view.sectionResonance;
 
   return (

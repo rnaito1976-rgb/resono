@@ -5,6 +5,7 @@ import { calculateRecommendationScore } from "@/lib/recommendation/scoring";
 import {
   buildResonanceReason,
   calculateResonanceMatch,
+  isCurrentResonanceReason,
 } from "@/lib/resonance/matching";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import {
@@ -35,8 +36,21 @@ type RankedFeedCacheEntry = {
 
 const rankedFeedCache = new Map<string, RankedFeedCacheEntry>();
 
+export function clearRankedFeedCache(memberId?: string) {
+  if (!memberId) {
+    rankedFeedCache.clear();
+    return;
+  }
+
+  for (const key of rankedFeedCache.keys()) {
+    if (key.startsWith(`${memberId}:`)) {
+      rankedFeedCache.delete(key);
+    }
+  }
+}
+
 function isValidReason(reason: ResonanceReason | undefined): reason is ResonanceReason {
-  return reason != null && Number.isFinite(reason.score);
+  return isCurrentResonanceReason(reason);
 }
 
 /** Seed / demo profiles without a linked auth user. */
