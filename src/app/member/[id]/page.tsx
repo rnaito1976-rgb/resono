@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/bands/queries";
-import { getMemberById } from "@/lib/members";
+import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import {
@@ -41,7 +41,9 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
   const [viewer, mutualMembers, bandActivities, resonanceStatus, cachedReasons] =
     await Promise.all([
-      viewerMemberId ? getMemberById(viewerMemberId) : Promise.resolve(undefined),
+      viewerMemberId && viewerMemberId !== member.id
+        ? getMemberListById(viewerMemberId)
+        : Promise.resolve(undefined),
       isOwnProfile && viewerMemberId
         ? getMutualResonateMembers(viewerMemberId)
         : Promise.resolve([]),

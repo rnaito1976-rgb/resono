@@ -16,8 +16,9 @@ import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { InfiniteData } from "@tanstack/react-query";
 
-const FEED_CACHE_PREFIX = "resono:home-feed:v4:";
-const FEED_CACHE_TTL_MS = 45 * 1000;
+const FEED_CACHE_PREFIX = "resono:home-feed:v5:";
+const FEED_CACHE_TTL_MS = 2 * 60 * 1000;
+const FEED_STALE_MS = 2 * 60 * 1000;
 
 type HomeFeedListProps = {
   viewerId?: string;
@@ -96,7 +97,6 @@ export function HomeFeedList({
 }: HomeFeedListProps) {
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const prefetchStartedRef = useRef(false);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
   const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
 
@@ -113,7 +113,7 @@ export function HomeFeedList({
         ? { pages: [cachedFirstPage.current], pageParams: [0] }
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-      staleTime: 45 * 1000,
+      staleTime: initialHasReasons ? FEED_STALE_MS : 45 * 1000,
       refetchOnMount: !initialFeedPage || !initialHasReasons,
       refetchOnWindowFocus: false,
     });
@@ -126,20 +126,6 @@ export function HomeFeedList({
       writeFeedCache(viewerId, firstPage);
     }
   }, [firstPage, viewerId]);
-
-  // Warm the next page as soon as the first page is ready — don't wait for the sentinel.
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage || prefetchStartedRef.current) {
-      return;
-    }
-
-    if ((data?.pages.length ?? 0) < 1) {
-      return;
-    }
-
-    prefetchStartedRef.current = true;
-    void fetchNextPage();
-  }, [data?.pages.length, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     const handleResonanceChange = () => {
@@ -180,43 +166,61 @@ export function HomeFeedList({
       return;
     }
 
-    for (const memberId of memberIds.slice(0, 6)) {
-      void prefetchMemberProfile(queryClient, memberId);
-    }
+    const prefetchProfiles = () => {
+      for (const memberId of memberIds.slice(0, 2)) {
+        void prefetchMemberProfile(queryClient, memberId);
+      }
+    };
+
+    const idleId = window.requestIdleCallback?.(prefetchProfiles, { timeout: 4000 });
+    const timeoutId = idleId ? undefined : window.setTimeout(prefetchProfiles, 2000);
 
     const missingStatusIds = feedItems
       .filter((item) => item.resonanceStatus === undefined)
       .map((item) => item.member.id);
 
-    if (missingStatusIds.length === 0) {
-      return;
-    }
-
-    void getResonanceStatusBatchAction(missingStatusIds).then((statusMap) => {
-      for (const [memberId, status] of Object.entries(statusMap)) {
-        queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
-      }
-
-      queryClient.setQueryData<InfiniteData<MembersFeedPage>>(
-        queryKeys.members.feed(viewerId),
-        (current) => {
-          if (!current) {
-            return current;
+    let statusTimeoutId: number | undefined;
+    if (missingStatusIds.length > 0) {
+      statusTimeoutId = window.setTimeout(() => {
+        void getResonanceStatusBatchAction(missingStatusIds).then((statusMap) => {
+          for (const [memberId, status] of Object.entries(statusMap)) {
+            queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
           }
 
-          return {
-            ...current,
-            pages: current.pages.map((page) => ({
-              ...page,
-              items: page.items.map((item) => {
-                const status = statusMap[item.member.id];
-                return status ? { ...item, resonanceStatus: status } : item;
-              }),
-            })),
-          };
-        }
-      );
-    });
+          queryClient.setQueryData<InfiniteData<MembersFeedPage>>(
+            queryKeys.members.feed(viewerId),
+            (current) => {
+              if (!current) {
+                return current;
+              }
+
+              return {
+                ...current,
+                pages: current.pages.map((page) => ({
+                  ...page,
+                  items: page.items.map((item) => {
+                    const status = statusMap[item.member.id];
+                    return status ? { ...item, resonanceStatus: status } : item;
+                  }),
+                })),
+              };
+            }
+          );
+        });
+      }, 1500);
+    }
+
+    return () => {
+      if (idleId) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+      if (statusTimeoutId) {
+        window.clearTimeout(statusTimeoutId);
+      }
+    };
   }, [feedItems, queryClient, viewerId]);
 
   const handleObserver = useCallback(

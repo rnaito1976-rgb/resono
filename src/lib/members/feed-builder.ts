@@ -23,7 +23,8 @@ const FEED_CANDIDATE_LIMIT = 200;
 const FEED_FAST_CANDIDATE_LIMIT = 24;
 /** 共鳴率順だけだと新規メンバー（rate 0）が候補に入らないので、最近参加した人も混ぜる */
 const RECENT_MEMBER_LIMIT = 12;
-const RANK_CACHE_TTL_MS = 20_000;
+const RANK_CACHE_TTL_MS = 60_000;
+const RANK_CACHE_TTL_FAST_MS = 45_000;
 
 type BuildMembersFeedPageOptions = {
   viewer?: Member;
@@ -44,7 +45,7 @@ type CandidatePoolEntry = {
   promise: Promise<{ members: Member[] }>;
 };
 
-const CANDIDATE_POOL_TTL_MS = 10_000;
+const CANDIDATE_POOL_TTL_MS = 45_000;
 const candidatePoolCache = new Map<number, CandidatePoolEntry>();
 
 type RecentPoolEntry = {
@@ -52,7 +53,7 @@ type RecentPoolEntry = {
   promise: Promise<Member[]>;
 };
 
-const RECENT_POOL_TTL_MS = 10_000;
+const RECENT_POOL_TTL_MS = 45_000;
 let recentMemberPool: RecentPoolEntry | null = null;
 
 function mergeMemberPools(...pools: Member[][]): Member[] {
@@ -290,7 +291,7 @@ async function getRankedFeedMembers(
 
   const [allMembers, feedViewer] = await Promise.all([
     getFeedCandidateMembers(candidateLimit),
-    resolveFeedViewerForBuild(viewer, fast),
+    fast ? Promise.resolve(viewer) : resolveFeedViewerForBuild(viewer, false),
   ]);
   const candidates = filterFeedMembers(allMembers, viewerMemberId, userId);
   const cachedReasons = await getResonanceReasonsFromCache(
@@ -303,12 +304,16 @@ async function getRankedFeedMembers(
       return reason.score;
     }
 
+    if (fast) {
+      return member.resonanceRate;
+    }
+
     return calculateResonanceMatch(feedViewer, member);
   });
 
   rankedFeedCache.set(cacheKey, {
     members: sorted,
-    expiresAt: Date.now() + RANK_CACHE_TTL_MS,
+    expiresAt: Date.now() + (fast ? RANK_CACHE_TTL_FAST_MS : RANK_CACHE_TTL_MS),
   });
 
   return sorted;
@@ -356,9 +361,7 @@ export async function buildMembersFeedPage(
     viewerMemberId,
     rankedPageMembers,
     {
-      syncLimit: isScrollPage
-        ? 0
-        : Math.max(SYNC_REASON_BUILD_LIMIT, rankedPageMembers.length),
+      syncLimit: isScrollPage ? 0 : rankedPageMembers.length,
       includeStatus: false,
       fast,
     }

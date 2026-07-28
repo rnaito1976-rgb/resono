@@ -80,7 +80,7 @@ export async function completeMinimalRegistrationAction(
       void saveFrequencyColorForUser(user.id, frequencyColor);
     }
 
-    await import("@/lib/live/events").then(({ publishLiveEvent }) =>
+    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
       publishLiveEvent({
         kind: "new_member",
         title: updated.name,
