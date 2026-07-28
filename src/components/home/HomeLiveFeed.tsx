@@ -2,14 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { formatRelativeTime, isLiveEventNew } from "@/lib/live/time";
 import { buildLoginHref } from "@/lib/navigation/login-redirect";
 import { NO_PHOTO_URL } from "@/lib/onboarding/status";
-import { prefetchMemberProfile } from "@/lib/profile/prefetch";
 import { useProfileSheetOptional } from "@/providers/ProfileSheetProvider";
 import { cn } from "@/lib/utils";
 import {
@@ -50,7 +48,6 @@ type HomeLiveFeedProps = {
 };
 
 export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
-  const queryClient = useQueryClient();
   const profileSheet = useProfileSheetOptional();
   const [animateIds, setAnimateIds] = useState<Set<string>>(new Set());
 
@@ -70,39 +67,6 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
       writeSeenIds(seen);
     }
   }, [events]);
-
-  useEffect(() => {
-    if (!profileSheet) {
-      return;
-    }
-
-    const memberIds = events
-      .filter((event) => event.kind === "new_member" && event.actorMemberId)
-      .slice(0, 4)
-      .map((event) => event.actorMemberId!);
-
-    if (memberIds.length === 0) {
-      return;
-    }
-
-    const prefetch = () => {
-      for (const memberId of memberIds) {
-        void prefetchMemberProfile(queryClient, memberId);
-      }
-    };
-
-    const idleId = window.requestIdleCallback?.(prefetch, { timeout: 2000 });
-    const timeoutId = idleId ? undefined : window.setTimeout(prefetch, 800);
-
-    return () => {
-      if (idleId) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [events, profileSheet, queryClient]);
 
   return (
     <section className="space-y-4">

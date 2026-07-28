@@ -1,13 +1,15 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { HomeFeedSection } from "@/components/home/HomeFeedSection";
-import { HomeLiveSection } from "@/components/home/HomeLiveSection";
+import { HomeFeedList } from "@/components/home/HomeFeedList";
+import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
+import { buildMembersFeedPage } from "@/lib/members/feed-builder";
+import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
+import { getLiveEvents } from "@/lib/live/events";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export function HomePageFallback() {
@@ -37,6 +39,17 @@ export async function HomePageContent() {
     redirect(buildWelcomeOnboardingHref());
   }
 
+  const [liveEvents, initialFeedPage] = await Promise.all([
+    getLiveEvents(20),
+    member || user
+      ? buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
+          viewer: member,
+          userId: user?.id,
+          fast: true,
+        })
+      : Promise.resolve(undefined),
+  ]);
+
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
   return (
@@ -48,28 +61,13 @@ export async function HomePageContent() {
       <main className="mx-auto min-h-dvh max-w-mobile bg-background">
         <AppHeader initialUser={user} />
         <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
-          <Suspense
-            fallback={
-              <div className="space-y-4">
-                <div className="h-3 w-12 animate-pulse rounded-full bg-white/10" />
-                <div className="h-7 w-48 animate-pulse rounded-full bg-white/10" />
-                <div className="flex gap-3 overflow-hidden">
-                  <div className="h-[88px] w-[220px] shrink-0 animate-pulse rounded-[20px] bg-white/[0.04]" />
-                  <div className="h-[88px] w-[220px] shrink-0 animate-pulse rounded-[20px] bg-white/[0.04]" />
-                </div>
-              </div>
-            }
-          >
-            <HomeLiveSection />
-          </Suspense>
+          <HomeLiveFeed events={liveEvents} />
           {member ? <PersonCard member={member} isOwnCard priority /> : null}
-          <Suspense fallback={<HomeFeedSkeleton count={member ? 2 : 3} />}>
-            <HomeFeedSection
-              member={member}
-              userId={user?.id}
-              showSectionHeader={Boolean(member)}
-            />
-          </Suspense>
+          <HomeFeedList
+            viewerId={member?.id ?? user?.id}
+            showSectionHeader={Boolean(member)}
+            initialFeedPage={initialFeedPage}
+          />
         </div>
       </main>
     </>

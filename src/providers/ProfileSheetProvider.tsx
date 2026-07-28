@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
+import { useQueryClient } from "@tanstack/react-query";
+import { prefetchMemberProfile } from "@/lib/profile/prefetch";
 
 const ProfileBottomSheet = dynamic(
   () =>
@@ -27,15 +29,20 @@ type ProfileSheetContextValue = {
 const ProfileSheetContext = createContext<ProfileSheetContextValue | null>(null);
 
 export function ProfileSheetProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [memberId, setMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     void import("@/components/profile/ProfileBottomSheet");
   }, []);
 
-  const openProfile = useCallback((id: string) => {
-    setMemberId(id);
-  }, []);
+  const openProfile = useCallback(
+    (id: string) => {
+      void prefetchMemberProfile(queryClient, id);
+      setMemberId(id);
+    },
+    [queryClient]
+  );
 
   const closeProfile = useCallback(() => {
     setMemberId(null);

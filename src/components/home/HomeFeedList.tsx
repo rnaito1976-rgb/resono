@@ -4,8 +4,6 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { PersonCardClient } from "@/components/person-card/PersonCardClient";
-import { getResonanceStatusBatchAction } from "@/lib/actions/resonance";
-import { prefetchMemberProfile } from "@/lib/profile/prefetch";
 import {
   FEED_PAGE_SIZE,
   INITIAL_FEED_PAGE_SIZE,
@@ -159,69 +157,6 @@ export function HomeFeedList({
       window.removeEventListener(RESONANCE_CHANGE_EVENT, handleResonanceChange);
     };
   }, [queryClient, viewerId]);
-
-  useEffect(() => {
-    const memberIds = feedItems.map((item) => item.member.id);
-    if (memberIds.length === 0) {
-      return;
-    }
-
-    const prefetchProfiles = () => {
-      for (const memberId of memberIds.slice(0, 2)) {
-        void prefetchMemberProfile(queryClient, memberId);
-      }
-    };
-
-    const idleId = window.requestIdleCallback?.(prefetchProfiles, { timeout: 4000 });
-    const timeoutId = idleId ? undefined : window.setTimeout(prefetchProfiles, 2000);
-
-    const missingStatusIds = feedItems
-      .filter((item) => item.resonanceStatus === undefined)
-      .map((item) => item.member.id);
-
-    let statusTimeoutId: number | undefined;
-    if (missingStatusIds.length > 0) {
-      statusTimeoutId = window.setTimeout(() => {
-        void getResonanceStatusBatchAction(missingStatusIds).then((statusMap) => {
-          for (const [memberId, status] of Object.entries(statusMap)) {
-            queryClient.setQueryData(queryKeys.resonance.status(memberId), status);
-          }
-
-          queryClient.setQueryData<InfiniteData<MembersFeedPage>>(
-            queryKeys.members.feed(viewerId),
-            (current) => {
-              if (!current) {
-                return current;
-              }
-
-              return {
-                ...current,
-                pages: current.pages.map((page) => ({
-                  ...page,
-                  items: page.items.map((item) => {
-                    const status = statusMap[item.member.id];
-                    return status ? { ...item, resonanceStatus: status } : item;
-                  }),
-                })),
-              };
-            }
-          );
-        });
-      }, 1500);
-    }
-
-    return () => {
-      if (idleId) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
-      if (statusTimeoutId) {
-        window.clearTimeout(statusTimeoutId);
-      }
-    };
-  }, [feedItems, queryClient, viewerId]);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {

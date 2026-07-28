@@ -29,6 +29,8 @@ export function useResonance(
     ...(seedStatus ? { initialData: seedStatus } : {}),
     staleTime: RESONANCE_STALE_MS,
     gcTime: 30 * 60 * 1000,
+    refetchOnMount: !seedStatus,
+    refetchOnWindowFocus: false,
   });
 
   const toggle = useCallback(() => {

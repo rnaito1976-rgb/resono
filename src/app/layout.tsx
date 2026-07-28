@@ -4,8 +4,10 @@ import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyCo
 import { PostAuthOnboardingRedirect } from "@/components/auth/PostAuthOnboardingRedirect";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { AuthUserProvider } from "@/providers/AuthUserProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
 import { getViewerTheme } from "@/lib/members/viewer-theme";
+import { getAuthSession } from "@/lib/supabase/auth";
 import { getSupabaseUrl } from "@/lib/supabase/env";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 import "./globals.css";
@@ -26,9 +28,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [supabaseUrl, viewerColor] = await Promise.all([
+  const [supabaseUrl, viewerColor, user] = await Promise.all([
     Promise.resolve(getSupabaseUrl()),
     getViewerTheme(),
+    getAuthSession(),
   ]);
 
   return (
@@ -45,12 +48,14 @@ export default async function RootLayout({
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
         <QueryProvider>
-          <FrequencyColorProvider initialColor={viewerColor}>
-            <ProfileSheetProvider>
-              <PostAuthOnboardingRedirect />
-              <TabBarWrapper>{children}</TabBarWrapper>
-            </ProfileSheetProvider>
-          </FrequencyColorProvider>
+          <AuthUserProvider initialUser={user}>
+            <FrequencyColorProvider initialColor={viewerColor}>
+              <ProfileSheetProvider>
+                <PostAuthOnboardingRedirect />
+                <TabBarWrapper>{children}</TabBarWrapper>
+              </ProfileSheetProvider>
+            </FrequencyColorProvider>
+          </AuthUserProvider>
         </QueryProvider>
       </body>
     </html>

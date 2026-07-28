@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  getBandActivityFeedForMember,
-  getMutualResonateMembers,
-} from "@/lib/bands/queries";
-import { getMemberById } from "@/lib/members";
+import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import {
@@ -32,12 +28,14 @@ export type MemberProfilePayload = {
   bandActivities: BandActivityFeedItem[];
 };
 
+/** シート初回表示向け — 重い band / mutual 取得は省略 */
 export async function getMemberProfileAction(
   memberId: string
 ): Promise<{ data?: MemberProfilePayload; error?: string }> {
-  const [member, user] = await Promise.all([
+  const [member, user, viewerMemberId] = await Promise.all([
     getMemberById(memberId),
     getAuthSession(),
+    resolveCurrentMemberId(),
   ]);
 
   if (!member) {
@@ -56,36 +54,35 @@ export async function getMemberProfileAction(
     };
   }
 
-  const viewerMemberId = await resolveCurrentMemberId();
   const isOwnProfile = isMemberOwnedByUser(member, user.id);
+  const needsResonance =
+    Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
   const viewerPromise: Promise<Member | undefined> =
     viewerMemberId && viewerMemberId === member.id
       ? Promise.resolve(member)
       : viewerMemberId
-        ? getMemberById(viewerMemberId)
+        ? getMemberListById(viewerMemberId)
         : Promise.resolve(undefined);
 
-  const [viewer, mutualMembers, bandActivities, resonanceStatus] = await Promise.all([
+  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
     viewerPromise,
-    isOwnProfile && viewerMemberId
-      ? getMutualResonateMembers(viewerMemberId)
-      : Promise.resolve([]),
-    viewerMemberId ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
-    viewerMemberId && !isOwnProfile && viewerMemberId !== member.id
-      ? getResonanceStatusForMember(viewerMemberId, member.id)
+    needsResonance
+      ? getResonanceStatusForMember(viewerMemberId!, member.id)
+      : Promise.resolve(undefined),
+    needsResonance
+      ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
   let musicResonance: MusicPageView["sectionResonance"] | undefined;
 
-  if (viewer && !isOwnProfile && viewer.id !== member.id) {
-    const cached = await getResonanceReasonsFromCache(viewer.id, [member.id]);
+  if (viewer && needsResonance) {
     resonanceReason =
-      cached.get(member.id) ?? buildResonanceReason(viewer, member);
+      cachedReasons?.get(member.id) ?? buildResonanceReason(viewer, member);
 
-    if (!cached.has(member.id)) {
+    if (!cachedReasons?.has(member.id)) {
       void saveResonanceReasonsToCache(viewer.id, [
         { targetMemberId: member.id, reason: resonanceReason },
       ]);
@@ -101,9 +98,9 @@ export async function getMemberProfileAction(
       resonanceReason,
       musicResonance,
       resonanceStatus,
-      showResonateButton: Boolean(viewer && !isOwnProfile),
-      mutualMembers,
-      bandActivities,
+      showResonateButton: Boolean(viewer && needsResonance),
+      mutualMembers: [],
+      bandActivities: [],
     },
   };
 }

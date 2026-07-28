@@ -28,7 +28,8 @@ export const getHomeViewer = cache(async (): Promise<HomeViewer> => {
     member = (await ensureMemberForUser(user.id, user.email)) ?? undefined;
   }
 
-  const frequencyColorFromProfile = await getFrequencyColorByUserId(user.id);
+  const frequencyColorFromProfile =
+    member?.frequencyColor == null ? await getFrequencyColorByUserId(user.id) : null;
   const frequencyColor: FrequencyColorHex =
     (member?.frequencyColor as FrequencyColorHex | undefined) ??
     frequencyColorFromProfile ??

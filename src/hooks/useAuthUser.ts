@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthUserContext } from "@/providers/AuthUserProvider";
 
-/** ⑪ SSRで initialUser がある場合は初回 getSession をスキップ（二重取得削減） */
+/** SSR seed or layout AuthUserProvider で初回 getUser を省略 */
 export function useAuthUser(initialUser: User | null = null) {
-  const [user, setUser] = useState<User | null>(initialUser);
-  const [isLoading, setIsLoading] = useState(initialUser === null);
+  const contextUser = useAuthUserContext();
+  const seededUser = contextUser !== undefined ? contextUser : initialUser;
+  const hasSeed = contextUser !== undefined || initialUser !== null;
+  const [user, setUser] = useState<User | null>(seededUser);
+  const [isLoading, setIsLoading] = useState(!hasSeed);
 
   useEffect(() => {
     const supabase = createClient();
 
-    if (initialUser === null) {
+    if (seededUser === null && contextUser === undefined) {
       async function syncUser() {
         const {
           data: { user: currentUser },
@@ -23,6 +27,8 @@ export function useAuthUser(initialUser: User | null = null) {
       }
 
       void syncUser();
+    } else {
+      setIsLoading(false);
     }
 
     const {
@@ -33,11 +39,11 @@ export function useAuthUser(initialUser: User | null = null) {
     });
 
     return () => subscription.unsubscribe();
-  }, [initialUser]);
+  }, [contextUser, seededUser]);
 
   return {
     user,
     isLoading,
-    isLoggedIn: Boolean(user ?? initialUser),
+    isLoggedIn: Boolean(user ?? seededUser),
   };
 }
