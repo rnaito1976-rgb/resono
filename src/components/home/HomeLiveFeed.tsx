@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatRelativeTime } from "@/lib/live/time";
+import { formatRelativeTime, isLiveEventNew } from "@/lib/live/time";
 import { NO_PHOTO_URL } from "@/lib/onboarding/status";
 import { cn } from "@/lib/utils";
 import {
@@ -103,6 +103,7 @@ function LiveEventCard({
   animateIn: boolean;
 }) {
   const hasPhoto = Boolean(event.photo && event.photo !== NO_PHOTO_URL);
+  const showNewBadge = event.isNew || isLiveEventNew(event.createdAt);
 
   return (
     <Link
@@ -112,7 +113,7 @@ function LiveEventCard({
         animateIn && "animate-live-fade-in"
       )}
     >
-      {event.isNew ? (
+      {showNewBadge ? (
         <span className="absolute right-3 top-2.5 text-[9px] font-medium uppercase tracking-[0.16em] text-primary">
           NEW
         </span>

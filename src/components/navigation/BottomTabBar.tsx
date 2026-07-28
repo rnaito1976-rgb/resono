@@ -34,36 +34,21 @@ function TabBadge({ count }: { count: number }) {
 
 function useDeferredBadgeQueries(pathname: string) {
   const deferOnHome = pathname === "/";
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(!deferOnHome);
 
   useEffect(() => {
     if (!deferOnHome) {
-      setEnabled(true);
       return;
     }
 
     const enable = () => setEnabled(true);
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        enable();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisible);
-
-    const idleCallback = window.requestIdleCallback?.(enable, { timeout: 8000 });
-    const timeoutId = idleCallback
-      ? undefined
-      : window.setTimeout(enable, 8000);
+    const timeoutId = window.setTimeout(enable, 1200);
+    const idleCallback = window.requestIdleCallback?.(enable, { timeout: 2000 });
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisible);
+      window.clearTimeout(timeoutId);
       if (idleCallback) {
         window.cancelIdleCallback(idleCallback);
-      }
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
       }
     };
   }, [deferOnHome]);

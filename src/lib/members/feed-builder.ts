@@ -356,7 +356,9 @@ export async function buildMembersFeedPage(
     viewerMemberId,
     rankedPageMembers,
     {
-      syncLimit: isScrollPage ? 0 : SYNC_REASON_BUILD_LIMIT,
+      syncLimit: isScrollPage
+        ? 0
+        : Math.max(SYNC_REASON_BUILD_LIMIT, rankedPageMembers.length),
       includeStatus: false,
       fast,
     }

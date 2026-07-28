@@ -98,6 +98,7 @@ export function HomeFeedList({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const prefetchStartedRef = useRef(false);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
+  const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -113,7 +114,7 @@ export function HomeFeedList({
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
       staleTime: 45 * 1000,
-      refetchOnMount: true,
+      refetchOnMount: !initialFeedPage || !initialHasReasons,
       refetchOnWindowFocus: false,
     });
 

@@ -128,15 +128,15 @@ async function getStoredLiveEvents(since: string, limit: number): Promise<LiveEv
 }
 
 /** Derive Live cards from public members + bands when the events table is empty. */
-async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveEvent[]> {
+async function synthesizeLiveEvents(since: string, limit: number, now = Date.now()): Promise<LiveEvent[]> {
   const events: LiveEvent[] = [];
   const anon = createAnonClient();
   const admin = createAdminClient();
   const reader = admin ?? anon;
 
-  // portrait は巨大な JSON なので、判定に使う 1 フィールドだけ引く
+  // portrait は巨大な JSON なので、判定に使うフィールドだけ引く
   const MEMBER_SYNTH_COLUMNS =
-    "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted";
+    "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted, joined_at:portrait->activityMilestones->0->>occurredAt";
 
   type MemberSynthRow = {
     id: string;
@@ -144,6 +144,7 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
     photo: string | null;
     created_at: string;
     dialogue_completed: boolean | null;
+    joined_at: string | null;
   };
 
   function pushMemberEvents(rows: MemberSynthRow[]) {
@@ -151,6 +152,8 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
       if (row.dialogue_completed !== true) {
         continue;
       }
+
+      const joinedAt = row.joined_at?.trim() || row.created_at;
 
       events.push({
         id: `synth-member-${row.id}`,
@@ -160,8 +163,8 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
         href: `/member/${row.id}`,
         photo: row.photo || undefined,
         actorMemberId: row.id,
-        createdAt: row.created_at,
-        isNew: false,
+        createdAt: joinedAt,
+        isNew: isLiveEventNew(joinedAt, now),
       });
     }
   }
@@ -227,7 +230,7 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
           actorMemberId: row.created_by_member_id,
           bandId: row.id,
           createdAt: row.created_at,
-          isNew: false,
+          isNew: isLiveEventNew(row.created_at, now),
         });
       }
     }
@@ -268,7 +271,7 @@ async function synthesizeLiveEvents(since: string, limit: number): Promise<LiveE
           photo: row.media_url || undefined,
           bandId: row.band_id,
           createdAt: row.created_at,
-          isNew: false,
+          isNew: isLiveEventNew(row.created_at, now),
         });
       }
     }
@@ -312,7 +315,7 @@ export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
     const synthesized =
       stored.length >= SYNTHESIZE_THRESHOLD
         ? []
-        : await synthesizeLiveEvents(since, limit);
+        : await synthesizeLiveEvents(since, limit, now);
 
     const seen = new Set<string>();
     const merged: LiveEvent[] = [];
