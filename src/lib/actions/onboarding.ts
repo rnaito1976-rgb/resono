@@ -30,7 +30,8 @@ import type { WelcomeOnboardingAnswers } from "@/types/welcome-onboarding";
 import { effectiveWelcomeParts } from "@/lib/welcome/onboarding-registration";
 
 export async function completeMinimalRegistrationAction(
-  input: Partial<MinimalRegistrationInput>
+  input: Partial<MinimalRegistrationInput>,
+  frequencyColor?: FrequencyColorHex
 ) {
   try {
     const supabase = await createClient();
@@ -55,29 +56,43 @@ export async function completeMinimalRegistrationAction(
       return { error: "プロフィールの作成に失敗しました。時間をおいて再度お試しください。" };
     }
 
-    const updated = buildMemberFromMinimalRegistration(member, input);
+    const updated = buildMemberFromMinimalRegistration(member, input, { deferAiComment: true });
     const result = await updateMember(updated);
 
     if (!result.success) {
       return { error: result.error ?? "保存に失敗しました" };
     }
 
-    void invalidateResonanceCacheForMember(member.id);
+    void invalidateResonanceCacheForMember(member.id, { clearAllFeeds: true });
 
-    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
-      publishLiveEvent({
+    void (async () => {
+      try {
+        const withComment = applyProfileAiComment(updated);
+        if (withComment.aiComment !== updated.aiComment) {
+          await updateMember(withComment);
+        }
+      } catch (error) {
+        console.error("[completeMinimalRegistrationAction] aiComment:", error);
+      }
+    })();
+
+    if (frequencyColor && isValidFrequencyColor(frequencyColor)) {
+      void saveFrequencyColorForUser(user.id, frequencyColor);
+    }
+
+    void import("@/lib/live/events").then(({ publishLiveEvent, clearLiveEventsCache }) => {
+      clearLiveEventsCache();
+      return publishLiveEvent({
         kind: "new_member",
         title: updated.name,
         subtitle: "コミュニティに参加しました",
         href: `/member/${updated.id}`,
         photo: updated.photo,
         actorMemberId: updated.id,
-      })
-    );
+      });
+    });
 
     revalidatePath("/");
-    revalidatePath("/onboarding");
-    revalidatePath("/discover");
     revalidatePath(`/member/${member.id}`);
 
     return { success: true };
@@ -212,18 +227,21 @@ export async function startResonoFromWelcomeAction(
       sounds: answers.sounds,
     };
 
-    const registrationResult = await completeMinimalRegistrationAction(input);
-    if (registrationResult.error) {
-      return registrationResult;
-    }
-
     if (answers.frequencyColor && isValidFrequencyColor(answers.frequencyColor)) {
-      const colorResult = await saveFrequencyColorAction(answers.frequencyColor);
-      if (colorResult.error) {
-        return colorResult;
+      const registrationResult = await completeMinimalRegistrationAction(
+        input,
+        answers.frequencyColor
+      );
+      if (registrationResult.error) {
+        return registrationResult;
       }
 
       return { success: true, redirectTo: "/" as const };
+    }
+
+    const registrationResult = await completeMinimalRegistrationAction(input);
+    if (registrationResult.error) {
+      return registrationResult;
     }
 
     return {

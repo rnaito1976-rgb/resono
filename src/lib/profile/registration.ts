@@ -36,7 +36,8 @@ export function isMinimalRegistrationInputComplete(
 
 export function buildMemberFromMinimalRegistration(
   member: Member,
-  input: MinimalRegistrationInput
+  input: MinimalRegistrationInput,
+  options?: { deferAiComment?: boolean }
 ): Member {
   const artists = input.favoriteArtists.map((artist) => artist.trim()).filter(Boolean);
   const instruments = resolveInstruments(input);
@@ -44,27 +45,31 @@ export function buildMemberFromMinimalRegistration(
   const musicDnaItem = createMusicDnaItem(artists);
   const photo = input.photo.trim() || NO_PHOTO_URL;
 
-  return attachInitialMemberActivities(
-    applyProfileAiComment({
-      ...member,
-      name: input.name.trim(),
-      photo,
-      tags: artists.slice(0, 3),
-      portrait: {
-        ...member.portrait,
-        bio: "",
-        dialogueCompleted: true,
-        profileItems: [
-          musicDnaItem,
-          ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
-        ],
-      },
-      music: {
-        ...member.music,
-        instruments,
-        favoriteArtists: artists,
-        genres,
-      },
-    })
-  );
+  const base = attachInitialMemberActivities({
+    ...member,
+    name: input.name.trim(),
+    photo,
+    tags: artists.slice(0, 3),
+    portrait: {
+      ...member.portrait,
+      bio: "",
+      dialogueCompleted: true,
+      profileItems: [
+        musicDnaItem,
+        ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
+      ],
+    },
+    music: {
+      ...member.music,
+      instruments,
+      favoriteArtists: artists,
+      genres,
+    },
+  });
+
+  if (options?.deferAiComment) {
+    return base;
+  }
+
+  return applyProfileAiComment(base);
 }

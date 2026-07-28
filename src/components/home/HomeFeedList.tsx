@@ -16,8 +16,8 @@ import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { InfiniteData } from "@tanstack/react-query";
 
-const FEED_CACHE_PREFIX = "resono:home-feed:v3:";
-const FEED_CACHE_TTL_MS = 3 * 60 * 1000;
+const FEED_CACHE_PREFIX = "resono:home-feed:v4:";
+const FEED_CACHE_TTL_MS = 45 * 1000;
 
 type HomeFeedListProps = {
   viewerId?: string;
@@ -98,7 +98,6 @@ export function HomeFeedList({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const prefetchStartedRef = useRef(false);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
-  const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -113,8 +112,8 @@ export function HomeFeedList({
         ? { pages: [cachedFirstPage.current], pageParams: [0] }
         : undefined,
       getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-      staleTime: 5 * 60 * 1000,
-      refetchOnMount: !initialFeedPage || !initialHasReasons,
+      staleTime: 45 * 1000,
+      refetchOnMount: true,
       refetchOnWindowFocus: false,
     });
 

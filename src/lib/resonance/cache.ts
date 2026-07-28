@@ -93,7 +93,10 @@ export async function saveResonanceReasonsToCache(
 }
 
 /** プロフィール更新時に関連キャッシュを無効化 */
-export async function invalidateResonanceCacheForMember(memberId: string): Promise<void> {
+export async function invalidateResonanceCacheForMember(
+  memberId: string,
+  options?: { clearAllFeeds?: boolean }
+): Promise<void> {
   if (!isSupabaseConfigured()) {
     return;
   }
@@ -110,8 +113,7 @@ export async function invalidateResonanceCacheForMember(memberId: string): Promi
     }
   }
 
-  // フィードのメモリ上ランキングも捨てて、次回再計算させる
   void import("@/lib/members/feed-builder").then(({ clearRankedFeedCache }) => {
-    clearRankedFeedCache(memberId);
+    clearRankedFeedCache(options?.clearAllFeeds ? undefined : memberId);
   });
 }

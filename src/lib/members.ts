@@ -197,6 +197,32 @@ export const getMemberById = cache(async function getMemberById(
   }
 });
 
+export async function getRecentMembers(limit: number): Promise<Member[]> {
+  if (!isSupabaseConfigured()) {
+    return fallbackMembers.slice(0, limit);
+  }
+
+  try {
+    const supabase = createAnonClient();
+    const { data, error } = await supabase
+      .from("members")
+      .select(MEMBER_LIST_COLUMNS)
+      .not("user_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[Supabase] getRecentMembers:", error.message);
+      return [];
+    }
+
+    return attachFrequencyColors((data ?? []).map(rowToMemberList));
+  } catch (error) {
+    console.error("[Supabase] getRecentMembers:", error);
+    return [];
+  }
+}
+
 export async function updateMember(
   member: Member
 ): Promise<{ success: boolean; error?: string }> {

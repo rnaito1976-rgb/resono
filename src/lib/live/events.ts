@@ -284,7 +284,7 @@ type LiveEventsCacheEntry = {
   events: LiveEvent[];
 };
 
-const LIVE_EVENTS_CACHE_TTL_MS = 30_000;
+const LIVE_EVENTS_CACHE_TTL_MS = 10_000;
 /** 合成にはメンバー・バンド・動画で4〜5クエリかかるので、常時は走らせない */
 const SYNTHESIZE_THRESHOLD = 4;
 

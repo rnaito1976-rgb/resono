@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { OnboardingPhotoPicker } from "@/components/onboarding/OnboardingPhotoPicker";
 import { FrequencyColorPicker } from "@/components/frequency-color/FrequencyColorPicker";
@@ -54,6 +55,7 @@ export function MinimalRegistrationFlow({
   initialPhase = "registration",
   skipPhoto = false,
 }: MinimalRegistrationFlowProps) {
+  const router = useRouter();
   const welcomeAnswers = useMemo(() => readValidWelcomeOnboardingAnswers(), []);
   const steps = useMemo(
     () => resolveRegistrationSteps(welcomeAnswers, skipPhoto),
@@ -141,31 +143,37 @@ export function MinimalRegistrationFlow({
     }
   }
 
+  function goHome() {
+    router.replace("/");
+    router.refresh();
+  }
+
   function submitRegistration(welcome: WelcomeOnboardingAnswers | null) {
     const nextForm = buildRegistrationInput(welcome);
 
     startTransition(async () => {
-      const result = await completeMinimalRegistrationAction(nextForm);
+      const savedColor = welcome?.frequencyColor;
+      const result = await completeMinimalRegistrationAction(
+        nextForm,
+        savedColor && isValidFrequencyColor(savedColor) ? savedColor : undefined
+      );
       if (result.error) {
         setError(result.error);
         return;
       }
 
-      const savedColor = welcome?.frequencyColor;
-      if (savedColor && isValidFrequencyColor(savedColor)) {
-        const colorResult = await saveFrequencyColorAction(savedColor);
-        if (colorResult?.error) {
-          setError(colorResult.error);
-          return;
-        }
-
+      if (welcome) {
         clearWelcomeOnboardingAnswers();
-        window.location.href = "/";
+      }
+
+      if (savedColor && isValidFrequencyColor(savedColor)) {
+        goHome();
         return;
       }
 
       if (welcome) {
-        clearWelcomeOnboardingAnswers();
+        goHome();
+        return;
       }
 
       setForm(nextForm);
@@ -209,7 +217,7 @@ export function MinimalRegistrationFlow({
           if (result?.error) {
             return { error: result.error };
           }
-          window.location.href = "/";
+          goHome();
         }}
         submitLabel="Resonoをはじめる"
       />
