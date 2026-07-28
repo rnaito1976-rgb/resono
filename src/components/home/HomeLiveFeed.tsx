@@ -2,9 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { formatRelativeTime, isLiveEventNew } from "@/lib/live/time";
+import { buildLoginHref } from "@/lib/navigation/login-redirect";
 import { NO_PHOTO_URL } from "@/lib/onboarding/status";
+import { prefetchMemberProfile } from "@/lib/profile/prefetch";
+import { useProfileSheetOptional } from "@/providers/ProfileSheetProvider";
 import { cn } from "@/lib/utils";
 import {
   LIVE_EVENT_KIND_LABELS,
@@ -44,6 +50,8 @@ type HomeLiveFeedProps = {
 };
 
 export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
+  const queryClient = useQueryClient();
+  const profileSheet = useProfileSheetOptional();
   const [animateIds, setAnimateIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -62,6 +70,39 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
       writeSeenIds(seen);
     }
   }, [events]);
+
+  useEffect(() => {
+    if (!profileSheet) {
+      return;
+    }
+
+    const memberIds = events
+      .filter((event) => event.kind === "new_member" && event.actorMemberId)
+      .slice(0, 4)
+      .map((event) => event.actorMemberId!);
+
+    if (memberIds.length === 0) {
+      return;
+    }
+
+    const prefetch = () => {
+      for (const memberId of memberIds) {
+        void prefetchMemberProfile(queryClient, memberId);
+      }
+    };
+
+    const idleId = window.requestIdleCallback?.(prefetch, { timeout: 2000 });
+    const timeoutId = idleId ? undefined : window.setTimeout(prefetch, 800);
+
+    return () => {
+      if (idleId) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [events, profileSheet, queryClient]);
 
   return (
     <section className="space-y-4">
@@ -95,24 +136,12 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
   );
 }
 
-function LiveEventCard({
-  event,
-  animateIn,
-}: {
-  event: LiveEvent;
-  animateIn: boolean;
-}) {
+function LiveEventCardContent({ event }: { event: LiveEvent }) {
   const hasPhoto = Boolean(event.photo && event.photo !== NO_PHOTO_URL);
   const showNewBadge = event.isNew || isLiveEventNew(event.createdAt);
 
   return (
-    <Link
-      href={event.href}
-      className={cn(
-        "relative flex h-[88px] w-[220px] shrink-0 items-center gap-3 rounded-[20px] border border-border/80 bg-white/[0.03] px-3.5 py-3 transition-quiet active:opacity-80",
-        animateIn && "animate-live-fade-in"
-      )}
-    >
+    <>
       {showNewBadge ? (
         <span className="absolute right-3 top-2.5 text-[9px] font-medium uppercase tracking-[0.16em] text-primary">
           NEW
@@ -148,6 +177,56 @@ function LiveEventCard({
           {formatRelativeTime(event.createdAt)}
         </p>
       </div>
+    </>
+  );
+}
+
+function LiveEventCard({
+  event,
+  animateIn,
+}: {
+  event: LiveEvent;
+  animateIn: boolean;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isLoggedIn } = useAuthUser();
+  const profileSheet = useProfileSheetOptional();
+  const loginHref = buildLoginHref(pathname);
+
+  const memberId =
+    event.kind === "new_member" ? event.actorMemberId : undefined;
+  const opensInSheet = Boolean(memberId && profileSheet);
+
+  const className = cn(
+    "relative flex h-[88px] w-[220px] shrink-0 items-center gap-3 rounded-[20px] border border-border/80 bg-white/[0.03] px-3.5 py-3 text-left transition-quiet active:opacity-80",
+    animateIn && "animate-live-fade-in"
+  );
+
+  function handleOpenMember() {
+    if (!memberId) {
+      return;
+    }
+
+    if (!isLoggedIn) {
+      router.push(loginHref);
+      return;
+    }
+
+    profileSheet?.openProfile(memberId);
+  }
+
+  if (opensInSheet) {
+    return (
+      <button type="button" onClick={handleOpenMember} className={className}>
+        <LiveEventCardContent event={event} />
+      </button>
+    );
+  }
+
+  return (
+    <Link href={event.href} className={className}>
+      <LiveEventCardContent event={event} />
     </Link>
   );
 }
