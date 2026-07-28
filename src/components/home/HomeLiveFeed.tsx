@@ -17,6 +17,19 @@ import {
 
 const SEEN_STORAGE_KEY = "resono:live-seen-ids";
 
+function getLiveEventMemberId(event: LiveEvent): string | undefined {
+  const hrefMatch = event.href.match(/^\/member\/([^/?#]+)/);
+  if (hrefMatch?.[1]) {
+    return hrefMatch[1];
+  }
+
+  if (event.kind === "new_member" || event.kind === "looking_for_updated") {
+    return event.actorMemberId;
+  }
+
+  return undefined;
+}
+
 function readSeenIds(): Set<string> {
   if (typeof window === "undefined") {
     return new Set();
@@ -158,8 +171,7 @@ function LiveEventCard({
   const profileSheet = useProfileSheetOptional();
   const loginHref = buildLoginHref(pathname);
 
-  const memberId =
-    event.kind === "new_member" ? event.actorMemberId : undefined;
+  const memberId = getLiveEventMemberId(event);
   const opensInSheet = Boolean(memberId && profileSheet);
 
   const className = cn(
