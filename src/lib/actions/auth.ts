@@ -9,41 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getEmailRedirectUrl } from "@/lib/supabase/env";
 import {
   normalizeEmailInput,
-  translateEmailAuthError,
+  translateAuthError,
   validateEmailForAuth,
 } from "@/lib/auth/email";
-
-function translateAuthError(message: string): string {
-  const normalized = message.toLowerCase();
-
-  const emailError = translateEmailAuthError(message);
-  if (emailError) {
-    return emailError;
-  }
-
-  if (
-    normalized.includes("rate limit") ||
-    normalized.includes("over_email_send_rate_limit")
-  ) {
-    return "確認メールの送信上限に達しました。1時間ほど待ってから再試行するか、Googleログインをご利用ください。";
-  }
-
-  const translations: Record<string, string> = {
-    "{}":
-      "認証に失敗しました。Googleログインをもう一度お試しください。",
-    "Invalid login credentials":
-      "メールアドレスまたはパスワードが正しくありません。",
-    "Email not confirmed":
-      "メールアドレスの確認が完了していません。確認メールのリンクを開くか、再送してください。",
-    "User already registered": "このメールアドレスはすでに登録されています。",
-    "Signup requires a valid password":
-      "パスワードは6文字以上で入力してください。",
-    "email rate limit exceeded":
-      "確認メールの送信上限に達しました。1時間ほど待ってから再試行するか、Googleログインをご利用ください。",
-  };
-
-  return translations[message] ?? message;
-}
 
 function isDuplicateSignup(
   user: { identities?: unknown } | null | undefined
@@ -74,7 +42,8 @@ export async function signInWithEmailAction(
   });
 
   if (error) {
-    return { error: translateAuthError(error.message) };
+    console.error("[Auth] signIn:", error.code, error.message);
+    return { error: translateAuthError(error) };
   }
 
   const {
@@ -114,7 +83,8 @@ export async function signUpWithEmailAction(email: string, password: string) {
   });
 
   if (error) {
-    return { error: translateAuthError(error.message) };
+    console.error("[Auth] signUp:", error.code, error.message);
+    return { error: translateAuthError(error) };
   }
 
   if (isDuplicateSignup(data.user)) {
@@ -171,7 +141,8 @@ export async function resendConfirmationEmailAction(email: string) {
   });
 
   if (error) {
-    return { error: translateAuthError(error.message) };
+    console.error("[Auth] resend:", error.code, error.message);
+    return { error: translateAuthError(error) };
   }
 
   return {
