@@ -10,6 +10,7 @@
     "seed": "tsx scripts/seed.ts",
     "auth:confirm": "tsx scripts/confirm-auth-user.ts",
     "email:test": "tsx scripts/send-test-email.ts",
+    "ai:regenerate": "tsx scripts/regenerate-ai-comments.ts",
     "migrate:013": "tsx scripts/apply-migration-013.ts",
     "migrate:017": "tsx scripts/apply-migration-017.ts"
   },

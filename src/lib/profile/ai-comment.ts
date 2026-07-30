@@ -6,42 +6,106 @@ import type { ProfileItemKind } from "@/types/profile-item";
 const MIN_LENGTH = 80;
 const MAX_LENGTH = 100;
 
-/** 表示しない。紹介文の軸になる第一印象。 */
-type FirstImpression =
-  | "studio-lover"
-  | "live-first"
-  | "quiet-tune"
-  | "copy-starter"
-  | "wide-taste"
-  | "improv-spirit";
+/** 紹介の切り口。表示しない。 */
+export type IntroAngle =
+  | "conversation-memory"
+  | "music-relationship"
+  | "favorite-band-trend"
+  | "playing-style"
+  | "band-role"
+  | "studio-habit"
+  | "live-enjoyment"
+  | "gear-focus"
+  | "music-discovery"
+  | "personality"
+  | "band-purpose"
+  | "cover-song"
+  | "favorite-genre"
+  | "non-music-values"
+  | "conversation-tempo";
 
-type AnchorKind =
-  | "live-memory"
-  | "ritual-song"
-  | "obsession"
-  | "process"
-  | "dream"
-  | "album"
-  | "hero"
-  | "gear"
-  | "artist"
-  | "cover-song";
+/** 文章構成。表示しない。 */
+type IntroStructure =
+  | "single"
+  | "two-part"
+  | "short"
+  | "episode-first"
+  | "song-first"
+  | "impression-first"
+  | "question-first"
+  | "surprise-first";
 
-type ConversationAnchor = {
-  kind: AnchorKind;
-  label: string;
-  title?: string;
+const INTRO_ANGLES: IntroAngle[] = [
+  "conversation-memory",
+  "music-relationship",
+  "favorite-band-trend",
+  "playing-style",
+  "band-role",
+  "studio-habit",
+  "live-enjoyment",
+  "gear-focus",
+  "music-discovery",
+  "personality",
+  "band-purpose",
+  "cover-song",
+  "favorite-genre",
+  "non-music-values",
+  "conversation-tempo",
+];
+
+const INTRO_STRUCTURES: IntroStructure[] = [
+  "single",
+  "two-part",
+  "short",
+  "episode-first",
+  "song-first",
+  "impression-first",
+  "question-first",
+  "surprise-first",
+];
+
+const BANNED_PATTERN =
+  /(会話の温度|空気感|世界観|きっと|音を重ね|ジャンルの壁|時間になりそう|という印象|タイプ|空気だった|饒舌になる|一気に距離|共鳴する|似合う人)/u;
+
+type MemberFacts = {
   artist?: string;
+  artistDuo?: string;
+  genre?: string;
+  genreDuo?: string;
+  instrument?: string;
+  instrumentDuo?: string;
+  liveMemory?: string;
+  ritualSong?: string;
+  coverSong?: string;
+  coverArtist?: string;
+  obsession?: string;
+  gear?: string;
+  album?: string;
+  hero?: string;
+  process?: string;
+  dream?: string;
+  bandVision?: string;
+  commitment?: string;
+  listeningMood?: string;
+  conversationNote?: string;
+  fashionNote?: string;
+  location?: string;
+  playingStyle?: string;
+  part?: string;
 };
 
 type IntroContext = {
   seed: string;
   member: Member;
-  impression: FirstImpression;
-  anchors: ConversationAnchor[];
+  angle: IntroAngle;
+  structure: IntroStructure;
+  facts: MemberFacts;
 };
 
-type IntroWriter = (ctx: IntroContext, anchor: ConversationAnchor) => string | null;
+export type BuildProfileAiCommentOptions = {
+  /** 直前のメンバーと同じ切り口を避ける（一括再生成用） */
+  avoidAngle?: IntroAngle;
+};
 
 function stableIndex(seed: string, length: number): number {
   let hash = 0;
@@ -83,208 +147,26 @@ function clip(text: string, max: number): string {
   return slice.trim();
 }
 
-function isBannedPhrase(text: string): boolean {
-  return /(です|ます|が好き|大切に|探して|をしている|をしています|プロフィール|担当)/u.test(
-    text
-  );
+function formatListeningLead(mood: string): string {
+  const trimmed = cleanPhrase(mood);
+  if (/に聴く|を聴く|聴く/u.test(trimmed)) {
+    return `音楽時間は${trimmed}`;
+  }
+
+  return `音楽は${trimmed}に聴く`;
 }
 
-function normalizeArtistSong(raw: string): { artist?: string; title: string } {
-  const parsed = parseArtistSongLine(raw);
-  return {
-    artist: parsed.artist ? clip(parsed.artist, 16) : undefined,
-    title: clip(parsed.title, 20),
-  };
+function formatListeningFollow(mood: string): string {
+  const trimmed = cleanPhrase(mood);
+  if (/に聴く|を聴く|聴く/u.test(trimmed)) {
+    return `「${trimmed}」が定番、と言っていた`;
+  }
+
+  return `音楽は${trimmed}に聴く、と言っていた`;
 }
 
-function pushAnchor(
-  anchors: ConversationAnchor[],
-  seen: Set<string>,
-  anchor: ConversationAnchor
-) {
-  const key = `${anchor.kind}:${anchor.label}`;
-  if (!anchor.label || seen.has(key)) {
-    return;
-  }
-
-  seen.add(key);
-  anchors.push(anchor);
-}
-
-function collectConversationAnchors(member: Member): ConversationAnchor[] {
-  const anchors: ConversationAnchor[] = [];
-  const seen = new Set<string>();
-
-  const itemPriority: ProfileItemKind[] = [
-    "live-ritual",
-    "favorite-live",
-    "current-obsession",
-    "first-album",
-    "guitar-heroes",
-    "creative-process",
-    "dream-band",
-    "favorite-gear",
-    "music-dna",
-  ];
-
-  for (const kind of itemPriority) {
-    const item = getProfileItems(member).find((entry) => entry.kind === kind);
-    if (!item?.value.trim()) {
-      continue;
-    }
-
-    const value = cleanPhrase(item.value);
-    const detail = item.detail ? cleanPhrase(item.detail) : undefined;
-
-    switch (kind) {
-      case "live-ritual": {
-        const song = normalizeArtistSong(value);
-        pushAnchor(anchors, seen, {
-          kind: "ritual-song",
-          label: song.artist ? `${song.artist}の${song.title}` : song.title,
-          artist: song.artist,
-          title: song.title,
-        });
-        break;
-      }
-      case "favorite-live":
-        pushAnchor(anchors, seen, { kind: "live-memory", label: clip(value, 28) });
-        break;
-      case "current-obsession":
-        pushAnchor(anchors, seen, { kind: "obsession", label: clip(value, 22) });
-        break;
-      case "first-album":
-        pushAnchor(anchors, seen, { kind: "album", label: clip(value, 20) });
-        break;
-      case "guitar-heroes":
-        pushAnchor(anchors, seen, {
-          kind: "hero",
-          label: clip(value, 18),
-          artist: clip(value, 18),
-        });
-        break;
-      case "creative-process":
-        pushAnchor(anchors, seen, { kind: "process", label: clip(value, 24) });
-        break;
-      case "dream-band":
-        pushAnchor(anchors, seen, { kind: "dream", label: clip(value, 24) });
-        break;
-      case "favorite-gear":
-        pushAnchor(anchors, seen, {
-          kind: "gear",
-          label: detail ? `${clip(value, 14)}（${clip(detail, 10)}）` : clip(value, 20),
-        });
-        break;
-      case "music-dna":
-        for (const line of value.split("\n").map(cleanPhrase).filter(Boolean).slice(0, 2)) {
-          pushAnchor(anchors, seen, {
-            kind: "artist",
-            label: clip(line, 16),
-            artist: clip(line, 16),
-          });
-        }
-        break;
-      default:
-        break;
-    }
-  }
-
-  for (const artist of member.music.favoriteArtists.filter(Boolean).slice(0, 4)) {
-    pushAnchor(anchors, seen, {
-      kind: "artist",
-      label: clip(artist, 16),
-      artist: clip(artist, 16),
-    });
-  }
-
-  for (const cover of member.music.coverSongs ?? []) {
-    const artist = cover.artist?.trim();
-    const title = cover.title?.trim();
-    if (!title) {
-      continue;
-    }
-
-    pushAnchor(anchors, seen, {
-      kind: "cover-song",
-      label: artist ? `${clip(artist, 14)}の${clip(title, 16)}` : clip(title, 20),
-      artist: artist ? clip(artist, 14) : undefined,
-      title: clip(title, 16),
-    });
-  }
-
-  return anchors;
-}
-
-function inferFirstImpression(member: Member): FirstImpression {
-  const signals = member.portrait.resonanceSignals;
-  const blob = [
-    ...(signals?.musicFocus ?? []),
-    ...(signals?.conversation ?? []),
-    member.lookingFor.bandVision,
-    member.lookingFor.commitment,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  if (/コピー|セッションから|コピーバンド/.test(blob)) {
-    return "copy-starter";
-  }
-
-  if (/練習重視|スタジオ|制作/.test(blob)) {
-    return "studio-lover";
-  }
-
-  if (/ライブハウス|定期的に演奏|ライブ/.test(blob)) {
-    return "live-first";
-  }
-
-  if (/ゆっくり|沈黙|静|内省/.test(blob)) {
-    return "quiet-tune";
-  }
-
-  if (/即興|自由|テンポよく/.test(blob)) {
-    return "improv-spirit";
-  }
-
-  if (member.music.genres.length >= 3) {
-    return "wide-taste";
-  }
-
-  return "studio-lover";
-}
-
-function pickPrimaryAnchor(
-  anchors: ConversationAnchor[],
-  seed: string
-): ConversationAnchor | undefined {
-  if (anchors.length === 0) {
-    return undefined;
-  }
-
-  const tiers: AnchorKind[][] = [
-    ["live-memory", "ritual-song", "cover-song"],
-    ["obsession", "process", "hero", "album"],
-    ["dream", "gear"],
-    ["artist"],
-  ];
-
-  for (const tier of tiers) {
-    const pool = anchors.filter((item) => tier.includes(item.kind));
-    if (pool.length > 0) {
-      return pickStable(pool, `${seed}:anchor`);
-    }
-  }
-
-  return pickStable(anchors, `${seed}:anchor`);
-}
-
-function joinArtistNames(anchors: ConversationAnchor[], limit = 2): string | undefined {
-  const names = anchors
-    .filter((item) => item.kind === "artist" || item.kind === "hero")
-    .map((item) => item.label)
-    .filter(Boolean);
-
-  const unique = [...new Set(names)].slice(0, limit);
+function joinList(items: string[], limit = 2): string | undefined {
+  const unique = [...new Set(items.filter(Boolean))].slice(0, limit);
   if (unique.length >= 2) {
     return `${unique[0]}と${unique[1]}`;
   }
@@ -296,275 +178,622 @@ function joinArtistNames(anchors: ConversationAnchor[], limit = 2): string | und
   return undefined;
 }
 
-const MOOD_VARIANTS: Record<FirstImpression, string[]> = {
-  "quiet-tune": [
-    "静かな曲の話になると、急に饒舌になる空気だった",
-    "穏やかなメロディの話題で、声のトーンが柔らかくなった",
-  ],
-  "copy-starter": [
-    "譜面より、その場のノリで音を合わせたい、と言っていた",
-    "コピーではなく、一緒に鳴らす時間を想像していた",
-  ],
-  "improv-spirit": [
-    "即興の話になると、急に前のめりになる空気だった",
-    "アドリブの話題で、目の色が一気に変わった",
-  ],
-  "live-first": [
-    "ライブの話になると、急に目の色が変わる空気だった",
-    "会場の熱の話で、声のトーンが上がっていった",
-  ],
-  "wide-taste": [
-    "曲の話題が次々と広がっていく、そんな会話だった",
-    "ジャンルの壁を越えて、音の話が続いていった",
-  ],
-  "studio-lover": [
-    "音の話になると、急に饒舌になる空気だった",
-    "リハ前に曲の話をすると、急に集中モードに入る",
-  ],
-};
-
-const CLOSING_VARIANTS = [
-  "次は一緒にスタジオで音を重ねてみたい",
-  "一緒に音を重ねたら、きっと面白い時間になりそう",
-  "スタジオで顔合わせして、一度鳴らしてみたい",
-  "次は一緒にリハして、空気を確かめてみたい",
-  "一緒にスタジオに入ったら、きっと楽しい時間になりそう",
-];
-
-function moodClause(ctx: IntroContext, avoid?: RegExp): string {
-  const variants = MOOD_VARIANTS[ctx.impression].filter((line) => !avoid?.test(line));
-  const pool = variants.length > 0 ? variants : MOOD_VARIANTS[ctx.impression];
-  return pickStable(pool, `${ctx.seed}:mood`) ?? pool[0];
+function normalizeArtistSong(raw: string): { artist?: string; title: string } {
+  const parsed = parseArtistSongLine(raw);
+  return {
+    artist: parsed.artist ? clip(parsed.artist, 16) : undefined,
+    title: clip(parsed.title, 20),
+  };
 }
 
-function closingClause(ctx: IntroContext): string {
-  return pickStable(CLOSING_VARIANTS, `${ctx.seed}:close`) ?? CLOSING_VARIANTS[0];
+function getProfileValue(member: Member, kind: ProfileItemKind): string | undefined {
+  const item = getProfileItems(member).find((entry) => entry.kind === kind);
+  if (!item?.value.trim()) {
+    return undefined;
+  }
+
+  return cleanPhrase(item.value);
+}
+
+function collectFacts(member: Member): MemberFacts {
+  const ritualRaw = getProfileValue(member, "live-ritual");
+  const ritual = ritualRaw ? normalizeArtistSong(ritualRaw) : undefined;
+  const cover = member.music.coverSongs?.find((song) => song.title?.trim());
+  const coverArtist = cover?.artist?.trim();
+  const coverTitle = cover?.title?.trim();
+
+  return {
+    artist: member.music.favoriteArtists[0]
+      ? clip(member.music.favoriteArtists[0], 16)
+      : member.portrait.influences[0]
+        ? clip(member.portrait.influences[0], 16)
+        : undefined,
+    artistDuo: joinList([
+      ...member.music.favoriteArtists,
+      ...member.portrait.influences,
+    ]),
+    genre: member.music.genres[0] ? clip(member.music.genres[0], 14) : undefined,
+    genreDuo: joinList(member.music.genres),
+    instrument: member.music.instruments[0]
+      ? clip(member.music.instruments[0], 10)
+      : undefined,
+    instrumentDuo: joinList(member.music.instruments),
+    liveMemory: getProfileValue(member, "favorite-live")
+      ? clip(getProfileValue(member, "favorite-live")!, 24)
+      : undefined,
+    ritualSong: ritual
+      ? ritual.artist
+        ? `${ritual.artist}の${ritual.title}`
+        : ritual.title
+      : undefined,
+    coverSong: coverTitle ? clip(coverTitle, 18) : undefined,
+    coverArtist: coverArtist ? clip(coverArtist, 14) : undefined,
+    obsession: getProfileValue(member, "current-obsession")
+      ? clip(getProfileValue(member, "current-obsession")!, 20)
+      : undefined,
+    gear: getProfileValue(member, "favorite-gear")
+      ? clip(getProfileValue(member, "favorite-gear")!, 20)
+      : undefined,
+    album: getProfileValue(member, "first-album")
+      ? clip(getProfileValue(member, "first-album")!, 18)
+      : undefined,
+    hero: getProfileValue(member, "guitar-heroes")
+      ? clip(getProfileValue(member, "guitar-heroes")!, 16)
+      : undefined,
+    process: getProfileValue(member, "creative-process")
+      ? clip(getProfileValue(member, "creative-process")!, 22)
+      : undefined,
+    dream: getProfileValue(member, "dream-band")
+      ? clip(getProfileValue(member, "dream-band")!, 22)
+      : undefined,
+    bandVision: member.lookingFor.bandVision
+      ? clip(member.lookingFor.bandVision, 24)
+      : undefined,
+    commitment: member.lookingFor.commitment
+      ? clip(member.lookingFor.commitment, 22)
+      : undefined,
+    listeningMood: member.music.listeningMood
+      ? clip(member.music.listeningMood, 22)
+      : undefined,
+    conversationNote: member.portrait.resonanceSignals?.conversation?.[0]
+      ? clip(member.portrait.resonanceSignals.conversation[0], 18)
+      : undefined,
+    fashionNote: member.fashion.description
+      ? clip(member.fashion.description, 20)
+      : undefined,
+    location: member.portrait.location
+      ? clip(member.portrait.location, 8)
+      : undefined,
+    playingStyle: member.music.playingStyle?.[0]
+      ? clip(member.music.playingStyle[0], 14)
+      : undefined,
+    part: member.lookingFor.parts[0]
+      ? clip(member.lookingFor.parts[0], 8)
+      : undefined,
+  };
+}
+
+function pickAngle(seed: string, avoid?: IntroAngle): IntroAngle {
+  let index = stableIndex(`${seed}:angle`, INTRO_ANGLES.length);
+
+  if (avoid && INTRO_ANGLES[index] === avoid) {
+    index = (index + 1) % INTRO_ANGLES.length;
+  }
+
+  return INTRO_ANGLES[index]!;
+}
+
+function pickStructure(seed: string): IntroStructure {
+  return INTRO_STRUCTURES[stableIndex(`${seed}:structure`, INTRO_STRUCTURES.length)]!;
+}
+
+function isValidIntro(text: string): boolean {
+  if (!text || BANNED_PATTERN.test(text)) {
+    return false;
+  }
+
+  return !/(です|ます|が好き|大切に|探して|をしている|をしています|プロフィール|担当)/u.test(
+    text
+  );
+}
+
+function fitLength(text: string, seed: string): string {
+  let body = cleanPhrase(text);
+
+  if (!body.endsWith("。")) {
+    body = `${body}。`;
+  }
+
+  if (body.length > MAX_LENGTH) {
+    body = `${clip(body, MAX_LENGTH - 1)}。`;
+  }
+
+  if (body.length < MIN_LENGTH) {
+    const pad = pickStable(LENGTH_PADS, `${seed}:pad`) ?? LENGTH_PADS[0];
+    const next = `${body.replace(/。$/u, "")}${pad}。`;
+    if (next.length <= MAX_LENGTH) {
+      body = next;
+    }
+  }
+
+  if (body.length > MAX_LENGTH) {
+    body = `${clip(body, MAX_LENGTH - 1)}。`;
+  }
+
+  return body;
+}
+
+function applyStructure(
+  structure: IntroStructure,
+  lead: string,
+  follow?: string,
+  seed?: string
+): string {
+  const second = follow?.trim();
+
+  switch (structure) {
+    case "single":
+      return lead;
+    case "two-part":
+      return second ? `${lead}。${second}` : lead;
+    case "short":
+      return second ? `${lead}、${second}` : lead;
+    case "episode-first":
+      return second
+        ? `会話の途中、${lead}。${second}`
+        : `会話の途中、${lead}`;
+    case "song-first": {
+      const songLead = pickStable(
+        [
+          lead,
+          second ? `『${lead}』の話から始まった。${second}` : `『${lead}』の話から始まった`,
+        ],
+        `${seed}:song`
+      );
+      return songLead ?? lead;
+    }
+    case "impression-first":
+      return second ? `最初に感じたのは、${lead}。${second}` : `最初に感じたのは、${lead}`;
+    case "question-first":
+      return second ? `${lead}？${second}` : `${lead}？`;
+    case "surprise-first":
+      return second ? `意外だったのは、${lead}。${second}` : `意外だったのは、${lead}`;
+    default:
+      return second ? `${lead}。${second}` : lead;
+  }
+}
+
+type AngleDraft = {
+  lead: string;
+  follow?: string;
+};
+
+function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
+  const { angle, facts, member } = ctx;
+  const name = member.name;
+
+  switch (angle) {
+    case "conversation-memory": {
+      if (facts.liveMemory) {
+        return {
+          lead: `${facts.liveMemory}の話をした`,
+          follow: "そのあと少し黙って、また別の話題に戻ってきた",
+        };
+      }
+      if (facts.artist) {
+        return {
+          lead: `${facts.artist}の話をしたあと、自分の曲の話まで踏み込んできた`,
+        };
+      }
+      return {
+        lead: `${name}さんと話しているうちに、音楽以外の話も自然に混ざってきた`,
+      };
+    }
+    case "music-relationship": {
+      if (facts.listeningMood) {
+        return {
+          lead: formatListeningLead(facts.listeningMood),
+          follow: "生活のリズムとセットで語る人だった",
+        };
+      }
+      if (facts.process) {
+        return { lead: facts.process, follow: "作り方の話が長かった" };
+      }
+      return {
+        lead: "曲を聴く時間より、鳴らす時間の話のほうが多かった",
+      };
+    }
+    case "favorite-band-trend": {
+      if (facts.artistDuo) {
+        return {
+          lead: `${facts.artistDuo}の名前が何度も出てきた`,
+          follow: "好きな理由まで細かく語っていた",
+        };
+      }
+      if (facts.artist) {
+        return {
+          lead: `${facts.artist}の話が中心だった`,
+          follow: "他のアーティストの話題にもすぐ広がった",
+        };
+      }
+      return null;
+    }
+    case "playing-style": {
+      if (facts.playingStyle && facts.instrument) {
+        return {
+          lead: `${facts.instrument}は${facts.playingStyle}寄り`,
+          follow: "音作りの話が具体的だった",
+        };
+      }
+      if (facts.instrumentDuo) {
+        return {
+          lead: `${facts.instrumentDuo}を使い分ける`,
+          follow: "役割の話まで自分から出してきた",
+        };
+      }
+      if (facts.instrument) {
+        return { lead: `${facts.instrument}の話になると、説明が丁寧になる` };
+      }
+      return null;
+    }
+    case "band-role": {
+      if (facts.instrument && facts.part) {
+        return {
+          lead: `${facts.instrument}を担当し、${facts.part}を探している`,
+          follow: "編成の話が早かった",
+        };
+      }
+      if (facts.instrument) {
+        return {
+          lead: `${facts.instrument}の立ち位置を大事にしたい`,
+          follow: "役割分担の話がはっきりしていた",
+        };
+      }
+      return {
+        lead: "バンドの中で自分が何を担うか、すでに考えている",
+      };
+    }
+    case "studio-habit": {
+      if (facts.ritualSong) {
+        return {
+          lead: `スタジオ前に${facts.ritualSong}をかける`,
+          follow: "入り方まで決まっている",
+        };
+      }
+      if (facts.commitment) {
+        return {
+          lead: `活動は${facts.commitment}`,
+          follow: "スタジオの過ごし方まで具体的だった",
+        };
+      }
+      return {
+        lead: "リハに入る前から、今日やることを頭の中で整理している",
+      };
+    }
+    case "live-enjoyment": {
+      if (facts.liveMemory) {
+        return {
+          lead: `${facts.liveMemory}が忘れられない`,
+          follow: "ライブの話になると声が上がる",
+        };
+      }
+      if (facts.ritualSong) {
+        return {
+          lead: `ライブ前は${facts.ritualSong}から入る`,
+          follow: "会場に出る前の儀式まで話していた",
+        };
+      }
+      return {
+        lead: "ライブの話題だけ、会話の速度が変わった",
+      };
+    }
+    case "gear-focus": {
+      if (facts.gear) {
+        return {
+          lead: `${facts.gear}の話が長かった`,
+          follow: "音の出し方までこだわりが見えた",
+        };
+      }
+      if (facts.instrument) {
+        return {
+          lead: `${facts.instrument}の機材選びに時間をかけている`,
+        };
+      }
+      return null;
+    }
+    case "music-discovery": {
+      if (facts.album) {
+        return {
+          lead: `最初に買ったのは${facts.album}`,
+          follow: "その話から今の好みまでつながった",
+        };
+      }
+      if (facts.obsession) {
+        return {
+          lead: `最近は${facts.obsession}に入っている`,
+          follow: "新しい音との出会い方が自分なりだった",
+        };
+      }
+      if (facts.hero) {
+        return {
+          lead: `${facts.hero}から音楽に入った`,
+          follow: "影響の話が意外と長かった",
+        };
+      }
+      return null;
+    }
+    case "personality": {
+      if (facts.fashionNote) {
+        return {
+          lead: facts.fashionNote,
+          follow: "話し方もそれに近かった",
+        };
+      }
+      if (facts.conversationNote) {
+        return {
+          lead: facts.conversationNote,
+          follow: "そのまま会話の進み方にも出ていた",
+        };
+      }
+      return {
+        lead: "言葉数は多くないのに、話したことは残る",
+      };
+    }
+    case "band-purpose": {
+      if (facts.dream) {
+        return { lead: facts.dream, follow: "理想像まで具体的だった" };
+      }
+      if (facts.bandVision) {
+        return {
+          lead: "バンドの話になると、言葉が増える",
+          follow: facts.bandVision,
+        };
+      }
+      return {
+        lead: "バンドに何を求めるか、最初から言葉にできていた",
+      };
+    }
+    case "cover-song": {
+      if (facts.coverSong && facts.coverArtist) {
+        return {
+          lead: `${facts.coverArtist}の${facts.coverSong}`,
+          follow: "コピーしたい理由まで話していた",
+        };
+      }
+      if (facts.coverSong) {
+        return {
+          lead: `『${facts.coverSong}』を一緒に鳴らしたい`,
+          follow: "譜面より入り方の話が長かった",
+        };
+      }
+      return {
+        lead: "コピー曲の候補を、すでにいくつか持っている",
+      };
+    }
+    case "favorite-genre": {
+      if (facts.genreDuo) {
+        return {
+          lead: `${facts.genreDuo}の話が長かった`,
+          follow: "系譜の話まで自分から広げてきた",
+        };
+      }
+      if (facts.genre) {
+        return {
+          lead: `${facts.genre}の話が多かった`,
+          follow: "その系譜まで自分から掘ってきた",
+        };
+      }
+      return null;
+    }
+    case "non-music-values": {
+      if (facts.fashionNote) {
+        return {
+          lead: facts.fashionNote,
+          follow: "音楽以外の話題でもテンポが落ちなかった",
+        };
+      }
+      if (facts.location) {
+        return {
+          lead: `${facts.location}を拠点に活動している`,
+          follow: "生活の話も自然に混ざっていた",
+        };
+      }
+      return {
+        lead: "音楽の話の前後で、日常の話もちゃんと続いていた",
+      };
+    }
+    case "conversation-tempo": {
+      if (facts.conversationNote) {
+        return {
+          lead: facts.conversationNote,
+          follow: "会話の間の取り方が印象的だった",
+        };
+      }
+      return {
+        lead: "質問を返す前に、一度考えてから答える",
+        follow: "その分、言葉の精度が高かった",
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+function buildFallbackDraft(ctx: IntroContext): AngleDraft {
+  const { facts, member } = ctx;
+
+  if (facts.coverSong && facts.coverArtist) {
+    return {
+      lead: `${facts.coverArtist}の${facts.coverSong}を一緒に鳴らしたい`,
+      follow: "譜面より入り方の話が長かった",
+    };
+  }
+
+  if (facts.playingStyle && facts.instrument) {
+    return {
+      lead: `${facts.instrument}は${facts.playingStyle}寄り`,
+      follow: "音作りの話が具体的だった",
+    };
+  }
+
+  if (facts.listeningMood) {
+    return {
+      lead: formatListeningLead(facts.listeningMood),
+      follow: "生活のリズムとセットで語っていた",
+    };
+  }
+
+  if (facts.artistDuo) {
+    return {
+      lead: `${facts.artistDuo}の名前が何度も出てきた`,
+      follow: "好きな理由まで細かく語っていた",
+    };
+  }
+
+  if (facts.bandVision) {
+    return {
+      lead: "バンドの話になると、言葉が増える",
+      follow: facts.bandVision,
+    };
+  }
+
+  if (facts.artist) {
+    return {
+      lead: `${facts.artist}の話から入った`,
+      follow: "そのあと自分の音楽の話まで自然に広がった",
+    };
+  }
+
+  return {
+    lead: `${member.name}さんと話すと、音楽の輪郭が少しずつ見えてくる`,
+  };
 }
 
 const LENGTH_PADS = [
-  "、その話の余韻が少し残った",
-  "、会話の温度が伝わってきた",
+  "、その話をもう少し聞きたくなった",
+  "、次に会ったら続きを聞きたい",
+  "、会話の途中でメモしたくなった",
+  "、本人の言葉がそのまま残っている",
+  "、話の順番が変わっても筋が通っていた",
+  "、音楽の話に自然につながっていた",
+  "、細部まで覚えている様子だった",
+  "、自分から具体例を出してきた",
 ];
 
-function fitLength(body: string, ctx: IntroContext): string {
-  let text = cleanPhrase(body);
-
-  if (!text.endsWith("。")) {
-    text = `${text}。`;
+function enrichShortDraft(ctx: IntroContext, draft: AngleDraft): AngleDraft {
+  if (draft.follow) {
+    return draft;
   }
 
-  if (text.length < MIN_LENGTH) {
-    const close = closingClause(ctx);
-    if (!text.includes(close)) {
-      const next = `${text}${close}。`;
-      if (next.length <= MAX_LENGTH) {
-        text = next;
-      }
-    }
+  const { facts } = ctx;
+  const extras = [
+    facts.coverSong && facts.coverArtist
+      ? `${facts.coverArtist}の${facts.coverSong}を一緒に鳴らしたい、と言っていた`
+      : undefined,
+    facts.artist ? `${facts.artist}の話も途中で出てきた` : undefined,
+    facts.listeningMood ? formatListeningFollow(facts.listeningMood) : undefined,
+    facts.instrument ? `${facts.instrument}の話が中心だった` : undefined,
+    facts.genre ? `${facts.genre}の話が長かった` : undefined,
+    facts.commitment ? `活動ペースは${facts.commitment}` : undefined,
+  ].filter((value): value is string => Boolean(value));
+
+  const follow = pickStable(extras, `${ctx.seed}:enrich`);
+  if (follow) {
+    return { ...draft, follow };
   }
 
-  if (text.length < MIN_LENGTH) {
-    const parts = text.replace(/。$/u, "").split("。");
-    if (parts.length >= 2) {
-      const pad = pickStable(LENGTH_PADS, `${ctx.seed}:pad`) ?? LENGTH_PADS[0];
-      parts[parts.length - 2] = `${parts[parts.length - 2]}${pad}`;
-      const next = `${parts.join("。")}。`;
-      if (next.length >= MIN_LENGTH && next.length <= MAX_LENGTH) {
-        text = next;
-      }
-    }
-  }
-
-  if (text.length > MAX_LENGTH) {
-    text = `${clip(text, MAX_LENGTH - 1)}。`;
-  }
-
-  return text;
-}
-
-function buildArtistDuoIntro(ctx: IntroContext, duo: string): string {
-  const mood = moodClause(ctx);
-  const close = closingClause(ctx);
-  const openings = [
-    `会話が${duo}のあいだを行き来した`,
-    `途中、${duo}の名前が何度も出てきた`,
-    `${duo}の話題で一気に距離が縮まった`,
-    `この前の会話、${duo}の話が止まらなかった`,
-  ];
-  const opening = pickStable(openings, `${ctx.seed}:artist-open`) ?? openings[0];
-  return `${opening}。${mood}。${close}`;
-}
-
-function buildSingleArtistIntro(ctx: IntroContext, label: string): string {
-  const mood = moodClause(ctx);
-  const close = closingClause(ctx);
-
-  if (ctx.impression === "copy-starter") {
-    const openings = [
-      `${label}のコピー話で盛り上がった`,
-      `${label}を一緒に鳴らす話で、目の色が変わった`,
-    ];
-    const opening = pickStable(openings, `${ctx.seed}:copy-open`) ?? openings[0];
-    return `${opening}。譜面より、その場のノリで音を合わせたい。${close}`;
-  }
-
-  const openings = [
-    `${label}の話題で一気に距離が縮まった`,
-    `${label}の名前が出た瞬間、急に饒舌になった`,
-    `会話の途中、${label}の話が長く続いた`,
-  ];
-  const opening = pickStable(openings, `${ctx.seed}:single-open`) ?? openings[0];
-  return `${opening}。${mood}。${close}`;
-}
-
-const INTRO_WRITERS: IntroWriter[] = [
-  (ctx, anchor) => {
-    if (anchor.kind !== "live-memory") {
-      return null;
-    }
-
-    const openings = [
-      `${anchor.label}の話になったとき、急に表情が変わった`,
-      `${anchor.label}の余韻が、会話の途中にも残っていた`,
-    ];
-    const opening = pickStable(openings, `${ctx.seed}:live-open`) ?? openings[0];
-    return `${opening}。${moodClause(ctx)}。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "ritual-song") {
-      return null;
-    }
-
-    const lead =
-      ctx.impression === "quiet-tune"
-        ? `${anchor.label}を流してからスタジオに入る、と話していた`
-        : `リハ前に${anchor.label}をかける話で盛り上がった`;
-
-    return `${lead}。${moodClause(ctx, /リハ前/)}。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "cover-song") {
-      return null;
-    }
-
-    if (ctx.impression === "copy-starter") {
-      return `${anchor.label}のコピー話で盛り上がった。譜面より、その場のノリで音を合わせたい。${closingClause(ctx)}`;
-    }
-
-    return `${anchor.label}の話題で一気に距離が縮まった。${moodClause(ctx)}。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "obsession") {
-      return null;
-    }
-
-    return `最近${anchor.label}の話ばかり。スタジオに入ると、急に集中モードに入る。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "process") {
-      return null;
-    }
-
-    return `${anchor.label}。アイデアの立ち上げ方が、ちょっと面白い。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "hero" && anchor.kind !== "album") {
-      return null;
-    }
-
-    const openings = [
-      `${anchor.label}の話で止まらなかった`,
-      `${anchor.label}の名前が出た瞬間、急に饒舌になった`,
-    ];
-    const opening = pickStable(openings, `${ctx.seed}:hero-open`) ?? openings[0];
-    return `${opening}。${moodClause(ctx)}。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "dream") {
-      return null;
-    }
-
-    return `${anchor.label}のバンド像を語っていた。${moodClause(ctx)}。一緒に形にしてみたい`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "gear") {
-      return null;
-    }
-
-    return `${anchor.label}の音で場が締まる、と話していた。${moodClause(ctx)}。${closingClause(ctx)}`;
-  },
-  (ctx, anchor) => {
-    if (anchor.kind !== "artist") {
-      return null;
-    }
-
-    const duo = joinArtistNames(ctx.anchors);
-    if (duo && duo.includes("と")) {
-      return buildArtistDuoIntro(ctx, duo);
-    }
-
-    return buildSingleArtistIntro(ctx, anchor.label);
-  },
-];
-
-function composeSparseIntro(ctx: IntroContext): string {
-  const duo = joinArtistNames(ctx.anchors);
-  if (duo && duo.includes("と")) {
-    return buildArtistDuoIntro(ctx, duo);
-  }
-
-  const tempo = ctx.member.portrait.resonanceSignals?.conversation?.[0];
-  if (tempo && /即興|自由/.test(tempo)) {
-    return `即興の話になると、急に前のめりになる空気だった。${closingClause(ctx)}`;
-  }
-
-  return `音楽の話をすると、急に饒舌になる空気だった。${closingClause(ctx)}`;
+  return draft;
 }
 
 function composeIntro(ctx: IntroContext): string {
-  const anchor = pickPrimaryAnchor(ctx.anchors, ctx.seed);
-  const candidates: string[] = [];
+  const baseDraft = buildAngleDraft(ctx) ?? buildFallbackDraft(ctx);
+  const draft = enrichShortDraft(ctx, baseDraft);
+  let structure = ctx.structure;
 
-  if (anchor) {
-    const start = stableIndex(`${ctx.seed}:writer`, INTRO_WRITERS.length);
-    for (let offset = 0; offset < INTRO_WRITERS.length; offset += 1) {
-      const draft = INTRO_WRITERS[(start + offset) % INTRO_WRITERS.length](ctx, anchor);
-      if (draft && !isBannedPhrase(draft)) {
-        candidates.push(draft);
-      }
-    }
+  const singlePreview = applyStructure("single", draft.lead, undefined, ctx.seed);
+  if (singlePreview.length < MIN_LENGTH && draft.follow) {
+    structure =
+      pickStable(
+        ["two-part", "episode-first", "impression-first", "surprise-first"],
+        `${ctx.seed}:expand`
+      ) ?? "two-part";
   }
 
-  candidates.push(composeSparseIntro(ctx));
-
-  for (const candidate of candidates) {
-    const fitted = fitLength(candidate, ctx);
-    if (fitted.length >= MIN_LENGTH && fitted.length <= MAX_LENGTH && !isBannedPhrase(fitted)) {
-      return fitted;
-    }
-  }
-
-  return fitLength(candidates[0] ?? composeSparseIntro(ctx), ctx);
+  const raw = applyStructure(structure, draft.lead, draft.follow, ctx.seed);
+  return fitLength(raw, ctx.seed);
 }
 
-/** 会話由来の具体情報から About 向け AI 紹介文（80〜100字）を生成 */
-export function buildProfileAiComment(member: Member): string {
-  const seed = [
+function createIntroContext(
+  member: Member,
+  options?: BuildProfileAiCommentOptions
+): IntroContext {
+  const seed = buildSeed(member);
+
+  return {
+    seed,
+    member,
+    angle: pickAngle(seed, options?.avoidAngle),
+    structure: pickStructure(seed),
+    facts: collectFacts(member),
+  };
+}
+
+export function resolveProfileAiIntro(
+  member: Member,
+  options?: BuildProfileAiCommentOptions
+): { angle: IntroAngle; comment: string } {
+  const ctx = createIntroContext(member, options);
+
+  const candidates: Array<{ angle: IntroAngle; comment: string }> = [];
+
+  for (let offset = 0; offset < INTRO_ANGLES.length; offset += 1) {
+    const tryAngle =
+      INTRO_ANGLES[(INTRO_ANGLES.indexOf(ctx.angle) + offset) % INTRO_ANGLES.length]!;
+    const tryStructure =
+      INTRO_STRUCTURES[
+        (INTRO_STRUCTURES.indexOf(ctx.structure) + offset) % INTRO_STRUCTURES.length
+      ]!;
+    const text = composeIntro({ ...ctx, angle: tryAngle, structure: tryStructure });
+    if (isValidIntro(text) && text.length >= MIN_LENGTH && text.length <= MAX_LENGTH) {
+      candidates.push({ angle: tryAngle, comment: text });
+    }
+  }
+
+  const primary = composeIntro(ctx);
+  if (isValidIntro(primary)) {
+    candidates.unshift({ angle: ctx.angle, comment: primary });
+  }
+
+  for (const candidate of candidates) {
+    if (candidate.comment.length >= MIN_LENGTH && candidate.comment.length <= MAX_LENGTH) {
+      return candidate;
+    }
+  }
+
+  return {
+    angle: ctx.angle,
+    comment: fitLength(buildFallbackDraft(ctx).lead, ctx.seed),
+  };
+}
+
+function buildSeed(member: Member): string {
+  return [
     member.id,
     member.name,
     ...getProfileItems(member).map((item) => `${item.kind}:${item.value}`),
     ...member.music.favoriteArtists,
     ...(member.music.coverSongs ?? []).map((song) => `${song.artist}:${song.title}`),
+    member.lookingFor.bandVision,
+    member.music.listeningMood ?? "",
   ].join("|");
+}
 
-  const ctx: IntroContext = {
-    seed,
-    member,
-    impression: inferFirstImpression(member),
-    anchors: collectConversationAnchors(member),
-  };
-
-  return composeIntro(ctx);
+/** 会話由来の具体情報から About 向け AI 紹介文（80〜100字）を生成 */
+export function buildProfileAiComment(
+  member: Member,
+  options?: BuildProfileAiCommentOptions
+): string {
+  return resolveProfileAiIntro(member, options).comment;
 }
 
 export function applyProfileAiComment(member: Member): Member {

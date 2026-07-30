@@ -6,7 +6,7 @@ export const members: Member[] = [
     name: "Yui",
     resonanceRate: 94,
     tags: ["シティポップ", "夜更け", "アナログ", "詩的"],
-    aiComment: "静かな夜の街と、少しだけ切ないメロディが似合う人。",
+    aiComment: "音楽時間は深夜1時、窓を開けて聴く音楽、話の順番が変わっても筋が通っていた。",
     photo:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
     portrait: {
@@ -38,7 +38,7 @@ export const members: Member[] = [
     name: "Ren",
     resonanceRate: 88,
     tags: ["Post-Punk", "モノクロ", "反骨", "ライブ"],
-    aiComment: "ステージの熱と、研ぎ澄まされた美学が共鳴するタイプ。",
+    aiComment: "音楽はリハ前のウォームアップに聴く、会話の途中でメモしたくなった。",
     photo:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
     portrait: {
@@ -70,7 +70,7 @@ export const members: Member[] = [
     name: "Mio",
     resonanceRate: 91,
     tags: ["Lo-fi", "昼下がり", "フィルム", "優しい"],
-    aiComment: "柔らかな光と、少しだけ霞んだ記憶を大切にする人。",
+    aiComment: "会話の途中、beabadoobeeの話をしたあと、自分の曲の話まで踏み込んできた。音楽は午後の日差しが差し込む部屋に聴く、と言っていた、その話をもう少し聞きたくなった。",
     photo:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&q=80",
     portrait: {
@@ -102,7 +102,7 @@ export const members: Member[] = [
     name: "Kaito",
     resonanceRate: 86,
     tags: ["Techno", "深夜", "ミニマル", "集中"],
-    aiComment: "規則正しいビートの中に、独自の世界観を築くタイプ。",
+    aiComment: "音楽はヘッドホンで没入する深夜に聴く、その話をもう少し聞きたくなった。",
     photo:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80",
     portrait: {
@@ -134,7 +134,7 @@ export const members: Member[] = [
     name: "Sora",
     resonanceRate: 92,
     tags: ["Jazz", "自由", "即興", "夜"],
-    aiComment: "即興の中に、言葉にできない感情を託す人。",
+    aiComment: "最初に感じたのは、Esperanza SpaldingとKamasi Washingtonの名前が何度も出てきた。好きな理由まで細かく語っていた、本人の言葉がそのまま残っている。",
     photo:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
     portrait: {
@@ -166,7 +166,7 @@ export const members: Member[] = [
     name: "Haru",
     resonanceRate: 89,
     tags: ["Shoegaze", "夢幻", "ギター", "内省"],
-    aiComment: "ざわめくノイズの奥に、繊細なメロディを隠すタイプ。",
+    aiComment: "RadioheadのNo Surprisesを一緒に鳴らしたい、会話の途中でメモしたくなった。",
     photo:
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
     portrait: {
@@ -213,7 +213,7 @@ export const members: Member[] = [
     name: "Takumi",
     resonanceRate: 85,
     tags: ["Hip-Hop", "ストリート", "ビート", "言葉"],
-    aiComment: "リズムと言葉で、日常のリアルを切り取る人。",
+    aiComment: "音楽はイヤホンで街を歩きながらに聴く、細部まで覚えている様子だった。",
     photo:
       "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80",
     portrait: {
@@ -245,7 +245,7 @@ export const members: Member[] = [
     name: "Aki",
     resonanceRate: 93,
     tags: ["R&B", "ソウル", "声", "官能"],
-    aiComment: "声の温度だけで、空間の空気を変えてしまうタイプ。",
+    aiComment: "最初に感じたのは、Frank Oceanの話をしたあと、自分の曲の話まで踏み込んできた。活動ペースは月2回スタジオ、ライブハウス出演、自分から具体例を出してきた。",
     photo:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80",
     portrait: {
@@ -277,7 +277,7 @@ export const members: Member[] = [
     name: "Daichi",
     resonanceRate: 82,
     tags: ["メタル", "重厚", "テクニカル", "情熱"],
-    aiComment: "重いリフの中に、意外な繊細さを秘めている人。",
+    aiComment: "音楽はスタジオでメトロノームと向き合う時間に聴く、自分から具体例を出してきた。",
     photo:
       "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80",
     portrait: {
@@ -309,7 +309,7 @@ export const members: Member[] = [
     name: "Nana",
     resonanceRate: 90,
     tags: ["K-Pop", "ダンス", "ポップ", "キラキラ"],
-    aiComment: "パフォーマンスの能量と、ポップのセンスが光るタイプ。",
+    aiComment: "音楽は鏡の前で振り付けを覚える朝に聴く、話の順番が変わっても筋が通っていた。",
     photo:
       "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80",
     portrait: {
@@ -341,7 +341,7 @@ export const members: Member[] = [
     name: "Shun",
     resonanceRate: 87,
     tags: ["アコースティック", "フォーク", "旅", "詩"],
-    aiComment: "アコギ一本で、場所の記憶を運んでくる人。",
+    aiComment: "音楽は新幹線の窓際、夕暮れの車窓に聴く、話の順番が変わっても筋が通っていた。",
     photo:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
     portrait: {
@@ -373,7 +373,7 @@ export const members: Member[] = [
     name: "Rin",
     resonanceRate: 95,
     tags: ["クラシック", "ピアノ", "叙情", "繊細"],
-    aiComment: "クラシックの教養と、ポップスの感覚が rare に共存する人。",
+    aiComment: "最初に感じたのは、Olafur Arnaldsの話をしたあと、自分の曲の話まで踏み込んできた。音楽はグランドピアノの前、一人きりの夜に聴く、と言っていた、本人の言葉がそのまま残っている。",
     photo:
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
     portrait: {
@@ -405,7 +405,7 @@ export const members: Member[] = [
     name: "Ken",
     resonanceRate: 84,
     tags: ["レゲエ", "ダブ", "ベース", "リラックス"],
-    aiComment: "低く深いベースラインに、穏やかな人柄が滲むタイプ。",
+    aiComment: "会話の途中、Damian Marleyの話をしたあと、自分の曲の話まで踏み込んできた。活動ペースは月2回リハ、ビーチライブ開催、話の順番が変わっても筋が通っていた。",
     photo:
       "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=800&q=80",
     portrait: {
@@ -437,7 +437,7 @@ export const members: Member[] = [
     name: "Emi",
     resonanceRate: 91,
     tags: ["シンセポップ", "80s", "ネオン", "ノスタルジー"],
-    aiComment: "80年代の残像と、現代的なセンスが混ざり合う人。",
+    aiComment: "音楽はネオン街をドライブしながらに聴く、話の順番が変わっても筋が通っていた。",
     photo:
       "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&q=80",
     portrait: {
@@ -469,7 +469,7 @@ export const members: Member[] = [
     name: "Tsubasa",
     resonanceRate: 88,
     tags: ["パンク", "DIY", "叫び", "ライブハウス"],
-    aiComment: "DIY 精神と、生のエネルギーが全身から溢れるタイプ。",
+    aiComment: "音楽はライブハウスの物販前、次のバンドを待つ時間に聴く、会話の途中でメモしたくなった。",
     photo:
       "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=800&q=80",
     portrait: {
@@ -501,7 +501,7 @@ export const members: Member[] = [
     name: "Mei",
     resonanceRate: 92,
     tags: ["ボサノバ", "ボサノヴァ", "優雅", "ギター"],
-    aiComment: "南米の陽射しと、日本の繊細さが溶け合う rare な存在。",
+    aiComment: "音楽はカフェテラス、午後のコーヒーに聴く、本人の言葉がそのまま残っている。",
     photo:
       "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80",
     portrait: {
@@ -533,7 +533,7 @@ export const members: Member[] = [
     name: "Hayato",
     resonanceRate: 83,
     tags: ["EDM", "フェス", "DJ", "ビート"],
-    aiComment: "フェスの群衆を、一つのビートにまとめるタイプ。",
+    aiComment: "音楽はフェス終演後、キャンプファイヤーの前に聴く、本人の言葉がそのまま残っている。",
     photo:
       "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
     portrait: {
@@ -565,7 +565,7 @@ export const members: Member[] = [
     name: "Yuka",
     resonanceRate: 89,
     tags: ["インディー", "詩", "ボーカル", "透明"],
-    aiComment: "透明感のある声と、観察者的な視点が印象的な人。",
+    aiComment: "音楽は図書館の窓際、静かな午後に聴く、自分から具体例を出してきた。",
     photo:
       "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&q=80",
     portrait: {
@@ -597,7 +597,7 @@ export const members: Member[] = [
     name: "Ryo",
     resonanceRate: 86,
     tags: ["ファンク", "グルーヴ", "ベース", "ダンス"],
-    aiComment: "グルーヴの塊。一緒にいるだけで、体が勝手に動き出す人。",
+    aiComment: "音楽はリハ後のビール、仲間とのセッションに聴く、自分から具体例を出してきた。",
     photo:
       "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=800&q=80",
     portrait: {
@@ -629,7 +629,7 @@ export const members: Member[] = [
     name: "Saki",
     resonanceRate: 94,
     tags: ["アンビエント", "瞑想", "自然", "音響"],
-    aiComment: "音の空間を設計する、静かな革命者のような存在。",
+    aiComment: "意外だったのは、Tim Heckerの話をしたあと、自分の曲の話まで踏み込んできた。活動ペースは季節1回の野外イベント、制作は随時、会話の途中でメモしたくなった。",
     photo:
       "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
     portrait: {
