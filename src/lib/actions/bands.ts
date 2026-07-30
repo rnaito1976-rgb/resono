@@ -149,17 +149,6 @@ export async function createBandAction(input: {
     return { error: timelineError.message };
   }
 
-  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
-    notifyBandMembersBadgeEmail({
-      bandId: band.id,
-      bandName: name,
-      preview: "Bandが結成されました。",
-      excludeMemberIds: [creatorMemberId],
-    }).catch((error) => {
-      console.error("[BadgeEmail] band formed notification:", error);
-    })
-  );
-
   void import("@/lib/live/events").then(({ publishLiveEvent }) =>
     Promise.all([
       publishLiveEvent({
@@ -291,17 +280,6 @@ export async function addBandMembersAction(input: {
     console.error("[addBandMembersAction] timeline:", timelineError.message);
   }
 
-  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
-    notifyBandMembersBadgeEmail({
-      bandId: input.bandId,
-      bandName: band.name,
-      preview: `${newMemberIds.length}人のメンバーが加わりました。`,
-      excludeMemberIds: [actor.id, ...newMemberIds],
-    }).catch((error) => {
-      console.error("[BadgeEmail] band member added notification:", error);
-    })
-  );
-
   revalidatePath("/bands");
   revalidatePath("/me");
   revalidatePath(`/bands/${input.bandId}`);
@@ -375,22 +353,6 @@ export async function createBandActivityAction(input: {
     .select("name")
     .eq("id", input.bandId)
     .maybeSingle();
-
-  const preview =
-    activity.body?.trim() ||
-    activity.title?.trim() ||
-    timelineTitle;
-
-  void import("@/lib/notifications/badge-email").then(({ notifyBandMembersBadgeEmail }) =>
-    notifyBandMembersBadgeEmail({
-      bandId: input.bandId,
-      bandName: band?.name ?? "Band",
-      preview,
-      excludeMemberIds: [member.id],
-    }).catch((error) => {
-      console.error("[BadgeEmail] band activity notification:", error);
-    })
-  );
 
   if (input.kind === "video") {
     void import("@/lib/live/events").then(({ publishLiveEvent }) =>

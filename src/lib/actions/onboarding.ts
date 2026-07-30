@@ -90,6 +90,12 @@ export async function completeMinimalRegistrationAction(
       actorMemberId: updated.id,
     });
 
+    void import("@/lib/notifications/match-email").then(({ notifyCompatibleMemberJoinedEmail }) =>
+      notifyCompatibleMemberJoinedEmail(updated.id).catch((error) => {
+        console.error("[MatchEmail] member joined:", error);
+      })
+    );
+
     revalidatePath("/");
     revalidatePath(`/member/${member.id}`);
 
@@ -144,6 +150,12 @@ export async function completeDialogueOnboardingAction(answers: DialogueAnswers)
       photo: updated.photo,
       actorMemberId: updated.id,
     });
+
+    void import("@/lib/notifications/match-email").then(({ notifyCompatibleMemberJoinedEmail }) =>
+      notifyCompatibleMemberJoinedEmail(updated.id).catch((error) => {
+        console.error("[MatchEmail] member joined:", error);
+      })
+    );
 
     revalidatePath("/");
     revalidatePath("/onboarding");

@@ -5,6 +5,7 @@ import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { getMemberByUserId, updateMember } from "@/lib/members";
+import { hasLookingForChanged } from "@/lib/live/looking-for";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { invalidateResonanceCacheForMember } from "@/lib/resonance/cache";
 import { PLAYING_PART_OPTIONS } from "@/lib/resonance/dialogue";
@@ -157,6 +158,20 @@ export async function updateMemberAction(member: Member) {
 
   // 応答をブロックしない後処理
   void invalidateResonanceCacheForMember(member.id);
+
+  void import("@/lib/notifications/match-email").then(
+    ({ notifyCompatibleMemberUpdatedEmail, notifyMatchingRecruitmentEmail }) => {
+      notifyCompatibleMemberUpdatedEmail(member.id).catch((error) => {
+        console.error("[MatchEmail] member updated:", error);
+      });
+
+      if (hasLookingForChanged(existing, member)) {
+        notifyMatchingRecruitmentEmail(member.id).catch((error) => {
+          console.error("[MatchEmail] recruitment:", error);
+        });
+      }
+    }
+  );
 
   return { success: true };
 }

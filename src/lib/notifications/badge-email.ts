@@ -1,11 +1,12 @@
 import { getMemberById } from "@/lib/members";
+import { isEmailNotificationEnabled } from "@/lib/notifications/preferences";
 import { isEmailConfigured, sendEmail } from "@/lib/notifications/send-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 
 const COOLDOWN_MINUTES = 30;
 
-type BadgeEmailKind = "message" | "band" | "resonance";
+type BadgeEmailKind = "message";
 
 async function getEmailForMember(memberId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -95,6 +96,10 @@ async function sendBadgeEmail(
     return;
   }
 
+  if (!(await isEmailNotificationEnabled(memberId, "messages"))) {
+    return;
+  }
+
   if (await isWithinCooldown(memberId, kind, scopeId)) {
     return;
   }
@@ -104,16 +109,16 @@ async function sendBadgeEmail(
     return;
   }
 
-  const siteUrl = getSiteUrl();
+  const settingsUrl = `${getSiteUrl()}/menu/notifications`;
   const html = `
     <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
       <p>${body}</p>
       <p><a href="${actionUrl}" style="color: #111;">Resonoで確認する</a></p>
-      <p style="color: #666; font-size: 12px;">このメールは Resono の未読通知です。</p>
+      <p style="color: #666; font-size: 12px;">通知設定は<a href="${settingsUrl}" style="color: #666;">こちら</a>から変更できます。</p>
     </div>
   `.trim();
 
-  const text = `${body}\n\nResonoで確認する: ${actionUrl}`;
+  const text = `${body}\n\nResonoで確認する: ${actionUrl}\n\n通知設定: ${settingsUrl}`;
 
   const sent = await sendEmail({
     to: email,
@@ -142,89 +147,5 @@ export async function notifyMessageBadgeEmail(input: {
     `Resono: ${senderName}さんから新しいメッセージ`,
     `${senderName}さんから新しいメッセージが届きました。`,
     `${getSiteUrl()}/messages/${input.conversationId}`
-  );
-}
-
-export async function notifyBandBadgeEmail(input: {
-  recipientMemberId: string;
-  bandId: string;
-  bandName: string;
-  preview: string;
-}): Promise<void> {
-  await sendBadgeEmail(
-    input.recipientMemberId,
-    "band",
-    input.bandId,
-    `Resono: バンド「${input.bandName}」に新しいActivity`,
-    `バンド「${input.bandName}」に新しいActivityがあります。${input.preview}`,
-    `${getSiteUrl()}/bands/${input.bandId}`
-  );
-}
-
-export async function notifyResonanceBadgeEmail(input: {
-  recipientMemberId: string;
-  senderMemberId: string;
-  isMutual: boolean;
-  conversationId?: string | null;
-}): Promise<void> {
-  const sender = await getMemberById(input.senderMemberId);
-  const senderName = sender?.name ?? "メンバー";
-
-  if (input.isMutual && input.conversationId) {
-    await sendBadgeEmail(
-      input.recipientMemberId,
-      "resonance",
-      input.senderMemberId,
-      `Resono: ${senderName}さんとお互いに共鳴`,
-      `${senderName}さんとお互いに共鳴しました。メッセージを送れます。`,
-      `${getSiteUrl()}/messages/${input.conversationId}`
-    );
-    return;
-  }
-
-  await sendBadgeEmail(
-    input.recipientMemberId,
-    "resonance",
-    input.senderMemberId,
-    `Resono: ${senderName}さんから共鳴`,
-    `${senderName}さんから共鳴が届きました。`,
-    `${getSiteUrl()}/member/${input.senderMemberId}`
-  );
-}
-
-export async function notifyBandMembersBadgeEmail(input: {
-  bandId: string;
-  bandName: string;
-  preview: string;
-  excludeMemberIds?: string[];
-}): Promise<void> {
-  const admin = createAdminClient();
-  if (!admin) {
-    return;
-  }
-
-  const { data: memberships, error } = await admin
-    .from("band_members")
-    .select("member_id")
-    .eq("band_id", input.bandId);
-
-  if (error) {
-    console.error("[BadgeEmail] band members lookup:", error.message);
-    return;
-  }
-
-  const excluded = new Set(input.excludeMemberIds ?? []);
-
-  await Promise.all(
-    (memberships ?? [])
-      .filter((row) => !excluded.has(row.member_id))
-      .map((row) =>
-        notifyBandBadgeEmail({
-          recipientMemberId: row.member_id,
-          bandId: input.bandId,
-          bandName: input.bandName,
-          preview: input.preview,
-        })
-      )
   );
 }

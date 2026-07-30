@@ -74,7 +74,7 @@ export const ResonateButton = memo(function ResonateButton({
       {isPending ? (
         <>
           <FrequencySpinner size={16} />
-          処理中...
+          共鳴しています
         </>
       ) : mounted && isResonated ? (
         <>

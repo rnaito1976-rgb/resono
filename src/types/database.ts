@@ -327,6 +327,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      email_notification_preferences: {
+        Row: {
+          member_id: string;
+          resonance_members: boolean;
+          messages: boolean;
+          band_recruitment: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          member_id: string;
+          resonance_members?: boolean;
+          messages?: boolean;
+          band_recruitment?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          member_id?: string;
+          resonance_members?: boolean;
+          messages?: boolean;
+          band_recruitment?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

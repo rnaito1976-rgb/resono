@@ -38,7 +38,7 @@ function intersection(a: unknown, b: unknown): string[] {
   return left.filter((item) => normalized.has(normalizeToken(item)));
 }
 
-function partsMatch(left: string, right: string): boolean {
+export function partsMatch(left: string, right: string): boolean {
   const a = normalizeToken(left);
   const b = normalizeToken(right);
   if (!a || !b) {
