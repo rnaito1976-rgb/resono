@@ -5,6 +5,11 @@ import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
 import {
+  PROFILE_GROW_NONE_LABEL,
+  applyNoneAwareSelection,
+  isProfileGrowNoneLabel,
+} from "@/lib/profile/grow/selection";
+import {
   WELCOME_OTHER_PART_LABEL,
   WELCOME_PART_GROUPS,
   WELCOME_PART_PRESETS,
@@ -60,11 +65,11 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
   }
 
   function togglePart(part: string) {
-    onChange(
-      selected.includes(part)
-        ? selected.filter((entry) => entry !== part)
-        : [...selected, part]
-    );
+    onChange(applyNoneAwareSelection(selected, part));
+  }
+
+  function toggleNone() {
+    onChange(applyNoneAwareSelection(selected, PROFILE_GROW_NONE_LABEL));
   }
 
   function commitOtherPart() {
@@ -107,6 +112,11 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
       <WelcomePickerSection label="Other">
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2.5">
+            <SelectableChip
+              label={PROFILE_GROW_NONE_LABEL}
+              selected={selected.some(isProfileGrowNoneLabel)}
+              onToggle={toggleNone}
+            />
             <SelectableChip
               label="Other（自由入力）"
               selected={otherSelected}

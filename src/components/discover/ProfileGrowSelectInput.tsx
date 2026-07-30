@@ -11,9 +11,11 @@ import {
   PROFILE_GROW_FESTIVAL_GROUPS,
   PROFILE_GROW_GEAR_GROUPS,
   PROFILE_GROW_LIVE_HOUSE_GROUPS,
+  PROFILE_GROW_PRODUCTION_GROUPS,
   PROFILE_GROW_SONG_GROUPS,
   PROFILE_GROW_STYLE_GROUPS,
   PROFILE_GROW_STUDIO_GROUPS,
+  PROFILE_GROW_WANTED_GEAR_GROUPS,
 } from "@/lib/profile/grow/catalogs";
 import { WELCOME_ARTIST_CATALOG } from "@/lib/welcome/onboarding-data";
 import type { ProfileGrowQuestion } from "@/types/profile-grow";
@@ -23,6 +25,8 @@ const LIVE_HOUSE_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_LIVE_HOUSE_GRO
 const STUDIO_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_STUDIO_GROUPS);
 const FESTIVAL_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_FESTIVAL_GROUPS);
 const GEAR_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_GEAR_GROUPS);
+const WANTED_GEAR_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_WANTED_GEAR_GROUPS);
+const PRODUCTION_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_PRODUCTION_GROUPS);
 const STYLE_CATALOG = flattenProfileGrowCatalog(PROFILE_GROW_STYLE_GROUPS);
 
 type ProfileGrowSelectInputProps = {
@@ -122,6 +126,26 @@ export function ProfileGrowSelectInput({
           groups={PROFILE_GROW_GEAR_GROUPS}
           catalog={GEAR_CATALOG}
           placeholder="機材を検索"
+          {...pickerProps}
+        />
+      );
+
+    case "wantedGear":
+      return (
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_WANTED_GEAR_GROUPS}
+          catalog={WANTED_GEAR_CATALOG}
+          placeholder="欲しい機材を検索"
+          {...pickerProps}
+        />
+      );
+
+    case "production":
+      return (
+        <ProfileGrowSearchPicker
+          groups={PROFILE_GROW_PRODUCTION_GROUPS}
+          catalog={PRODUCTION_CATALOG}
+          placeholder="DAWや制作機材を検索"
           {...pickerProps}
         />
       );

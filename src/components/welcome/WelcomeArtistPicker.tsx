@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
+import {
+  PROFILE_GROW_NONE_LABEL,
+  applyNoneAwareSelection,
+  isProfileGrowNoneLabel,
+} from "@/lib/profile/grow/selection";
 import { WELCOME_ARTIST_CATALOG, WELCOME_ARTIST_GROUPS } from "@/lib/welcome/onboarding-data";
 import { cn } from "@/lib/utils";
 import {
@@ -59,7 +64,17 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
 
   function addArtist(name: string) {
     const value = name.trim();
-    if (!value || selected.length >= WELCOME_ARTIST_MAX) {
+    if (!value) {
+      return;
+    }
+
+    if (isProfileGrowNoneLabel(value)) {
+      onChange(applyNoneAwareSelection(selected, value));
+      setQuery("");
+      return;
+    }
+
+    if (selected.length >= WELCOME_ARTIST_MAX) {
       return;
     }
 
@@ -68,7 +83,7 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
       return;
     }
 
-    onChange([...selected, value]);
+    onChange(applyNoneAwareSelection(selected, value));
     setQuery("");
   }
 
@@ -123,6 +138,14 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
 
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
         <div className="space-y-8 pb-2">
+          <div className="flex flex-wrap gap-2.5">
+            <SelectableChip
+              label={PROFILE_GROW_NONE_LABEL}
+              selected={selected.some(isProfileGrowNoneLabel)}
+              onToggle={() => addArtist(PROFILE_GROW_NONE_LABEL)}
+            />
+          </div>
+
           {customCandidate ? (
             <div className="flex flex-wrap gap-2.5">
               <button

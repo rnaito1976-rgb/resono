@@ -51,7 +51,7 @@ export function MenuScreen() {
         <>
           <MenuSectionGap />
           <MenuGroup>
-            <MenuRow href="/menu/notifications" label="メール通知" />
+            <MenuRow href="/menu/notifications" label="Notification" />
           </MenuGroup>
           <MenuSectionGap />
           <MenuGroup>

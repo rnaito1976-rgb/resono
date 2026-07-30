@@ -87,7 +87,7 @@ export const PROFILE_GROW_THEMES: ProfileGrowTheme[] = [
       {
         message: "次に欲しい機材や気になっているものは？",
         inputMode: "select",
-        picker: "gear",
+        picker: "wantedGear",
         field: "gear",
       },
       {
@@ -135,7 +135,7 @@ export const PROFILE_GROW_THEMES: ProfileGrowTheme[] = [
       {
         message: "制作で使っているDAWや機材は？",
         inputMode: "select",
-        picker: "gear",
+        picker: "production",
         field: "gear",
       },
       {

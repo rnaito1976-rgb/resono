@@ -5,6 +5,11 @@ import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
 import { PROFILE_GROW_OTHER_LABEL } from "@/lib/profile/grow/catalogs";
+import {
+  PROFILE_GROW_NONE_LABEL,
+  applyNoneAwareSelection,
+  isProfileGrowNoneLabel,
+} from "@/lib/profile/grow/selection";
 import { MOBILE_TOUCH_INPUT_CLASS } from "@/lib/mobile/input-classes";
 import type { WelcomeOptionGroup } from "@/lib/welcome/onboarding-data";
 import { cn } from "@/lib/utils";
@@ -77,7 +82,17 @@ export function ProfileGrowSearchPicker({
 
   function addValue(value: string) {
     const trimmed = value.trim();
-    if (!trimmed || atMax) {
+    if (!trimmed) {
+      return;
+    }
+
+    if (isProfileGrowNoneLabel(trimmed)) {
+      onChange(applyNoneAwareSelection(selected, trimmed));
+      setQuery("");
+      return;
+    }
+
+    if (atMax) {
       return;
     }
 
@@ -86,7 +101,7 @@ export function ProfileGrowSearchPicker({
       return;
     }
 
-    onChange([...selected, trimmed]);
+    onChange(applyNoneAwareSelection(selected, trimmed));
     setQuery("");
   }
 
@@ -129,6 +144,14 @@ export function ProfileGrowSearchPicker({
         style={{ height: listMaxHeight, maxHeight: listMaxHeight }}
       >
         <div className="space-y-6 pb-2">
+          <div className="flex flex-wrap gap-2.5">
+            <SelectableChip
+              label={PROFILE_GROW_NONE_LABEL}
+              selected={selected.some(isProfileGrowNoneLabel)}
+              onToggle={() => addValue(PROFILE_GROW_NONE_LABEL)}
+            />
+          </div>
+
           {searchMatch && !selected.includes(searchMatch) ? (
             <div className="flex flex-wrap gap-2.5">
               <SelectableChip

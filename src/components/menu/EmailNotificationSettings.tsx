@@ -75,7 +75,7 @@ export function EmailNotificationSettings({ initialPreferences }: EmailNotificat
   return (
     <div className="space-y-3">
       <p className="text-[15px] leading-relaxed text-foreground/55">
-        出会いに関するメール通知のみ。すべてデフォルトでオンです。
+        共鳴に関するメール通知のみ。すべてデフォルトでオンです。
       </p>
       {EMAIL_NOTIFICATION_ITEMS.map((item) => (
         <NotificationToggle
@@ -97,7 +97,7 @@ export function EmailNotificationSettingsPage({
   preferences: EmailNotificationPreferences;
 }) {
   return (
-    <MenuPageShell title="メール通知" subtitle="出会いに関する通知">
+    <MenuPageShell title="Notification" subtitle="共鳴に関する通知">
       <EmailNotificationSettings initialPreferences={preferences} />
     </MenuPageShell>
   );

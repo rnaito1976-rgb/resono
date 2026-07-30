@@ -1,6 +1,10 @@
 import { parseArtistSongLine } from "@/lib/form";
 import { getProfileGrowFieldSection } from "@/lib/profile/grow/labels";
 import { PROFILE_GROW_OTHER_LABEL } from "@/lib/profile/grow/catalogs";
+import {
+  PROFILE_GROW_NONE_LABEL,
+  isProfileGrowNoneLabel,
+} from "@/lib/profile/grow/selection";
 import { WELCOME_OTHER_PART_LABEL } from "@/lib/welcome/onboarding-data";
 import type { ProfileGrowCandidate, ProfileGrowFieldKey, ProfileGrowQuestion } from "@/types/profile-grow";
 
@@ -35,7 +39,7 @@ function cleanSelectionValues(values: string[]): string[] {
 
   for (const value of values) {
     const trimmed = value.trim();
-    if (!trimmed || OTHER_LABELS.has(trimmed)) {
+    if (!trimmed || OTHER_LABELS.has(trimmed) || isProfileGrowNoneLabel(trimmed)) {
       continue;
     }
 
@@ -91,5 +95,9 @@ export function extractFreeTextCandidates(
 }
 
 export function formatSelectionSummary(values: string[]): string {
+  if (values.some(isProfileGrowNoneLabel)) {
+    return PROFILE_GROW_NONE_LABEL;
+  }
+
   return cleanSelectionValues(values).join("、");
 }

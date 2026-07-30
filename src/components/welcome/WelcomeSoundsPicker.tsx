@@ -6,6 +6,11 @@ import {
   WelcomePickerSection,
   WelcomeSelectedTags,
 } from "@/components/welcome/WelcomePickerSection";
+import {
+  PROFILE_GROW_NONE_LABEL,
+  applyNoneAwareSelection,
+  isProfileGrowNoneLabel,
+} from "@/lib/profile/grow/selection";
 import { WELCOME_SOUND_GROUPS, WELCOME_SOUND_PRESETS } from "@/lib/welcome/onboarding-data";
 import { cn } from "@/lib/utils";
 
@@ -67,16 +72,17 @@ export function WelcomeSoundsPicker({
       return;
     }
 
-    if (selected.includes(value)) {
-      onChange(selected.filter((item) => item !== value));
+    if (isProfileGrowNoneLabel(value)) {
+      onChange(applyNoneAwareSelection(selected, value));
+      setQuery("");
       return;
     }
 
-    if (atMax) {
+    if (atMax && !selected.includes(value)) {
       return;
     }
 
-    onChange([...selected, value]);
+    onChange(applyNoneAwareSelection(selected, value));
     setQuery("");
   }
 
@@ -110,6 +116,14 @@ export function WelcomeSoundsPicker({
 
       <div className="min-h-0 flex-1 overflow-y-auto pb-2 scrollbar-hide">
         <div className="space-y-8">
+          <div className="flex flex-wrap gap-2.5">
+            <SelectableChip
+              label={PROFILE_GROW_NONE_LABEL}
+              selected={selected.some(isProfileGrowNoneLabel)}
+              onToggle={() => toggleItem(PROFILE_GROW_NONE_LABEL)}
+            />
+          </div>
+
           {customCandidate ? (
             <div className="flex flex-wrap gap-2.5">
               <button

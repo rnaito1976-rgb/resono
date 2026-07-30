@@ -32,6 +32,8 @@ export type ProfileGrowPickerKind =
   | "studios"
   | "festivals"
   | "gear"
+  | "wantedGear"
+  | "production"
   | "style"
   | "members";
 
