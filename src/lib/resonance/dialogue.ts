@@ -295,10 +295,13 @@ export function buildMemberFromDialogue(
     },
   };
 
-  return attachInitialMemberActivities({
-    ...nextMember,
-    aiComment: buildProfileAiComment(nextMember),
-  });
+  return attachInitialMemberActivities(
+    {
+      ...nextMember,
+      aiComment: buildProfileAiComment(nextMember),
+    },
+    { force: true }
+  );
 }
 
 export function enrichMemberFromDiscover(

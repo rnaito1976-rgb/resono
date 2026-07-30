@@ -135,6 +135,16 @@ export async function completeDialogueOnboardingAction(answers: DialogueAnswers)
       return { error: result.error ?? "保存に失敗しました" };
     }
 
+    const { publishLiveEvent } = await import("@/lib/live/events");
+    await publishLiveEvent({
+      kind: "new_member",
+      title: updated.name,
+      subtitle: "コミュニティに参加しました",
+      href: `/member/${updated.id}`,
+      photo: updated.photo,
+      actorMemberId: updated.id,
+    });
+
     revalidatePath("/");
     revalidatePath("/onboarding");
     revalidatePath("/discover");

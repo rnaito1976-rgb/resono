@@ -30,8 +30,11 @@ export function buildInitialMemberActivities(
   }));
 }
 
-export function attachInitialMemberActivities(member: Member): Member {
-  if (member.portrait.activityMilestones?.length) {
+export function attachInitialMemberActivities(
+  member: Member,
+  options?: { force?: boolean }
+): Member {
+  if (!options?.force && member.portrait.activityMilestones?.length) {
     return member;
   }
 

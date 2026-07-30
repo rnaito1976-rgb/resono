@@ -45,27 +45,30 @@ export function buildMemberFromMinimalRegistration(
   const musicDnaItem = createMusicDnaItem(artists);
   const photo = input.photo.trim() || NO_PHOTO_URL;
 
-  const base = attachInitialMemberActivities({
-    ...member,
-    name: input.name.trim(),
-    photo,
-    tags: artists.slice(0, 3),
-    portrait: {
-      ...member.portrait,
-      bio: "",
-      dialogueCompleted: true,
-      profileItems: [
-        musicDnaItem,
-        ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
-      ],
+  const base = attachInitialMemberActivities(
+    {
+      ...member,
+      name: input.name.trim(),
+      photo,
+      tags: artists.slice(0, 3),
+      portrait: {
+        ...member.portrait,
+        bio: "",
+        dialogueCompleted: true,
+        profileItems: [
+          musicDnaItem,
+          ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
+        ],
+      },
+      music: {
+        ...member.music,
+        instruments,
+        favoriteArtists: artists,
+        genres,
+      },
     },
-    music: {
-      ...member.music,
-      instruments,
-      favoriteArtists: artists,
-      genres,
-    },
-  });
+    { force: true }
+  );
 
   if (options?.deferAiComment) {
     return base;

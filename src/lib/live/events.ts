@@ -132,78 +132,61 @@ async function getStoredLiveEvents(limit: number): Promise<LiveEvent[]> {
   }
 }
 
-/** Derive new-member Live cards from members (fallback when stored events are sparse). */
-async function synthesizeMemberLiveEvents(limit: number, now = Date.now()): Promise<LiveEvent[]> {
-  const anon = createAnonClient();
+/** Registered members are the source of truth for new-member Live cards. */
+async function synthesizeMemberLiveEvents(
+  storedJoinTimes: Map<string, string>,
+  now = Date.now()
+): Promise<LiveEvent[]> {
   const admin = createAdminClient();
-  const reader = admin ?? anon;
-
-  const MEMBER_SYNTH_COLUMNS =
-    "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted, joined_at:portrait->activityMilestones->0->>occurredAt";
-
-  type MemberSynthRow = {
-    id: string;
-    name: string;
-    photo: string | null;
-    created_at: string;
-    dialogue_completed: boolean | null;
-    joined_at: string | null;
-  };
-
-  function toMemberEvent(row: MemberSynthRow): LiveEvent {
-    const joinedAt = row.joined_at?.trim() || row.created_at;
-
-    return {
-      id: `synth-member-${row.id}`,
-      kind: "new_member",
-      title: row.name,
-      subtitle: "コミュニティに参加しました",
-      href: `/member/${row.id}`,
-      photo: row.photo || undefined,
-      actorMemberId: row.id,
-      createdAt: joinedAt,
-      isNew: isLiveEventNew(joinedAt, now),
-    };
-  }
+  const reader = admin ?? createAnonClient();
 
   try {
-    let members: MemberSynthRow[] | null = null;
-
-    const ordered = await reader
+    const { data, error } = await reader
       .from("members")
-      .select(MEMBER_SYNTH_COLUMNS)
-      .not("user_id", "is", null)
-      .order("portrait->activityMilestones->0->>occurredAt", {
-        ascending: false,
-        nullsFirst: false,
-      })
-      .limit(LIVE_MEMBER_CANDIDATE_POOL_SIZE);
+      .select("id, name, photo, created_at, portrait, music")
+      .not("user_id", "is", null);
 
-    if (ordered.error) {
-      console.error("[Live] synthesize members (ordered):", ordered.error.message);
-      const fallback = await reader
-        .from("members")
-        .select(MEMBER_SYNTH_COLUMNS)
-        .not("user_id", "is", null)
-        .limit(LIVE_MEMBER_CANDIDATE_POOL_SIZE);
-
-      if (fallback.error) {
-        console.error("[Live] synthesize members:", fallback.error.message);
-        return [];
-      }
-
-      members = (fallback.data ?? []) as unknown as MemberSynthRow[];
-    } else {
-      members = (ordered.data ?? []) as unknown as MemberSynthRow[];
+    if (error) {
+      console.error("[Live] synthesize members:", error.message);
+      return [];
     }
 
     return sortByNewest(
-      members.filter((row) => row.dialogue_completed === true).map(toMemberEvent)
-    ).slice(0, limit);
+      ((data ?? []) as MemberLiveRow[])
+        .filter(isRegisteredMemberForLive)
+        .map((row) => {
+          const profileJoinedAt = resolveMemberJoinedAt(row);
+          const storedJoinedAt = storedJoinTimes.get(row.id);
+          const joinedAt =
+            storedJoinedAt &&
+            new Date(storedJoinedAt).getTime() > new Date(profileJoinedAt).getTime()
+              ? storedJoinedAt
+              : profileJoinedAt;
+
+          return memberRowToLiveEvent(row, joinedAt, now);
+        })
+    );
   } catch (error) {
     console.error("[Live] synthesize members:", error);
     return [];
   }
+}
+
+function collectStoredMemberJoinTimes(stored: LiveEvent[]): Map<string, string> {
+  const joinTimes = new Map<string, string>();
+
+  for (const event of stored) {
+    if (event.kind !== "new_member" || !event.actorMemberId) {
+      continue;
+    }
+
+    const existing = joinTimes.get(event.actorMemberId);
+    if (!existing || new Date(event.createdAt).getTime() > new Date(existing).getTime()) {
+      joinTimes.set(event.actorMemberId, event.createdAt);
+    }
+  }
+
+  return joinTimes;
 }
 
 /** Derive band/video Live cards from public activity. */
@@ -297,7 +280,8 @@ async function synthesizeBandLiveEvents(limit: number, now = Date.now()): Promis
 function mergeLiveEvents(stored: LiveEvent[], synthesized: LiveEvent[]): LiveEvent[] {
   const byKey = new Map<string, LiveEvent>();
 
-  for (const event of [...stored, ...synthesized]) {
+  // Prefer synthesized member rows so the members table stays authoritative.
+  for (const event of [...synthesized, ...stored]) {
     const dedupeKey =
       event.kind === "new_member" && event.actorMemberId
         ? `member:${event.actorMemberId}`
@@ -322,9 +306,78 @@ type LiveEventsCacheEntry = {
   events: LiveEvent[];
 };
 
-const LIVE_EVENTS_CACHE_TTL_MS = 30_000;
+const LIVE_EVENTS_CACHE_TTL_MS = 15_000;
 const LIVE_CANDIDATE_POOL_SIZE = LIVE_FEED_SIZE * 6;
-const LIVE_MEMBER_CANDIDATE_POOL_SIZE = 40;
+
+type MemberLiveRow = {
+  id: string;
+  name: string;
+  photo: string | null;
+  created_at: string;
+  portrait: unknown;
+  music: unknown;
+};
+
+function parsePortraitForLive(raw: unknown) {
+  const value = (raw ?? {}) as {
+    dialogueCompleted?: boolean;
+    activityMilestones?: { occurredAt?: string }[];
+  };
+
+  return value;
+}
+
+function parseMusicForLive(raw: unknown) {
+  const value = (raw ?? {}) as {
+    favoriteArtists?: unknown[];
+    instruments?: unknown[];
+  };
+
+  return value;
+}
+
+function isRegisteredMemberForLive(row: MemberLiveRow): boolean {
+  const portrait = parsePortraitForLive(row.portrait);
+  if (portrait.dialogueCompleted === true) {
+    return true;
+  }
+
+  const music = parseMusicForLive(row.music);
+  return (
+    (music.favoriteArtists?.length ?? 0) > 0 && (music.instruments?.length ?? 0) > 0
+  );
+}
+
+function resolveMemberJoinedAt(row: MemberLiveRow): string {
+  const portrait = parsePortraitForLive(row.portrait);
+  let latest = row.created_at;
+
+  for (const milestone of portrait.activityMilestones ?? []) {
+    if (typeof milestone.occurredAt !== "string") {
+      continue;
+    }
+
+    if (new Date(milestone.occurredAt).getTime() > new Date(latest).getTime()) {
+      latest = milestone.occurredAt;
+    }
+  }
+
+  return latest;
+}
+
+function memberRowToLiveEvent(row: MemberLiveRow, joinedAt: string, now = Date.now()): LiveEvent {
+  return {
+    id: `synth-member-${row.id}`,
+    kind: "new_member",
+    title: row.name,
+    subtitle: "コミュニティに参加しました",
+    href: `/member/${row.id}`,
+    photo: row.photo || undefined,
+    actorMemberId: row.id,
+    createdAt: joinedAt,
+    isNew: isLiveEventNew(joinedAt, now),
+  };
+}
 
 let liveEventsCache: LiveEventsCacheEntry | null = null;
 
@@ -344,13 +397,17 @@ export async function getLiveEvents(limit = LIVE_FEED_SIZE): Promise<LiveEvent[]
   }
 
   try {
-    const [stored, memberSynth, bandSynth] = await Promise.all([
-      getStoredLiveEvents(LIVE_CANDIDATE_POOL_SIZE),
-      synthesizeMemberLiveEvents(LIVE_FEED_SIZE, now),
+    const stored = await getStoredLiveEvents(LIVE_CANDIDATE_POOL_SIZE);
+    const storedJoinTimes = collectStoredMemberJoinTimes(stored);
+    const [memberSynth, bandSynth] = await Promise.all([
+      synthesizeMemberLiveEvents(storedJoinTimes, now),
       synthesizeBandLiveEvents(LIVE_CANDIDATE_POOL_SIZE, now),
     ]);
 
-    const merged = mergeLiveEvents(stored, [...memberSynth, ...bandSynth]);
+    const merged = mergeLiveEvents(
+      stored.filter((event) => event.kind !== "new_member"),
+      [...memberSynth, ...bandSynth]
+    );
 
     liveEventsCache = {
       events: merged,
