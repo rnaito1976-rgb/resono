@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { markWelcomeSignupIntent } from "@/components/auth/PostAuthOnboardingRedirect";
 
@@ -27,7 +26,7 @@ export function GoogleAuthButton({
 
   return (
     <Button type="button" variant="outline" className="w-full" asChild>
-      <Link
+      <a
         href={href}
         onClick={() => {
           if (skipPhoto || nextPath.includes("skipPhoto=1")) {
@@ -37,7 +36,7 @@ export function GoogleAuthButton({
       >
         <GoogleIcon />
         {label}
-      </Link>
+      </a>
     </Button>
   );
 }

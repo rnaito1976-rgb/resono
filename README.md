@@ -85,6 +85,7 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
    - Redirect URLs:
      - `http://localhost:3000/auth/callback`
      - `https://resono-fwdi.vercel.app/auth/callback`
+     - プレビュー URL を使う場合は `https://*.vercel.app/auth/callback` も追加
 4. **メール確認 / 送信上限**（開発・本番）:
    - Supabase 標準メールは **1時間あたり数通** の上限があります。テスト中に「送信上限」が出た場合は **Google ログイン** を使うか、1時間ほど待ってください。
    - 開発中にメール確認を省略する: **Authentication → Providers → Email → Confirm email** を OFF

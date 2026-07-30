@@ -13,6 +13,8 @@ import { resolvePostAuthRedirect } from "@/lib/auth/post-auth-redirect";
 import { ensureMemberForUser } from "@/lib/members";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");

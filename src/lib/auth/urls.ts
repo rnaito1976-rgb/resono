@@ -20,22 +20,12 @@ export function getRequestOrigin(request: NextRequest, fallbackOrigin: string): 
   return fallbackOrigin;
 }
 
+/** OAuth callback must stay on the same host that stored the PKCE cookie. */
 export function getAuthOrigin(request: NextRequest): string {
-  const requestOrigin = new URL(request.url).origin;
-
-  if (process.env.NODE_ENV === "development") {
-    return requestOrigin;
-  }
-
-  return getSiteUrl() || requestOrigin;
+  return getRequestOrigin(request, getSiteUrl());
 }
 
-type AuthCallbackOptions = {
-  origin?: string;
-};
-
 /** Bare callback URL so Supabase redirect allowlists match exactly. */
-export function getAuthCallbackUrl(options: AuthCallbackOptions = {}): string {
-  const base = (options.origin ?? getSiteUrl()).replace(/\/$/, "");
-  return `${base}/auth/callback`;
+export function getAuthCallbackUrl(request: NextRequest): string {
+  return `${getAuthOrigin(request).replace(/\/$/, "")}/auth/callback`;
 }

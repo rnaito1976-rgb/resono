@@ -5,12 +5,14 @@ import {
   setWelcomeSignupIntent,
 } from "@/lib/auth/welcome-signup-intent";
 import {
-  getAuthOrigin,
   getAuthCallbackUrl,
+  getAuthOrigin,
   sanitizeNextPath,
 } from "@/lib/auth/urls";
 import { WELCOME_ONBOARDING_PATH } from "@/lib/navigation/onboarding";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
   const origin = getAuthOrigin(request);
   const { supabase, applyCookies } = createRouteHandlerClient(request);
 
-  const redirectTo = getAuthCallbackUrl({ origin });
+  const redirectTo = getAuthCallbackUrl(request);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
