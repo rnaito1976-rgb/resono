@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
+import { normalizeEmailInput, validateEmailForAuth } from "@/lib/auth/email";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
 const RESEND_COOLDOWN_MS = 60_000;
@@ -78,10 +79,16 @@ export function AuthForm({
     }
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
+    const email = normalizeEmailInput(String(formData.get("email") ?? ""));
     const password = String(formData.get("password") ?? "");
 
-    if (!email || !password) {
+    const emailError = validateEmailForAuth(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    if (!password) {
       setError("メールアドレスとパスワードを入力してください");
       return;
     }
@@ -173,7 +180,7 @@ export function AuthForm({
         <div className="h-px flex-1 bg-white/10" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-8">
         <div className="space-y-7">
           <div className="space-y-2">
             <Label htmlFor="email">メールアドレス</Label>

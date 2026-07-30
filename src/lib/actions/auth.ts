@@ -7,9 +7,19 @@ import { ensureMemberForUser } from "@/lib/members";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import { getEmailRedirectUrl } from "@/lib/supabase/env";
+import {
+  normalizeEmailInput,
+  translateEmailAuthError,
+  validateEmailForAuth,
+} from "@/lib/auth/email";
 
 function translateAuthError(message: string): string {
   const normalized = message.toLowerCase();
+
+  const emailError = translateEmailAuthError(message);
+  if (emailError) {
+    return emailError;
+  }
 
   if (
     normalized.includes("rate limit") ||
@@ -50,9 +60,16 @@ export async function signInWithEmailAction(
   password: string,
   nextPath?: string
 ) {
+  const trimmedEmail = normalizeEmailInput(email);
+  const emailError = validateEmailForAuth(trimmedEmail);
+
+  if (emailError) {
+    return { error: emailError };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
-    email: email.trim(),
+    email: trimmedEmail,
     password,
   });
 
@@ -78,8 +95,14 @@ export async function signInWithEmailAction(
 }
 
 export async function signUpWithEmailAction(email: string, password: string) {
+  const trimmedEmail = normalizeEmailInput(email);
+  const emailError = validateEmailForAuth(trimmedEmail);
+
+  if (emailError) {
+    return { error: emailError };
+  }
+
   const supabase = await createClient();
-  const trimmedEmail = email.trim();
   const emailRedirectTo = getEmailRedirectUrl();
 
   const { data, error } = await supabase.auth.signUp({
@@ -129,8 +152,14 @@ export async function signUpWithEmailAction(email: string, password: string) {
 }
 
 export async function resendConfirmationEmailAction(email: string) {
+  const trimmedEmail = normalizeEmailInput(email);
+  const emailError = validateEmailForAuth(trimmedEmail);
+
+  if (emailError) {
+    return { error: emailError };
+  }
+
   const supabase = await createClient();
-  const trimmedEmail = email.trim();
   const emailRedirectTo = getEmailRedirectUrl();
 
   const { error } = await supabase.auth.resend({
