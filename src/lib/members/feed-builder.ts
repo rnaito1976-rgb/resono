@@ -370,7 +370,7 @@ export async function buildMembersFeedPage(
     rankedPageMembers,
     {
       syncLimit: isScrollPage ? 0 : rankedPageMembers.length,
-      includeStatus: !isScrollPage,
+      includeStatus: true,
       fast,
     }
   );
