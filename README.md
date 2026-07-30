@@ -86,18 +86,20 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
      - `http://localhost:3000/auth/callback`
      - `https://resono-fwdi.vercel.app/auth/callback`
      - プレビュー URL を使う場合は `https://*.vercel.app/auth/callback` も追加
-4. **メール確認 / SMTP（重要）**:
-   - Supabase **標準 SMTP** では、確認メールは **Supabase 組織メンバーのアドレスにしか送れません**。`@yahoo.co.jp` や `@gmail.com` など外部アドレスで登録するには **カスタム SMTP が必須** です。
-   - **Authentication → Emails → SMTP Settings** で Resend を設定（旧 UI では Authentication → SMTP Settings）:
-     - 左サイドバー **Authentication** → **NOTIFICATIONS** の **Emails**
-     - 上部タブ **SMTP Settings**（または Templates タブ内の **Set up SMTP**）
-     - **Enable Custom SMTP** を ON
-     - Host: `smtp.resend.com`
-     - Port: `465`
-     - User: `resend`
-     - Password: Resend の API キー（`re_...`）
-     - Sender: `Resono <onboarding@resend.dev>`（または検証済みドメイン）
-   - Vercel の `RESEND_API_KEY` / `EMAIL_FROM` は **アプリ内通知用** です。**Supabase Auth の確認メールには別途 SMTP 設定が必要** です。
+4. **メール確認（Send Email Hook 推奨）**:
+   - Supabase SMTP が不安定な場合、**Resend API + Send Email Hook** を使います（本番 URL: `https://resono-fwdi.vercel.app/api/auth/send-email`）。
+   - Vercel に以下を設定:
+     - `RESEND_API_KEY` = `re_...`
+     - `EMAIL_FROM` = `Resono <onboarding@resend.dev>`
+     - `SEND_EMAIL_HOOK_SECRET` = Supabase で生成した Hook Secret（`v1,whsec_...`）
+   - Supabase Dashboard:
+     1. **Authentication → Hooks → Send Email** を有効化
+     2. Type: **HTTPS**
+     3. URL: `https://resono-fwdi.vercel.app/api/auth/send-email`
+     4. **Generate Secret** して Vercel の `SEND_EMAIL_HOOK_SECRET` に貼り付け
+     5. **Email Provider** は ON のまま
+   - Hook 有効時は SMTP ではなく Resono が Resend API で確認メールを送信します。
+   - 代替: **Authentication → Emails → SMTP Settings** で Resend SMTP（port 587/465）を設定
    - 送信上限に達した場合は **Google ログイン** を使うか、1時間ほど待ってください。
    - 開発中にメール確認を省略する: **Authentication → Providers → Email → Confirm email** を OFF
 5. 開発用: 確認メールが届かない既存ユーザーを手動確認する場合:
