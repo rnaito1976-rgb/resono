@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSupabaseConfigError } from "@/lib/supabase/config";
-import { normalizeEmailInput, validateEmailForAuth } from "@/lib/auth/email";
+import { normalizeEmailInput, normalizeSignupErrorDisplay, validateEmailForAuth } from "@/lib/auth/email";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
 
 const RESEND_COOLDOWN_MS = 60_000;
@@ -98,7 +98,7 @@ export function AuthForm({
         const result = await signUpWithEmailAction(email, password);
 
         if (result?.error) {
-          setError(result.error);
+          setError(normalizeSignupErrorDisplay(result.error));
           if (result.canResend && result.email && !isEmailRateLimitMessage(result.error)) {
             setPendingEmail(result.email);
           }
@@ -139,7 +139,7 @@ export function AuthForm({
       const result = await resendConfirmationEmailAction(pendingEmail);
 
       if (result?.error) {
-        setError(result.error);
+        setError(normalizeSignupErrorDisplay(result.error));
         return;
       }
 

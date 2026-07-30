@@ -30,6 +30,23 @@ export type AuthErrorLike = {
 
 export type AuthErrorContext = "signup" | "signin" | "callback";
 
+const LEGACY_SIGNUP_ERROR_PATTERN =
+  /Googleログインをもう一度|認証に失敗しました。Google/i;
+
+/** Normalize errors shown on the signup form (incl. stale server bundles). */
+export function normalizeSignupErrorDisplay(error: string): string {
+  const trimmed = error.trim();
+  if (
+    !trimmed ||
+    trimmed === "{}" ||
+    LEGACY_SIGNUP_ERROR_PATTERN.test(trimmed)
+  ) {
+    return AUTH_ERROR_CODE_MESSAGES.unexpected_failure;
+  }
+
+  return translateAuthError({ message: trimmed }, "signup");
+}
+
 /** Normalize common IME / full-width mistakes before auth. */
 export function normalizeEmailInput(email: string): string {
   return email
@@ -142,5 +159,7 @@ export function translateAuthError(
     "Error sending confirmation email": AUTH_ERROR_CODE_MESSAGES.unexpected_failure,
   };
 
-  return translations[message] ?? message;
+  return translations[message] ?? (context === "signup"
+    ? AUTH_ERROR_CODE_MESSAGES.unexpected_failure
+    : message);
 }
