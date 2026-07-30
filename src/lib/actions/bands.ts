@@ -312,13 +312,30 @@ export async function createBandActivityAction(input: {
     return { error: "プロフィールが見つかりません。" };
   }
 
+  const body = input.body?.trim() || "";
+  const title = input.title?.trim() || "";
+  const mediaUrl = input.mediaUrl?.trim() || "";
+
+  if (input.kind === "text") {
+    if (!body) {
+      return { error: "テキストを入力してください。" };
+    }
+  } else if (!mediaUrl) {
+    return {
+      error:
+        input.kind === "photo"
+          ? "写真を投稿するには、画像URLを入力してください。"
+          : "動画を投稿するには、動画URLを入力してください。",
+    };
+  }
+
   const payload = {
     band_id: input.bandId,
     author_member_id: member.id,
     kind: input.kind,
-    body: input.body?.trim() || null,
-    title: input.title?.trim() || null,
-    media_url: input.mediaUrl?.trim() || null,
+    body: body || null,
+    title: title || null,
+    media_url: mediaUrl || null,
   };
 
   const { data: activity, error } = await supabase
@@ -328,6 +345,15 @@ export async function createBandActivityAction(input: {
     .single();
 
   if (error || !activity) {
+    if (error?.message.includes("band_activities_check")) {
+      return {
+        error:
+          input.kind === "text"
+            ? "テキストを入力してください。"
+            : "画像または動画のURLを入力してください。",
+      };
+    }
+
     return { error: error?.message ?? "投稿に失敗しました。" };
   }
 

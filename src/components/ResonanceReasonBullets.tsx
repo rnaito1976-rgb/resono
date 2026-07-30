@@ -39,7 +39,7 @@ export function ResonanceReasonBullets({
 
 export function ResonanceReasonHeader({ reason }: { reason: ResonanceReason }) {
   return (
-    <section className="mb-5 rounded-[28px] border border-border bg-subtle px-5 py-5">
+    <section className="mb-5 space-y-4">
       <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
         Resonance
       </p>

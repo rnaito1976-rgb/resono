@@ -207,8 +207,26 @@ function ActivityTab({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const canSubmit =
+    kind === "text" ? body.trim().length > 0 : mediaUrl.trim().length > 0;
+
   function handleSubmit() {
     setError(null);
+
+    if (kind === "text" && !body.trim()) {
+      setError("テキストを入力してください。");
+      return;
+    }
+
+    if (kind !== "text" && !mediaUrl.trim()) {
+      setError(
+        kind === "photo"
+          ? "写真を投稿するには、画像URLを入力してください。"
+          : "動画を投稿するには、動画URLを入力してください。"
+      );
+      return;
+    }
+
     startTransition(async () => {
       const result = await createBandActivityAction({
         bandId,
@@ -265,12 +283,12 @@ function ActivityTab({
           <input
             value={mediaUrl}
             onChange={(event) => setMediaUrl(event.target.value)}
-            placeholder="画像または動画URL"
+            placeholder={kind === "photo" ? "画像URL（必須）" : "動画URL（必須）"}
             className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
           />
         ) : null}
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
-        <Button disabled={isPending} onClick={handleSubmit} className="w-full">
+        <Button disabled={isPending || !canSubmit} onClick={handleSubmit} className="w-full">
           {isPending ? "投稿中..." : "記録を残す"}
         </Button>
       </section>
