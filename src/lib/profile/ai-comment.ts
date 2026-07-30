@@ -8,7 +8,7 @@ const MAX_LENGTH = 100;
 
 /** 紹介の切り口。表示しない。 */
 export type IntroAngle =
-  | "conversation-memory"
+  | "memorable-trait"
   | "music-relationship"
   | "favorite-band-trend"
   | "playing-style"
@@ -22,7 +22,7 @@ export type IntroAngle =
   | "cover-song"
   | "favorite-genre"
   | "non-music-values"
-  | "conversation-tempo";
+  | "communication-style";
 
 /** 文章構成。表示しない。 */
 type IntroStructure =
@@ -31,12 +31,12 @@ type IntroStructure =
   | "short"
   | "episode-first"
   | "song-first"
-  | "impression-first"
+  | "trait-first"
   | "question-first"
   | "surprise-first";
 
 const INTRO_ANGLES: IntroAngle[] = [
-  "conversation-memory",
+  "memorable-trait",
   "music-relationship",
   "favorite-band-trend",
   "playing-style",
@@ -50,7 +50,7 @@ const INTRO_ANGLES: IntroAngle[] = [
   "cover-song",
   "favorite-genre",
   "non-music-values",
-  "conversation-tempo",
+  "communication-style",
 ];
 
 const INTRO_STRUCTURES: IntroStructure[] = [
@@ -59,13 +59,13 @@ const INTRO_STRUCTURES: IntroStructure[] = [
   "short",
   "episode-first",
   "song-first",
-  "impression-first",
+  "trait-first",
   "question-first",
   "surprise-first",
 ];
 
 const BANNED_PATTERN =
-  /(会話の温度|空気感|世界観|きっと|音を重ね|ジャンルの壁|時間になりそう|という印象|タイプ|空気だった|饒舌になる|一気に距離|共鳴する|似合う人)/u;
+  /(会話|話している|話をした|話していた|話題|語っていた|やり取り|本人の言葉|名前が何度も出てきた|印象的|会話の温度|空気感|世界観|きっと|音を重ね|ジャンルの壁|時間になりそう|という印象|タイプ|空気だった|饒舌|一気に距離|共鳴する|似合う人|と言っていた|話が長|話が中心|話から|話になる|メモした|覚えている様子|具体例を出して)/u;
 
 type MemberFacts = {
   artist?: string;
@@ -87,7 +87,7 @@ type MemberFacts = {
   bandVision?: string;
   commitment?: string;
   listeningMood?: string;
-  conversationNote?: string;
+  temperamentNote?: string;
   fashionNote?: string;
   location?: string;
   playingStyle?: string;
@@ -154,15 +154,6 @@ function formatListeningLead(mood: string): string {
   }
 
   return `音楽は${trimmed}に聴く`;
-}
-
-function formatListeningFollow(mood: string): string {
-  const trimmed = cleanPhrase(mood);
-  if (/に聴く|を聴く|聴く/u.test(trimmed)) {
-    return `「${trimmed}」が定番、と言っていた`;
-  }
-
-  return `音楽は${trimmed}に聴く、と言っていた`;
 }
 
 function joinList(items: string[], limit = 2): string | undefined {
@@ -255,7 +246,7 @@ function collectFacts(member: Member): MemberFacts {
     listeningMood: member.music.listeningMood
       ? clip(member.music.listeningMood, 22)
       : undefined,
-    conversationNote: member.portrait.resonanceSignals?.conversation?.[0]
+    temperamentNote: member.portrait.resonanceSignals?.conversation?.[0]
       ? clip(member.portrait.resonanceSignals.conversation[0], 18)
       : undefined,
     fashionNote: member.fashion.description
@@ -297,6 +288,17 @@ function isValidIntro(text: string): boolean {
   );
 }
 
+const LENGTH_PADS = [
+  "、音の解像度が高い",
+  "、こだわりがはっきりしている",
+  "、輪郭が少しずつ見えてくる",
+  "、自分の言葉で筋が通っている",
+  "、編集された自己紹介ではない",
+  "、具体性が人柄に出ている",
+  "、音楽への向き合い方が一定している",
+  "、バンドの形まで見えている",
+];
+
 function fitLength(text: string, seed: string): string {
   let body = cleanPhrase(text);
 
@@ -308,19 +310,32 @@ function fitLength(text: string, seed: string): string {
     body = `${clip(body, MAX_LENGTH - 1)}。`;
   }
 
-  if (body.length < MIN_LENGTH) {
-    const pad = pickStable(LENGTH_PADS, `${seed}:pad`) ?? LENGTH_PADS[0];
-    const next = `${body.replace(/。$/u, "")}${pad}。`;
-    if (next.length <= MAX_LENGTH) {
-      body = next;
-    }
+  if (body.length >= MIN_LENGTH) {
+    return body;
   }
 
-  if (body.length > MAX_LENGTH) {
-    body = `${clip(body, MAX_LENGTH - 1)}。`;
+  const pad = pickStable(LENGTH_PADS, `${seed}:pad`) ?? LENGTH_PADS[0];
+  const padded = `${body.replace(/。$/u, "")}${pad}。`;
+  if (padded.length <= MAX_LENGTH) {
+    return padded;
   }
 
   return body;
+}
+
+function buildListeningDraft(facts: MemberFacts, seed: string): AngleDraft {
+  const lead = formatListeningLead(facts.listeningMood!);
+  const tail = pickStable(
+    [
+      facts.bandVision ? `目指すのは${facts.bandVision}` : undefined,
+      facts.instrument ? `${facts.instrument}も同じリズムで鳴らす` : undefined,
+      facts.genre ? `${facts.genre}を軸に、聴く時間も演奏も同じ速度` : undefined,
+      "聴く時間も演奏も、日常と同じ速度で動いている",
+    ].filter((value): value is string => Boolean(value)),
+    `${seed}:listening`
+  );
+
+  return tail ? { lead, follow: tail } : { lead };
 }
 
 function applyStructure(
@@ -339,25 +354,23 @@ function applyStructure(
     case "short":
       return second ? `${lead}、${second}` : lead;
     case "episode-first":
-      return second
-        ? `会話の途中、${lead}。${second}`
-        : `会話の途中、${lead}`;
+      return second ? `${lead}。${second}` : lead;
     case "song-first": {
       const songLead = pickStable(
         [
-          lead,
-          second ? `『${lead}』の話から始まった。${second}` : `『${lead}』の話から始まった`,
+          second ? `『${lead}』から${second}` : `『${lead}』が起点`,
+          second ? `${lead}を軸に、${second}` : `${lead}を軸に音楽を組み立てる`,
         ],
         `${seed}:song`
       );
       return songLead ?? lead;
     }
-    case "impression-first":
-      return second ? `最初に感じたのは、${lead}。${second}` : `最初に感じたのは、${lead}`;
+    case "trait-first":
+      return second ? `${lead}。${second}` : lead;
     case "question-first":
       return second ? `${lead}？${second}` : `${lead}？`;
     case "surprise-first":
-      return second ? `意外だったのは、${lead}。${second}` : `意外だったのは、${lead}`;
+      return second ? `意外なのは、${lead}。${second}` : `意外なのは、${lead}`;
     default:
       return second ? `${lead}。${second}` : lead;
   }
@@ -369,51 +382,48 @@ type AngleDraft = {
 };
 
 function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
-  const { angle, facts, member } = ctx;
-  const name = member.name;
+  const { angle, facts } = ctx;
 
   switch (angle) {
-    case "conversation-memory": {
+    case "memorable-trait": {
       if (facts.liveMemory) {
         return {
-          lead: `${facts.liveMemory}の話をした`,
-          follow: "そのあと少し黙って、また別の話題に戻ってきた",
+          lead: `${facts.liveMemory}を原点に音楽を語る`,
+          follow: "ライブの記憶が、その人の輪郭になっている",
         };
       }
       if (facts.artist) {
         return {
-          lead: `${facts.artist}の話をしたあと、自分の曲の話まで踏み込んできた`,
+          lead: `${facts.artist}を入口に、自分の制作まで一本線で結ぶ`,
+          follow: "参照と創作の距離感が近い",
         };
       }
       return {
-        lead: `${name}さんと話しているうちに、音楽以外の話も自然に混ざってきた`,
+        lead: "音楽と日常を、別々の箱に入れない",
       };
     }
     case "music-relationship": {
       if (facts.listeningMood) {
-        return {
-          lead: formatListeningLead(facts.listeningMood),
-          follow: "生活のリズムとセットで語る人だった",
-        };
+        return buildListeningDraft(facts, ctx.seed);
       }
       if (facts.process) {
-        return { lead: facts.process, follow: "作り方の話が長かった" };
+        return { lead: facts.process, follow: "作り方の解像度が高い" };
       }
       return {
-        lead: "曲を聴く時間より、鳴らす時間の話のほうが多かった",
+        lead: "聴く時間より、鳴らす時間の比重が大きい",
       };
     }
     case "favorite-band-trend": {
       if (facts.artistDuo) {
         return {
-          lead: `${facts.artistDuo}の名前が何度も出てきた`,
-          follow: "好きな理由まで細かく語っていた",
+          lead: `${facts.artistDuo}を行き来する聴き方`,
+          follow: "参照点が多いのに、好みの軸がぶれない",
         };
       }
       if (facts.artist) {
         return {
-          lead: `${facts.artist}の話が中心だった`,
-          follow: "他のアーティストの話題にもすぐ広がった",
+          lead: `${facts.artist}を軸に、好みの輪郭がはっきりしている`,
+          follow: "参照点が多いのに軸がぶれない",
         };
       }
       return null;
@@ -422,17 +432,17 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.playingStyle && facts.instrument) {
         return {
           lead: `${facts.instrument}は${facts.playingStyle}寄り`,
-          follow: "音作りの話が具体的だった",
+          follow: "音作りの解像度が高い",
         };
       }
       if (facts.instrumentDuo) {
         return {
           lead: `${facts.instrumentDuo}を使い分ける`,
-          follow: "役割の話まで自分から出してきた",
+          follow: "役割の見立てが早い",
         };
       }
       if (facts.instrument) {
-        return { lead: `${facts.instrument}の話になると、説明が丁寧になる` };
+        return { lead: `${facts.instrument}の音色設計に時間をかけている` };
       }
       return null;
     }
@@ -440,17 +450,17 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.instrument && facts.part) {
         return {
           lead: `${facts.instrument}を担当し、${facts.part}を探している`,
-          follow: "編成の話が早かった",
+          follow: "編成の見立てが早い",
         };
       }
       if (facts.instrument) {
         return {
           lead: `${facts.instrument}の立ち位置を大事にしたい`,
-          follow: "役割分担の話がはっきりしていた",
+          follow: "役割分担のイメージがはっきりしている",
         };
       }
       return {
-        lead: "バンドの中で自分が何を担うか、すでに考えている",
+        lead: "バンドの中で自分が何を担うか、すでに決まっている",
       };
     }
     case "studio-habit": {
@@ -462,8 +472,8 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       }
       if (facts.commitment) {
         return {
-          lead: `活動は${facts.commitment}`,
-          follow: "スタジオの過ごし方まで具体的だった",
+          lead: `活動ペースは${facts.commitment}`,
+          follow: "スタジオでの過ごし方まで具体化している",
         };
       }
       return {
@@ -474,24 +484,24 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.liveMemory) {
         return {
           lead: `${facts.liveMemory}が忘れられない`,
-          follow: "ライブの話になると声が上がる",
+          follow: "ライブの記憶が表情に出る",
         };
       }
       if (facts.ritualSong) {
         return {
           lead: `ライブ前は${facts.ritualSong}から入る`,
-          follow: "会場に出る前の儀式まで話していた",
+          follow: "会場に出る前の儀式まで決まっている",
         };
       }
       return {
-        lead: "ライブの話題だけ、会話の速度が変わった",
+        lead: "ライブの話だけ、声のトーンが変わる",
       };
     }
     case "gear-focus": {
       if (facts.gear) {
         return {
-          lead: `${facts.gear}の話が長かった`,
-          follow: "音の出し方までこだわりが見えた",
+          lead: `${facts.gear}にこだわりがある`,
+          follow: "音の出し方まで設計している",
         };
       }
       if (facts.instrument) {
@@ -505,19 +515,19 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.album) {
         return {
           lead: `最初に買ったのは${facts.album}`,
-          follow: "その話から今の好みまでつながった",
+          follow: "そこから今の好みまで一本線でつながる",
         };
       }
       if (facts.obsession) {
         return {
           lead: `最近は${facts.obsession}に入っている`,
-          follow: "新しい音との出会い方が自分なりだった",
+          follow: "新しい音との出会い方が自分なり",
         };
       }
       if (facts.hero) {
         return {
           lead: `${facts.hero}から音楽に入った`,
-          follow: "影響の話が意外と長かった",
+          follow: "影響の輪郭がはっきりしている",
         };
       }
       return null;
@@ -526,44 +536,44 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.fashionNote) {
         return {
           lead: facts.fashionNote,
-          follow: "話し方もそれに近かった",
+          follow: "見た目と音楽の方向性が揃っている",
         };
       }
-      if (facts.conversationNote) {
+      if (facts.temperamentNote) {
         return {
-          lead: facts.conversationNote,
-          follow: "そのまま会話の進み方にも出ていた",
+          lead: facts.temperamentNote,
+          follow: "そのまま音楽への向き合い方にも出ている",
         };
       }
       return {
-        lead: "言葉数は多くないのに、話したことは残る",
+        lead: "言葉数は多くないのに、輪郭ははっきり残る",
       };
     }
     case "band-purpose": {
       if (facts.dream) {
-        return { lead: facts.dream, follow: "理想像まで具体的だった" };
+        return { lead: facts.dream, follow: "理想像まで具体化している" };
       }
       if (facts.bandVision) {
         return {
-          lead: "バンドの話になると、言葉が増える",
-          follow: facts.bandVision,
+          lead: facts.bandVision,
+          follow: "バンドを組む理由がはっきりしている",
         };
       }
       return {
-        lead: "バンドに何を求めるか、最初から言葉にできていた",
+        lead: "バンドに何を求めるか、最初から言葉にできている",
       };
     }
     case "cover-song": {
       if (facts.coverSong && facts.coverArtist) {
         return {
-          lead: `${facts.coverArtist}の${facts.coverSong}`,
-          follow: "コピーしたい理由まで話していた",
+          lead: `${facts.coverArtist}の${facts.coverSong}をコピーしたい`,
+          follow: "譜面より入り方にこだわりがある",
         };
       }
       if (facts.coverSong) {
         return {
           lead: `『${facts.coverSong}』を一緒に鳴らしたい`,
-          follow: "譜面より入り方の話が長かった",
+          follow: "譜面より入り方にこだわりがある",
         };
       }
       return {
@@ -573,14 +583,14 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
     case "favorite-genre": {
       if (facts.genreDuo) {
         return {
-          lead: `${facts.genreDuo}の話が長かった`,
-          follow: "系譜の話まで自分から広げてきた",
+          lead: `${facts.genreDuo}を横断する聴き方`,
+          follow: "系譜の話まで自分から掘れる",
         };
       }
       if (facts.genre) {
         return {
-          lead: `${facts.genre}の話が多かった`,
-          follow: "その系譜まで自分から掘ってきた",
+          lead: `${facts.genre}を軸に音楽を選ぶ`,
+          follow: "その系譜まで自分から掘れる",
         };
       }
       return null;
@@ -589,29 +599,29 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
       if (facts.fashionNote) {
         return {
           lead: facts.fashionNote,
-          follow: "音楽以外の話題でもテンポが落ちなかった",
+          follow: "音楽以外の価値観もはっきりしている",
         };
       }
       if (facts.location) {
         return {
           lead: `${facts.location}を拠点に活動している`,
-          follow: "生活の話も自然に混ざっていた",
+          follow: "土地のリズムが音楽にも出ている",
         };
       }
       return {
-        lead: "音楽の話の前後で、日常の話もちゃんと続いていた",
+        lead: "音楽と日常を、別々の箱に入れない",
       };
     }
-    case "conversation-tempo": {
-      if (facts.conversationNote) {
+    case "communication-style": {
+      if (facts.temperamentNote) {
         return {
-          lead: facts.conversationNote,
-          follow: "会話の間の取り方が印象的だった",
+          lead: facts.temperamentNote,
+          follow: "言葉の精度が高い",
         };
       }
       return {
-        lead: "質問を返す前に、一度考えてから答える",
-        follow: "その分、言葉の精度が高かった",
+        lead: "答える前に一度間を置く",
+        follow: "その分、言葉の精度が高い",
       };
     }
     default:
@@ -620,65 +630,51 @@ function buildAngleDraft(ctx: IntroContext): AngleDraft | null {
 }
 
 function buildFallbackDraft(ctx: IntroContext): AngleDraft {
-  const { facts, member } = ctx;
+  const { facts } = ctx;
 
   if (facts.coverSong && facts.coverArtist) {
     return {
-      lead: `${facts.coverArtist}の${facts.coverSong}を一緒に鳴らしたい`,
-      follow: "譜面より入り方の話が長かった",
+      lead: `${facts.coverArtist}の${facts.coverSong}をコピーしたい`,
+      follow: "譜面より入り方にこだわりがある",
     };
   }
 
   if (facts.playingStyle && facts.instrument) {
     return {
       lead: `${facts.instrument}は${facts.playingStyle}寄り`,
-      follow: "音作りの話が具体的だった",
+      follow: "音作りの解像度が高い",
     };
   }
 
   if (facts.listeningMood) {
-    return {
-      lead: formatListeningLead(facts.listeningMood),
-      follow: "生活のリズムとセットで語っていた",
-    };
+    return buildListeningDraft(facts, ctx.seed);
   }
 
   if (facts.artistDuo) {
     return {
-      lead: `${facts.artistDuo}の名前が何度も出てきた`,
-      follow: "好きな理由まで細かく語っていた",
+      lead: `${facts.artistDuo}を行き来する聴き方`,
+      follow: "参照点が多いのに、好みの軸がぶれない",
     };
   }
 
   if (facts.bandVision) {
     return {
-      lead: "バンドの話になると、言葉が増える",
-      follow: facts.bandVision,
+      lead: facts.bandVision,
+      follow: "バンドを組む理由がはっきりしている",
     };
   }
 
   if (facts.artist) {
     return {
-      lead: `${facts.artist}の話から入った`,
-      follow: "そのあと自分の音楽の話まで自然に広がった",
+      lead: `${facts.artist}を軸に、自分の音楽を組み立てる`,
+      follow: "参照と創作の距離感が近い",
     };
   }
 
   return {
-    lead: `${member.name}さんと話すと、音楽の輪郭が少しずつ見えてくる`,
+    lead: "音楽の輪郭が、少しずつはっきりしてくる人",
   };
 }
-
-const LENGTH_PADS = [
-  "、その話をもう少し聞きたくなった",
-  "、次に会ったら続きを聞きたい",
-  "、会話の途中でメモしたくなった",
-  "、本人の言葉がそのまま残っている",
-  "、話の順番が変わっても筋が通っていた",
-  "、音楽の話に自然につながっていた",
-  "、細部まで覚えている様子だった",
-  "、自分から具体例を出してきた",
-];
 
 function enrichShortDraft(ctx: IntroContext, draft: AngleDraft): AngleDraft {
   if (draft.follow) {
@@ -688,12 +684,11 @@ function enrichShortDraft(ctx: IntroContext, draft: AngleDraft): AngleDraft {
   const { facts } = ctx;
   const extras = [
     facts.coverSong && facts.coverArtist
-      ? `${facts.coverArtist}の${facts.coverSong}を一緒に鳴らしたい、と言っていた`
+      ? `${facts.coverArtist}の${facts.coverSong}をコピーしたい`
       : undefined,
-    facts.artist ? `${facts.artist}の話も途中で出てきた` : undefined,
-    facts.listeningMood ? formatListeningFollow(facts.listeningMood) : undefined,
-    facts.instrument ? `${facts.instrument}の話が中心だった` : undefined,
-    facts.genre ? `${facts.genre}の話が長かった` : undefined,
+    facts.artist ? `${facts.artist}を軸に音楽を選ぶ` : undefined,
+    facts.instrument ? `${facts.instrument}の音色設計に時間をかけている` : undefined,
+    facts.genre ? `${facts.genre}を横断する聴き方` : undefined,
     facts.commitment ? `活動ペースは${facts.commitment}` : undefined,
   ].filter((value): value is string => Boolean(value));
 
@@ -714,7 +709,7 @@ function composeIntro(ctx: IntroContext): string {
   if (singlePreview.length < MIN_LENGTH && draft.follow) {
     structure =
       pickStable(
-        ["two-part", "episode-first", "impression-first", "surprise-first"],
+        ["two-part", "trait-first", "surprise-first"],
         `${ctx.seed}:expand`
       ) ?? "two-part";
   }
@@ -770,9 +765,15 @@ export function resolveProfileAiIntro(
     }
   }
 
+  const fallback = buildFallbackDraft(ctx);
+  const fallbackText = fitLength(
+    applyStructure("two-part", fallback.lead, fallback.follow, ctx.seed),
+    ctx.seed
+  );
+
   return {
     angle: ctx.angle,
-    comment: fitLength(buildFallbackDraft(ctx).lead, ctx.seed),
+    comment: fallbackText,
   };
 }
 
