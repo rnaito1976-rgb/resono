@@ -51,16 +51,29 @@ function rowToLiveEvent(row: LiveEventRow, now = Date.now()): LiveEvent | null {
   };
 }
 
+function sortByNewest(events: LiveEvent[]): LiveEvent[] {
+  return [...events].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+function buildLiveFeed(events: LiveEvent[], limit: number, now = Date.now()): LiveEvent[] {
+  const newMembers = sortByNewest(events.filter((event) => event.kind === "new_member"));
+  const others = sortByNewest(events.filter((event) => event.kind !== "new_member"));
+
+  const selected = [
+    ...newMembers.slice(0, limit),
+    ...others.slice(0, Math.max(0, limit - newMembers.length)),
+  ].slice(0, limit);
+
+  return selected.map((event) => ({
+    ...event,
+    isNew: isLiveEventNew(event.createdAt, now),
+  }));
+}
+
 function sortAndLimit(events: LiveEvent[], limit: number, now = Date.now()): LiveEvent[] {
-  return [...events]
-    .sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .slice(0, limit)
-    .map((event) => ({
-      ...event,
-      isNew: isLiveEventNew(event.createdAt, now),
-    }));
+  return buildLiveFeed(events, limit, now);
 }
 
 /** Fire-and-forget community Live event. Never throws to callers. */
@@ -121,8 +134,9 @@ async function getStoredLiveEvents(limit: number): Promise<LiveEvent[]> {
 
 /** Derive new-member Live cards from members (fallback when stored events are sparse). */
 async function synthesizeMemberLiveEvents(limit: number, now = Date.now()): Promise<LiveEvent[]> {
-  const events: LiveEvent[] = [];
   const anon = createAnonClient();
+  const admin = createAdminClient();
+  const reader = admin ?? anon;
 
   const MEMBER_SYNTH_COLUMNS =
     "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted, joined_at:portrait->activityMilestones->0->>occurredAt";
@@ -136,46 +150,60 @@ async function synthesizeMemberLiveEvents(limit: number, now = Date.now()): Prom
     joined_at: string | null;
   };
 
-  function pushMemberEvents(rows: MemberSynthRow[]) {
-    for (const row of rows) {
-      if (row.dialogue_completed !== true) {
-        continue;
-      }
+  function toMemberEvent(row: MemberSynthRow): LiveEvent {
+    const joinedAt = row.joined_at?.trim() || row.created_at;
 
-      const joinedAt = row.joined_at?.trim() || row.created_at;
-
-      events.push({
-        id: `synth-member-${row.id}`,
-        kind: "new_member",
-        title: row.name,
-        subtitle: "コミュニティに参加しました",
-        href: `/member/${row.id}`,
-        photo: row.photo || undefined,
-        actorMemberId: row.id,
-        createdAt: joinedAt,
-        isNew: isLiveEventNew(joinedAt, now),
-      });
-    }
+    return {
+      id: `synth-member-${row.id}`,
+      kind: "new_member",
+      title: row.name,
+      subtitle: "コミュニティに参加しました",
+      href: `/member/${row.id}`,
+      photo: row.photo || undefined,
+      actorMemberId: row.id,
+      createdAt: joinedAt,
+      isNew: isLiveEventNew(joinedAt, now),
+    };
   }
 
   try {
-    const { data: recentMembers, error: membersError } = await anon
+    let members: MemberSynthRow[] | null = null;
+
+    const ordered = await reader
       .from("members")
       .select(MEMBER_SYNTH_COLUMNS)
       .not("user_id", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("portrait->activityMilestones->0->>occurredAt", {
+        ascending: false,
+        nullsFirst: false,
+      })
+      .limit(LIVE_MEMBER_CANDIDATE_POOL_SIZE);
 
-    if (membersError) {
-      console.error("[Live] synthesize members:", membersError.message);
+    if (ordered.error) {
+      console.error("[Live] synthesize members (ordered):", ordered.error.message);
+      const fallback = await reader
+        .from("members")
+        .select(MEMBER_SYNTH_COLUMNS)
+        .not("user_id", "is", null)
+        .limit(LIVE_MEMBER_CANDIDATE_POOL_SIZE);
+
+      if (fallback.error) {
+        console.error("[Live] synthesize members:", fallback.error.message);
+        return [];
+      }
+
+      members = (fallback.data ?? []) as unknown as MemberSynthRow[];
     } else {
-      pushMemberEvents((recentMembers ?? []) as unknown as MemberSynthRow[]);
+      members = (ordered.data ?? []) as unknown as MemberSynthRow[];
     }
+
+    return sortByNewest(
+      members.filter((row) => row.dialogue_completed === true).map(toMemberEvent)
+    ).slice(0, limit);
   } catch (error) {
     console.error("[Live] synthesize members:", error);
+    return [];
   }
-
-  return events;
 }
 
 /** Derive band/video Live cards from public activity. */
@@ -267,8 +295,7 @@ async function synthesizeBandLiveEvents(limit: number, now = Date.now()): Promis
 }
 
 function mergeLiveEvents(stored: LiveEvent[], synthesized: LiveEvent[]): LiveEvent[] {
-  const seen = new Set<string>();
-  const merged: LiveEvent[] = [];
+  const byKey = new Map<string, LiveEvent>();
 
   for (const event of [...stored, ...synthesized]) {
     const dedupeKey =
@@ -278,15 +305,16 @@ function mergeLiveEvents(stored: LiveEvent[], synthesized: LiveEvent[]): LiveEve
           ? `${event.kind}:${event.bandId}`
           : event.id;
 
-    if (seen.has(dedupeKey)) {
-      continue;
+    const existing = byKey.get(dedupeKey);
+    if (
+      !existing ||
+      new Date(event.createdAt).getTime() > new Date(existing.createdAt).getTime()
+    ) {
+      byKey.set(dedupeKey, event);
     }
-
-    seen.add(dedupeKey);
-    merged.push(event);
   }
 
-  return merged;
+  return Array.from(byKey.values());
 }
 
 type LiveEventsCacheEntry = {
@@ -296,6 +324,7 @@ type LiveEventsCacheEntry = {
 
 const LIVE_EVENTS_CACHE_TTL_MS = 30_000;
 const LIVE_CANDIDATE_POOL_SIZE = LIVE_FEED_SIZE * 6;
+const LIVE_MEMBER_CANDIDATE_POOL_SIZE = 40;
 
 let liveEventsCache: LiveEventsCacheEntry | null = null;
 
@@ -317,7 +346,7 @@ export async function getLiveEvents(limit = LIVE_FEED_SIZE): Promise<LiveEvent[]
   try {
     const [stored, memberSynth, bandSynth] = await Promise.all([
       getStoredLiveEvents(LIVE_CANDIDATE_POOL_SIZE),
-      synthesizeMemberLiveEvents(LIVE_CANDIDATE_POOL_SIZE, now),
+      synthesizeMemberLiveEvents(LIVE_FEED_SIZE, now),
       synthesizeBandLiveEvents(LIVE_CANDIDATE_POOL_SIZE, now),
     ]);
 
