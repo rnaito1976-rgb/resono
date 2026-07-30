@@ -6,7 +6,7 @@ export const members: Member[] = [
     name: "Yui",
     resonanceRate: 94,
     tags: ["シティポップ", "夜更け", "アナログ", "詩的"],
-    aiComment: "音楽時間は深夜1時、窓を開けて聴く音楽。目指すのは都市の孤独を、温かいグルーヴに変えるバンド、編集された自己紹介ではない。",
+    aiComment: "月2回のスタジオ、月1回のライブ——価値観の中心。隣で演奏すると、バンドの芯が見える。",
     photo:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
     portrait: {
@@ -38,7 +38,7 @@ export const members: Member[] = [
     name: "Ren",
     resonanceRate: 88,
     tags: ["Post-Punk", "モノクロ", "反骨", "ライブ"],
-    aiComment: "音楽はリハ前のウォームアップに聴く。Post-Punkを軸に、聴く時間も演奏も同じ速度、輪郭が少しずつ見えてくる。",
+    aiComment: "IDLESとFontaines D.C.への偏りが強い。同じスタジオに入ると、好みの温度が先に立つ。",
     photo:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
     portrait: {
@@ -70,7 +70,7 @@ export const members: Member[] = [
     name: "Mio",
     resonanceRate: 91,
     tags: ["Lo-fi", "昼下がり", "フィルム", "優しい"],
-    aiComment: "音楽は午後の日差しが差し込む部屋に聴く。目指すのは日常をそのまま、美しい音にするデュオ〜バンド、音の解像度が高い。",
+    aiComment: "日常をそのまま、美しい音にするデュオ〜バンド——バンドへの向き合い方がはっきり。同じバンドに入りたくなる。",
     photo:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&q=80",
     portrait: {
@@ -102,7 +102,7 @@ export const members: Member[] = [
     name: "Kaito",
     resonanceRate: 86,
     tags: ["Techno", "深夜", "ミニマル", "集中"],
-    aiComment: "音楽はヘッドホンで没入する深夜に聴く。目指すのは音と映像で空間を作る、ライブエレクトロニカ、音の解像度が高い。",
+    aiComment: "BonoboとFloating Points——この人の音楽地図の中心。一緒に組むと、軸がぶれない。",
     photo:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80",
     portrait: {
@@ -134,7 +134,7 @@ export const members: Member[] = [
     name: "Sora",
     resonanceRate: 92,
     tags: ["Jazz", "自由", "即興", "夜"],
-    aiComment: "意外なのは、Esperanza SpaldingとKamasi Washingtonを行き来する聴き方。参照点が多いのに、好みの軸がぶれない、自分の言葉で筋が通っている。",
+    aiComment: "週1セッション、ジャズフェス出演目標——この人の軸。一緒に鳴らすと、判断の輪郭が見える。",
     photo:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
     portrait: {
@@ -166,7 +166,7 @@ export const members: Member[] = [
     name: "Haru",
     resonanceRate: 89,
     tags: ["Shoegaze", "夢幻", "ギター", "内省"],
-    aiComment: "RadioheadのNo Surprisesをコピーしたい。譜面より入り方にこだわりがある、輪郭が少しずつ見えてくる。",
+    aiComment: "音の壁を作る、シューゲイズバンド——バンドへの向き合い方がはっきり。隣で鳴らすと温度が合う。",
     photo:
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
     portrait: {
@@ -213,7 +213,7 @@ export const members: Member[] = [
     name: "Takumi",
     resonanceRate: 85,
     tags: ["Hip-Hop", "ストリート", "ビート", "言葉"],
-    aiComment: "音楽はイヤホンで街を歩きながらに聴く。Hip-Hopを軸に、聴く時間も演奏も同じ速度、音楽への向き合い方が一定している。",
+    aiComment: "J DillaとAwichへの偏りが強い。同じスタジオに入ると、好みの温度が先に立つ。",
     photo:
       "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80",
     portrait: {
@@ -245,7 +245,7 @@ export const members: Member[] = [
     name: "Aki",
     resonanceRate: 93,
     tags: ["R&B", "ソウル", "声", "官能"],
-    aiComment: "音楽はキャンドルの灯りと、グラス一张の夜に聴く。聴く時間も演奏も、日常と同じ速度で動いている、バンドの形まで見えている。",
+    aiComment: "月2回スタジオ、ライブハウス出演を大切にする人。バンドに入ると、その価値観が芯になる。",
     photo:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80",
     portrait: {
@@ -277,7 +277,7 @@ export const members: Member[] = [
     name: "Daichi",
     resonanceRate: 82,
     tags: ["メタル", "重厚", "テクニカル", "情熱"],
-    aiComment: "音楽はスタジオでメトロノームと向き合う時間に聴く。聴く時間も演奏も、日常と同じ速度で動いている、バンドの形まで見えている。",
+    aiComment: "テクニカルとエモーションを両立するメタルバンド——バンドへの向き合い方がはっきり。隣で鳴らすと温度が合う。",
     photo:
       "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80",
     portrait: {
@@ -309,7 +309,7 @@ export const members: Member[] = [
     name: "Nana",
     resonanceRate: 90,
     tags: ["K-Pop", "ダンス", "ポップ", "キラキラ"],
-    aiComment: "音楽は鏡の前で振り付けを覚える朝に聴く。目指すのは日韓混合の、次世代ポップユニット、編集された自己紹介ではない。",
+    aiComment: "aespaとTWICE——この人の音楽地図の中心。一緒に組むと、軸がぶれない。",
     photo:
       "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80",
     portrait: {
@@ -341,7 +341,7 @@ export const members: Member[] = [
     name: "Shun",
     resonanceRate: 87,
     tags: ["アコースティック", "フォーク", "旅", "詩"],
-    aiComment: "音楽は新幹線の窓際、夕暮れの車窓に聴く。目指すのは旅と音楽をセットにした、アコースティックユニット、編集された自己紹介ではない。",
+    aiComment: "旅と音楽をセットにした、アコースティックユニットがバンドの芯。同じリハ室に入ると、方向が見える。",
     photo:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
     portrait: {
@@ -373,7 +373,7 @@ export const members: Member[] = [
     name: "Rin",
     resonanceRate: 95,
     tags: ["クラシック", "ピアノ", "叙情", "繊細"],
-    aiComment: "音楽はグランドピアノの前、一人きりの夜に聴く。聴く時間も演奏も、日常と同じ速度で動いている、自分の言葉で筋が通っている。",
+    aiComment: "月2回アンサンブル、年1回ワンマンが信条。同じスタジオに入ると、大切にしたいことが伝わる。",
     photo:
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
     portrait: {
@@ -405,7 +405,7 @@ export const members: Member[] = [
     name: "Ken",
     resonanceRate: 84,
     tags: ["レゲエ", "ダブ", "ベース", "リラックス"],
-    aiComment: "音楽は海辺の夕暮れ、ビール片手にに聴く。目指すのは海と風を感じる、ルーツレゲエバンド、編集された自己紹介ではない。",
+    aiComment: "Damian MarleyとSOJA——この人の音楽地図の中心。一緒に組むと、軸がぶれない。",
     photo:
       "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=800&q=80",
     portrait: {
@@ -437,7 +437,7 @@ export const members: Member[] = [
     name: "Emi",
     resonanceRate: 91,
     tags: ["シンセポップ", "80s", "ネオン", "ノスタルジー"],
-    aiComment: "音楽はネオン街をドライブしながらに聴く。目指すのは80s と未来を行き来する、シンセポップバンド、編集された自己紹介ではない。",
+    aiComment: "80s と未来を行き来する、シンセポップバンド——バンドへの向き合い方がはっきり。隣で鳴らすと温度が合う。",
     photo:
       "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&q=80",
     portrait: {
@@ -469,7 +469,7 @@ export const members: Member[] = [
     name: "Tsubasa",
     resonanceRate: 88,
     tags: ["パンク", "DIY", "叫び", "ライブハウス"],
-    aiComment: "音楽はライブハウスの物販前、次のバンドを待つ時間に聴く。Punkを軸に、聴く時間も演奏も同じ速度、輪郭が少しずつ見えてくる。",
+    aiComment: "Rise AgainstとGlimmer Spenceへの偏りが強い。同じスタジオに入ると、好みの温度が先に立つ。",
     photo:
       "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=800&q=80",
     portrait: {
@@ -501,7 +501,7 @@ export const members: Member[] = [
     name: "Mei",
     resonanceRate: 92,
     tags: ["ボサノバ", "ボサノヴァ", "優雅", "ギター"],
-    aiComment: "音楽はカフェテラス、午後のコーヒーに聴く。聴く時間も演奏も、日常と同じ速度で動いている、自分の言葉で筋が通っている。",
+    aiComment: "月2回セッション、カフェライブが信条。同じスタジオに入ると、大切にしたいことが伝わる。",
     photo:
       "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80",
     portrait: {
@@ -533,7 +533,7 @@ export const members: Member[] = [
     name: "Hayato",
     resonanceRate: 83,
     tags: ["EDM", "フェス", "DJ", "ビート"],
-    aiComment: "音楽はフェス終演後、キャンプファイヤーの前に聴く。聴く時間も演奏も、日常と同じ速度で動いている、自分の言葉で筋が通っている。",
+    aiComment: "フェスで主役級の、ライブエレクトロニカ——バンドへの向き合い方がはっきり。隣で鳴らすと温度が合う。",
     photo:
       "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
     portrait: {
@@ -565,7 +565,7 @@ export const members: Member[] = [
     name: "Yuka",
     resonanceRate: 89,
     tags: ["インディー", "詩", "ボーカル", "透明"],
-    aiComment: "音楽は図書館の窓際、静かな午後に聴く。聴く時間も演奏も、日常と同じ速度で動いている、バンドの形まで見えている。",
+    aiComment: "隔週リハ、月1ワンマン目標——この人の軸。一緒に鳴らすと、判断の輪郭が見える。",
     photo:
       "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&q=80",
     portrait: {
@@ -597,7 +597,7 @@ export const members: Member[] = [
     name: "Ryo",
     resonanceRate: 86,
     tags: ["ファンク", "グルーヴ", "ベース", "ダンス"],
-    aiComment: "音楽はリハ後のビール、仲間とのセッションに聴く。聴く時間も演奏も、日常と同じ速度で動いている、バンドの形まで見えている。",
+    aiComment: "会場全体を踊らせる、ファンクバンド——この人のバンド観の中心。隣で鳴らすと、解像度が上がる。",
     photo:
       "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=800&q=80",
     portrait: {
@@ -629,7 +629,7 @@ export const members: Member[] = [
     name: "Saki",
     resonanceRate: 94,
     tags: ["アンビエント", "瞑想", "自然", "音響"],
-    aiComment: "音楽は森の中、朝もやの中を歩きながらに聴く。Ambientを軸に、聴く時間も演奏も同じ速度、輪郭が少しずつ見えてくる。",
+    aiComment: "Tim HeckerとHammockへの偏りが強い。同じスタジオに入ると、好みの温度が先に立つ。",
     photo:
       "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
     portrait: {
