@@ -5,16 +5,21 @@ import { getViewerContext } from "@/lib/members/viewer-context";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const offset = Math.max(0, Number(searchParams.get("offset") ?? 0));
   const limit = Math.min(
     Math.max(1, Number(searchParams.get("limit") ?? FEED_PAGE_SIZE)),
     FEED_PAGE_SIZE
   );
   const fast = searchParams.get("fast") === "1";
+  const excludeIds = (searchParams.get("exclude") ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
 
   const { user, member: viewer } = await getViewerContext();
 
-  const payload = await buildMembersFeedPage(offset, limit, {
+  const payload = await buildMembersFeedPage({
+    limit,
+    excludeIds,
     viewer,
     userId: user?.id,
     fast,

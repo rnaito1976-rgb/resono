@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { PersonCardClient } from "@/components/person-card/PersonCardClient";
 import {
+  dedupeFeedItems,
   FEED_PAGE_SIZE,
   INITIAL_FEED_PAGE_SIZE,
   type MembersFeedPage,
@@ -14,7 +15,7 @@ import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { InfiniteData } from "@tanstack/react-query";
 
-const FEED_CACHE_PREFIX = "resono:home-feed:v5:";
+const FEED_CACHE_PREFIX = "resono:home-feed:v6:";
 const FEED_CACHE_TTL_MS = 2 * 60 * 1000;
 const FEED_STALE_MS = 2 * 60 * 1000;
 
@@ -75,11 +76,22 @@ function writeFeedCache(viewerId: string | undefined, page: MembersFeedPage) {
   }
 }
 
-async function fetchFeedPage(offset: number, limit: number): Promise<MembersFeedPage> {
-  const response = await fetch(
-    `/api/members/feed?offset=${offset}&limit=${limit}&fast=1`,
-    { credentials: "same-origin" }
-  );
+async function fetchFeedPage(
+  excludeIds: string[],
+  limit: number
+): Promise<MembersFeedPage> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    fast: "1",
+  });
+
+  if (excludeIds.length > 0) {
+    params.set("exclude", excludeIds.join(","));
+  }
+
+  const response = await fetch(`/api/members/feed?${params.toString()}`, {
+    credentials: "same-origin",
+  });
 
   if (!response.ok) {
     throw new Error("フィードの取得に失敗しました");
@@ -101,22 +113,30 @@ export function HomeFeedList({
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
       queryKey: queryKeys.members.feed(viewerId),
-      queryFn: ({ pageParam }) =>
-        fetchFeedPage(
-          pageParam,
-          pageParam === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE
-        ),
-      initialPageParam: 0,
+      queryFn: ({ pageParam }) => {
+        const excludeIds = pageParam as string[];
+        return fetchFeedPage(
+          excludeIds,
+          excludeIds.length === 0 ? INITIAL_FEED_PAGE_SIZE : FEED_PAGE_SIZE
+        );
+      },
+      initialPageParam: [] as string[],
       initialData: cachedFirstPage.current
-        ? { pages: [cachedFirstPage.current], pageParams: [0] }
+        ? { pages: [cachedFirstPage.current], pageParams: [[]] }
         : undefined,
-      getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+      getNextPageParam: (lastPage, allPages) => {
+        if (!lastPage.hasMore) {
+          return undefined;
+        }
+
+        return allPages.flatMap((page) => page.items.map((item) => item.member.id));
+      },
       staleTime: initialHasReasons ? FEED_STALE_MS : 45 * 1000,
       refetchOnMount: !initialFeedPage || !initialHasReasons,
       refetchOnWindowFocus: false,
     });
 
-  const feedItems = data?.pages.flatMap((page) => page.items) ?? [];
+  const feedItems = dedupeFeedItems(data?.pages.flatMap((page) => page.items) ?? []);
   const firstPage = data?.pages[0];
 
   useEffect(() => {

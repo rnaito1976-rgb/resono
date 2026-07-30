@@ -43,7 +43,8 @@ export async function HomePageContent() {
   const [liveEvents, initialFeedPage] = await Promise.all([
     getLiveEvents(LIVE_FEED_SIZE),
     member || user
-      ? buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
+      ? buildMembersFeedPage({
+          limit: INITIAL_FEED_PAGE_SIZE,
           viewer: member,
           userId: user?.id,
           fast: true,

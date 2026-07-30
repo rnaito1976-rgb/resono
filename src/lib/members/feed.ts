@@ -12,11 +12,26 @@ export type FeedItem = {
 
 export type MembersFeedPage = {
   items: FeedItem[];
-  nextOffset: number | null;
   hasMore: boolean;
 };
 
 export const FEED_PAGE_SIZE = 12;
+
+export function dedupeFeedItems(items: FeedItem[]): FeedItem[] {
+  const seen = new Set<string>();
+  const deduped: FeedItem[] = [];
+
+  for (const item of items) {
+    if (seen.has(item.member.id)) {
+      continue;
+    }
+
+    seen.add(item.member.id);
+    deduped.push(item);
+  }
+
+  return deduped;
+}
 
 /** First paint: fewer cards = faster TTFB and hydration. */
 export const INITIAL_FEED_PAGE_SIZE = 4;

@@ -16,7 +16,8 @@ export async function HomeFeedSection({
 }: HomeFeedSectionProps) {
   const initialFeedPage =
     member || userId
-      ? await buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
+      ? await buildMembersFeedPage({
+          limit: INITIAL_FEED_PAGE_SIZE,
           viewer: member,
           userId,
           fast: true,

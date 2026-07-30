@@ -27,6 +27,8 @@ const RANK_CACHE_TTL_MS = 60_000;
 const RANK_CACHE_TTL_FAST_MS = 45_000;
 
 type BuildMembersFeedPageOptions = {
+  limit: number;
+  excludeIds?: string[];
   viewer?: Member;
   userId?: string;
   /** Skip recommendation scoring for faster first paint. */
@@ -178,22 +180,28 @@ function sortMembersForFeed(
       return aSeed ? 1 : -1;
     }
 
-    return getScore(b) - getScore(a);
+    const scoreDelta = getScore(b) - getScore(a);
+    if (scoreDelta !== 0) {
+      return scoreDelta;
+    }
+
+    return a.id.localeCompare(b.id);
   });
 }
 
-function buildFeedPageResult(
-  items: FeedItem[],
-  offset: number,
-  limit: number,
-  totalCount: number
-): MembersFeedPage {
-  const nextOffset = offset + limit < totalCount ? offset + limit : null;
+function excludeLoadedMembers(members: Member[], excludeIds: string[]): Member[] {
+  if (excludeIds.length === 0) {
+    return members;
+  }
 
+  const excludeSet = new Set(excludeIds);
+  return members.filter((member) => !excludeSet.has(member.id));
+}
+
+function buildFeedPageResult(items: FeedItem[], hasMore: boolean): MembersFeedPage {
   return {
     items,
-    nextOffset,
-    hasMore: nextOffset != null,
+    hasMore,
   };
 }
 
@@ -320,30 +328,29 @@ async function getRankedFeedMembers(
 }
 
 export async function buildMembersFeedPage(
-  offset: number,
-  limit: number,
-  options: BuildMembersFeedPageOptions = {}
+  options: BuildMembersFeedPageOptions
 ): Promise<MembersFeedPage> {
+  const { limit, excludeIds = [] } = options;
   const candidateLimit = options.fast ? FEED_FAST_CANDIDATE_LIMIT : FEED_CANDIDATE_LIMIT;
   const viewerMemberId = options.viewer?.id ?? (await resolveCurrentMemberId());
-  const isScrollPage = offset > 0;
+  const isScrollPage = excludeIds.length > 0;
   const fast = options.fast ?? false;
 
   if (!options.viewer || !viewerMemberId) {
     const allMembers = await getFeedCandidateMembers(candidateLimit);
     const candidates = filterFeedMembers(allMembers, viewerMemberId, options.userId);
     const sorted = sortMembersForFeed(candidates, (member) => member.resonanceRate);
+    const available = excludeLoadedMembers(sorted, excludeIds);
+    const pageMembers = available.slice(0, limit);
 
     return buildFeedPageResult(
-      sorted.slice(offset, offset + limit).map((member) => ({
+      pageMembers.map((member) => ({
         member,
         recommendation: undefined,
         reason: undefined,
         resonanceStatus: undefined,
       })),
-      offset,
-      limit,
-      sorted.length
+      available.length > limit
     );
   }
 
@@ -354,7 +361,8 @@ export async function buildMembersFeedPage(
     candidateLimit,
     fast
   );
-  const rankedPageMembers = sorted.slice(offset, offset + limit);
+  const available = excludeLoadedMembers(sorted, excludeIds);
+  const rankedPageMembers = available.slice(0, limit);
 
   const items = await buildResonanceFeedItems(
     options.viewer,
@@ -368,7 +376,7 @@ export async function buildMembersFeedPage(
   );
 
   if (fast || isScrollPage) {
-    return buildFeedPageResult(items, offset, limit, sorted.length);
+    return buildFeedPageResult(items, available.length > limit);
   }
 
   const feedViewer = await resolveFeedViewerForBuild(options.viewer, false);
@@ -378,8 +386,6 @@ export async function buildMembersFeedPage(
       ...item,
       recommendation: calculateRecommendationScore(feedViewer, item.member),
     })),
-    offset,
-    limit,
-    sorted.length
+    available.length > limit
   );
 }
