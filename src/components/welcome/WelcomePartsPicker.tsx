@@ -16,6 +16,7 @@ type WelcomePartsPickerProps = {
 };
 
 const PRESET_SET = new Set<string>(WELCOME_PART_PRESETS);
+const PRESET_GROUPS = WELCOME_PART_GROUPS.filter((group) => group.label !== "Other");
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
@@ -40,26 +41,25 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
     onChange(selected.filter((entry) => entry !== part));
   }
 
-  function togglePart(part: string) {
-    if (part === WELCOME_OTHER_PART_LABEL) {
-      if (otherSelected) {
-        onChange(
-          selected.filter(
-            (entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL
-          )
-        );
-        setOtherText("");
-        return;
-      }
-
+  function toggleOther() {
+    if (otherSelected) {
       onChange(
-        selected.includes(WELCOME_OTHER_PART_LABEL)
-          ? selected
-          : [...selected, WELCOME_OTHER_PART_LABEL]
+        selected.filter(
+          (entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL
+        )
       );
+      setOtherText("");
       return;
     }
 
+    onChange(
+      selected.includes(WELCOME_OTHER_PART_LABEL)
+        ? selected
+        : [...selected, WELCOME_OTHER_PART_LABEL]
+    );
+  }
+
+  function togglePart(part: string) {
     onChange(
       selected.includes(part)
         ? selected.filter((entry) => entry !== part)
@@ -104,65 +104,59 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
         </div>
       ) : null}
 
+      <WelcomePickerSection label="Other">
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2.5">
+            <SelectableChip
+              label="Other（自由入力）"
+              selected={otherSelected}
+              onToggle={toggleOther}
+            />
+          </div>
+
+          {otherSelected ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={otherText}
+                onChange={(event) => setOtherText(event.target.value)}
+                placeholder="パートを入力"
+                className="min-w-0 flex-1 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitOtherPart();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={commitOtherPart}
+                disabled={!otherText.trim()}
+                className="shrink-0 rounded-full border border-border px-4 py-3 text-[14px] text-primary transition-quiet disabled:opacity-40"
+              >
+                追加
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </WelcomePickerSection>
+
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pb-2 scrollbar-hide">
-        {WELCOME_PART_GROUPS.map((group) => {
-          if (group.label === "Other") {
-            return (
-              <WelcomePickerSection key={group.label} label={group.label}>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2.5">
-                    <SelectableChip
-                      label="Other（自由入力）"
-                      selected={otherSelected}
-                      onToggle={() => togglePart(WELCOME_OTHER_PART_LABEL)}
-                    />
-                  </div>
-
-                  {otherSelected ? (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={otherText}
-                        onChange={(event) => setOtherText(event.target.value)}
-                        placeholder="パートを入力"
-                        className="min-w-0 flex-1 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15"
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            commitOtherPart();
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={commitOtherPart}
-                        disabled={!otherText.trim()}
-                        className="shrink-0 rounded-full border border-border px-4 py-3 text-[14px] text-primary transition-quiet disabled:opacity-40"
-                      >
-                        追加
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              </WelcomePickerSection>
-            );
-          }
-
-          return (
-            <WelcomePickerSection key={group.label} label={group.label}>
-              <div className="flex flex-wrap gap-2.5">
-                {group.items.map((part) => (
-                  <SelectableChip
-                    key={part}
-                    label={part}
-                    selected={selected.includes(part)}
-                    onToggle={() => togglePart(part)}
-                  />
-                ))}
-              </div>
-            </WelcomePickerSection>
-          );
-        })}
+        {PRESET_GROUPS.map((group) => (
+          <WelcomePickerSection key={group.label} label={group.label}>
+            <div className="flex flex-wrap gap-2.5">
+              {group.items.map((part) => (
+                <SelectableChip
+                  key={part}
+                  label={part}
+                  selected={selected.includes(part)}
+                  onToggle={() => togglePart(part)}
+                />
+              ))}
+            </div>
+          </WelcomePickerSection>
+        ))}
       </div>
     </div>
   );

@@ -88,6 +88,26 @@ export function WelcomeSoundsPicker({
     <div className="flex min-h-0 flex-1 flex-col gap-5">
       <WelcomeSelectedTags items={selected} onRemove={removeItem} />
 
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={placeholder}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (customCandidate) {
+              toggleItem(customCandidate);
+            }
+          }
+        }}
+        className={cn(
+          "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
+          atMax && "opacity-60"
+        )}
+        disabled={atMax}
+      />
+
       <div className="min-h-0 flex-1 overflow-y-auto pb-2 scrollbar-hide">
         <div className="space-y-8">
           {customCandidate ? (
@@ -124,18 +144,6 @@ export function WelcomeSoundsPicker({
           ) : null}
         </div>
       </div>
-
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={placeholder}
-        className={cn(
-          "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
-          atMax && "opacity-60"
-        )}
-        disabled={atMax}
-      />
     </div>
   );
 }

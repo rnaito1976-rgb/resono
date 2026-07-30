@@ -101,6 +101,26 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
           : null}
       </p>
 
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="アーティストを検索"
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (customCandidate) {
+              addArtist(customCandidate);
+            }
+          }
+        }}
+        className={cn(
+          "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
+          atMax && "opacity-60"
+        )}
+        disabled={atMax}
+      />
+
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
         <div className="space-y-8 pb-2">
           {customCandidate ? (
@@ -137,26 +157,6 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
           ) : null}
         </div>
       </div>
-
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="アーティストを検索"
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            if (customCandidate) {
-              addArtist(customCandidate);
-            }
-          }
-        }}
-        className={cn(
-          "w-full shrink-0 rounded-2xl border border-border bg-subtle px-4 py-3.5 text-[16px] outline-none transition-quiet placeholder:text-muted focus:border-primary/35 focus:ring-1 focus:ring-primary/15",
-          atMax && "opacity-60"
-        )}
-        disabled={atMax}
-      />
     </div>
   );
 }
