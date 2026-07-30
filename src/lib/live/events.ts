@@ -77,7 +77,8 @@ export async function publishLiveEvent(input: PublishLiveEventInput): Promise<vo
   }
 
   try {
-    const supabase = await createClient();
+    const admin = createAdminClient();
+    const supabase = admin ?? (await createClient());
     const { error } = await supabase.from("live_events").insert({
       kind: input.kind,
       title: input.title.trim(),
@@ -127,14 +128,15 @@ async function getStoredLiveEvents(since: string, limit: number): Promise<LiveEv
   }
 }
 
-/** Derive Live cards from public members + bands when the events table is empty. */
-async function synthesizeLiveEvents(since: string, limit: number, now = Date.now()): Promise<LiveEvent[]> {
+/** Derive new-member Live cards from members (always run as a fallback). */
+async function synthesizeMemberLiveEvents(
+  since: string,
+  limit: number,
+  now = Date.now()
+): Promise<LiveEvent[]> {
   const events: LiveEvent[] = [];
   const anon = createAnonClient();
-  const admin = createAdminClient();
-  const reader = admin ?? anon;
 
-  // portrait は巨大な JSON なので、判定に使うフィールドだけ引く
   const MEMBER_SYNTH_COLUMNS =
     "id, name, photo, created_at, dialogue_completed:portrait->dialogueCompleted, joined_at:portrait->activityMilestones->0->>occurredAt";
 
@@ -184,7 +186,6 @@ async function synthesizeLiveEvents(since: string, limit: number, now = Date.now
       pushMemberEvents((members ?? []) as unknown as MemberSynthRow[]);
     }
 
-    // If nothing happened in 24h, still show a few recent members so Live isn't blank.
     if (events.length === 0) {
       const { data: recentMembers } = await anon
         .from("members")
@@ -198,6 +199,20 @@ async function synthesizeLiveEvents(since: string, limit: number, now = Date.now
   } catch (error) {
     console.error("[Live] synthesize members:", error);
   }
+
+  return events;
+}
+
+/** Derive band/video Live cards when stored events are sparse. */
+async function synthesizeBandLiveEvents(
+  since: string,
+  limit: number,
+  now = Date.now()
+): Promise<LiveEvent[]> {
+  const events: LiveEvent[] = [];
+  const anon = createAnonClient();
+  const admin = createAdminClient();
+  const reader = admin ?? anon;
 
   try {
     const [bandsResult, videosResult] = await Promise.all([
@@ -312,10 +327,13 @@ export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
 
   try {
     const stored = await getStoredLiveEvents(since, limit);
-    const synthesized =
+    const [memberSynth, bandSynth] = await Promise.all([
+      synthesizeMemberLiveEvents(since, limit, now),
       stored.length >= SYNTHESIZE_THRESHOLD
-        ? []
-        : await synthesizeLiveEvents(since, limit, now);
+        ? Promise.resolve([])
+        : synthesizeBandLiveEvents(since, limit, now),
+    ]);
+    const synthesized = [...memberSynth, ...bandSynth];
 
     const seen = new Set<string>();
     const merged: LiveEvent[] = [];

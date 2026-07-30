@@ -80,16 +80,15 @@ export async function completeMinimalRegistrationAction(
       void saveFrequencyColorForUser(user.id, frequencyColor);
     }
 
-    void import("@/lib/live/events").then(({ publishLiveEvent }) =>
-      publishLiveEvent({
-        kind: "new_member",
-        title: updated.name,
-        subtitle: "コミュニティに参加しました",
-        href: `/member/${updated.id}`,
-        photo: updated.photo,
-        actorMemberId: updated.id,
-      })
-    );
+    const { publishLiveEvent } = await import("@/lib/live/events");
+    await publishLiveEvent({
+      kind: "new_member",
+      title: updated.name,
+      subtitle: "コミュニティに参加しました",
+      href: `/member/${updated.id}`,
+      photo: updated.photo,
+      actorMemberId: updated.id,
+    });
 
     revalidatePath("/");
     revalidatePath(`/member/${member.id}`);
