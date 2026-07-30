@@ -3,8 +3,10 @@ import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isLiveEventNew } from "@/lib/live/time";
+import { resolveMemberJoinTime } from "@/lib/members/initial-activities";
 import {
   isLiveFeedKind,
+  LIVE_EVENT_WINDOW_MS,
   LIVE_FEED_SIZE,
   type LiveEvent,
   type LiveEventKind,
@@ -57,9 +59,24 @@ function sortByNewest(events: LiveEvent[]): LiveEvent[] {
   );
 }
 
+function isWithinLiveWindow(iso: string, now: number): boolean {
+  const then = new Date(iso).getTime();
+  return Number.isFinite(then) && now - then <= LIVE_EVENT_WINDOW_MS;
+}
+
 function buildLiveFeed(events: LiveEvent[], limit: number, now = Date.now()): LiveEvent[] {
-  const newMembers = sortByNewest(events.filter((event) => event.kind === "new_member"));
-  const others = sortByNewest(events.filter((event) => event.kind !== "new_member"));
+  const newMembers = sortByNewest(
+    events.filter(
+      (event) =>
+        event.kind === "new_member" && isWithinLiveWindow(event.createdAt, now)
+    )
+  );
+  const others = sortByNewest(
+    events.filter(
+      (event) =>
+        event.kind !== "new_member" && isWithinLiveWindow(event.createdAt, now)
+    )
+  );
 
   const selected = [
     ...newMembers.slice(0, limit),
@@ -157,14 +174,23 @@ async function synthesizeMemberLiveEvents(
         .map((row) => {
           const profileJoinedAt = resolveMemberJoinedAt(row);
           const storedJoinedAt = storedJoinTimes.get(row.id);
-          const joinedAt =
-            storedJoinedAt &&
-            new Date(storedJoinedAt).getTime() > new Date(profileJoinedAt).getTime()
-              ? storedJoinedAt
-              : profileJoinedAt;
+          let joinedAt = profileJoinedAt;
+
+          if (storedJoinedAt) {
+            const storedTime = new Date(storedJoinedAt).getTime();
+            const profileTime = new Date(profileJoinedAt).getTime();
+            // Prefer the first published Live event, unless profile join is earlier.
+            if (
+              Number.isFinite(storedTime) &&
+              (!Number.isFinite(profileTime) || storedTime < profileTime)
+            ) {
+              joinedAt = storedJoinedAt;
+            }
+          }
 
           return memberRowToLiveEvent(row, joinedAt, now);
         })
+        .filter((event) => isWithinLiveWindow(event.createdAt, now))
     );
   } catch (error) {
     console.error("[Live] synthesize members:", error);
@@ -181,7 +207,10 @@ function collectStoredMemberJoinTimes(stored: LiveEvent[]): Map<string, string> 
     }
 
     const existing = joinTimes.get(event.actorMemberId);
-    if (!existing || new Date(event.createdAt).getTime() > new Date(existing).getTime()) {
+    if (
+      !existing ||
+      new Date(event.createdAt).getTime() < new Date(existing).getTime()
+    ) {
       joinTimes.set(event.actorMemberId, event.createdAt);
     }
   }
@@ -349,20 +378,11 @@ function isRegisteredMemberForLive(row: MemberLiveRow): boolean {
 }
 
 function resolveMemberJoinedAt(row: MemberLiveRow): string {
-  const portrait = parsePortraitForLive(row.portrait);
-  let latest = row.created_at;
+  const portrait = parsePortraitForLive(row.portrait) as {
+    activityMilestones?: { id?: string; occurredAt?: string }[];
+  };
 
-  for (const milestone of portrait.activityMilestones ?? []) {
-    if (typeof milestone.occurredAt !== "string") {
-      continue;
-    }
-
-    if (new Date(milestone.occurredAt).getTime() > new Date(latest).getTime()) {
-      latest = milestone.occurredAt;
-    }
-  }
-
-  return latest;
+  return resolveMemberJoinTime(portrait, row.created_at);
 }
 
 function memberRowToLiveEvent(row: MemberLiveRow, joinedAt: string, now = Date.now()): LiveEvent {

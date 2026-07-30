@@ -18,6 +18,9 @@ export const INITIAL_MEMBER_ACTIVITY_TITLES = [
 
 const MILESTONE_INTERVAL_MS = 60_000;
 
+/** Milestone id for "joined community" — stable join time for Live. */
+export const MEMBER_JOIN_MILESTONE_ID = "initial-0";
+
 export function buildInitialMemberActivities(
   baseTime: string = new Date().toISOString()
 ): MemberActivityMilestone[] {
@@ -34,8 +37,15 @@ export function attachInitialMemberActivities(
   member: Member,
   options?: { force?: boolean }
 ): Member {
-  if (!options?.force && member.portrait.activityMilestones?.length) {
-    return member;
+  if (member.portrait.activityMilestones?.length) {
+    if (!options?.force) {
+      return member;
+    }
+
+    // Keep the original join milestones after the first completed registration.
+    if (member.portrait.dialogueCompleted === true) {
+      return member;
+    }
   }
 
   return {
@@ -62,6 +72,19 @@ export function getMemberActivityMilestones(
   }
 
   return buildInitialMemberActivities(registeredAt ?? new Date().toISOString());
+}
+
+export function resolveMemberJoinTime(
+  portrait: {
+    activityMilestones?: Array<{ id?: string; occurredAt?: string }>;
+  },
+  fallback: string
+): string {
+  const joinMilestone = portrait.activityMilestones?.find(
+    (milestone) => milestone.id === MEMBER_JOIN_MILESTONE_ID
+  );
+
+  return joinMilestone?.occurredAt ?? fallback;
 }
 
 export function memberActivityMilestonesToFeedItems(
