@@ -55,7 +55,6 @@ export async function saveProfileGrowSessionAction(candidates: ProfileGrowCandid
     return { error: "保存する更新候補がありません。" };
   }
 
-  const before = member;
   const { member: merged, updatedFields } = applyProfileGrowCandidates(member, candidates);
   const milestone = buildProfileGrowActivityMilestone(updatedFields);
   const withActivity = appendProfileGrowActivity(merged, milestone);
@@ -69,7 +68,6 @@ export async function saveProfileGrowSessionAction(candidates: ProfileGrowCandid
   }
 
   void invalidateResonanceCacheForMember(member.id);
-  void publishLookingForUpdateIfChanged(before, updated);
 
   revalidatePath("/");
   revalidatePath("/discover");
@@ -81,25 +79,4 @@ export async function saveProfileGrowSessionAction(candidates: ProfileGrowCandid
     updatedFields,
     after: updated,
   };
-}
-
-async function publishLookingForUpdateIfChanged(before: Member, updated: Member) {
-  try {
-    const { hasLookingForChanged } = await import("@/lib/live/looking-for");
-    if (!hasLookingForChanged(before, updated)) {
-      return;
-    }
-
-    const { publishLiveEvent } = await import("@/lib/live/events");
-    await publishLiveEvent({
-      kind: "looking_for_updated",
-      title: updated.name,
-      subtitle: "Looking For を更新しました",
-      href: `/member/${updated.id}`,
-      photo: updated.photo,
-      actorMemberId: updated.id,
-    });
-  } catch (error) {
-    console.error("[saveProfileGrowSessionAction] live event", error);
-  }
 }

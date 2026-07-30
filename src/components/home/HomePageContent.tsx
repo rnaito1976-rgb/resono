@@ -10,6 +10,7 @@ import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { buildMembersFeedPage } from "@/lib/members/feed-builder";
 import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
 import { getLiveEvents } from "@/lib/live/events";
+import { LIVE_FEED_SIZE } from "@/types/live";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export function HomePageFallback() {
@@ -40,7 +41,7 @@ export async function HomePageContent() {
   }
 
   const [liveEvents, initialFeedPage] = await Promise.all([
-    getLiveEvents(20),
+    getLiveEvents(LIVE_FEED_SIZE),
     member || user
       ? buildMembersFeedPage(0, INITIAL_FEED_PAGE_SIZE, {
           viewer: member,

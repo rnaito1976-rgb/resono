@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isLiveEventNew } from "@/lib/live/time";
 import {
-  LIVE_EVENT_WINDOW_MS,
+  isLiveFeedKind,
+  LIVE_FEED_SIZE,
   type LiveEvent,
   type LiveEventKind,
 } from "@/types/live";
@@ -31,22 +32,14 @@ type LiveEventRow = {
   created_at: string;
 };
 
-const LIVE_KINDS = new Set<LiveEventKind>([
-  "new_member",
-  "new_band",
-  "band_formed",
-  "new_video",
-  "looking_for_updated",
-]);
-
 function rowToLiveEvent(row: LiveEventRow, now = Date.now()): LiveEvent | null {
-  if (!LIVE_KINDS.has(row.kind as LiveEventKind)) {
+  if (!isLiveFeedKind(row.kind)) {
     return null;
   }
 
   return {
     id: row.id,
-    kind: row.kind as LiveEventKind,
+    kind: row.kind,
     title: row.title,
     subtitle: row.subtitle ?? undefined,
     href: row.href,
@@ -72,7 +65,7 @@ function sortAndLimit(events: LiveEvent[], limit: number, now = Date.now()): Liv
 
 /** Fire-and-forget community Live event. Never throws to callers. */
 export async function publishLiveEvent(input: PublishLiveEventInput): Promise<void> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !isLiveFeedKind(input.kind)) {
     return;
   }
 
@@ -100,7 +93,7 @@ export async function publishLiveEvent(input: PublishLiveEventInput): Promise<vo
   }
 }
 
-async function getStoredLiveEvents(since: string, limit: number): Promise<LiveEvent[]> {
+async function getStoredLiveEvents(limit: number): Promise<LiveEvent[]> {
   try {
     const supabase = createAnonClient();
     const { data, error } = await supabase
@@ -108,12 +101,10 @@ async function getStoredLiveEvents(since: string, limit: number): Promise<LiveEv
       .select(
         "id, kind, title, subtitle, href, photo, actor_member_id, band_id, created_at"
       )
-      .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) {
-      // Table may not exist yet before migration 021 is applied.
       console.error("[Live] getStoredLiveEvents:", error.message);
       return [];
     }
@@ -128,12 +119,8 @@ async function getStoredLiveEvents(since: string, limit: number): Promise<LiveEv
   }
 }
 
-/** Derive new-member Live cards from members (always run as a fallback). */
-async function synthesizeMemberLiveEvents(
-  since: string,
-  limit: number,
-  now = Date.now()
-): Promise<LiveEvent[]> {
+/** Derive new-member Live cards from members (fallback when stored events are sparse). */
+async function synthesizeMemberLiveEvents(limit: number, now = Date.now()): Promise<LiveEvent[]> {
   const events: LiveEvent[] = [];
   const anon = createAnonClient();
 
@@ -172,28 +159,16 @@ async function synthesizeMemberLiveEvents(
   }
 
   try {
-    const { data: members, error: membersError } = await anon
+    const { data: recentMembers, error: membersError } = await anon
       .from("members")
       .select(MEMBER_SYNTH_COLUMNS)
       .not("user_id", "is", null)
-      .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (membersError) {
       console.error("[Live] synthesize members:", membersError.message);
     } else {
-      pushMemberEvents((members ?? []) as unknown as MemberSynthRow[]);
-    }
-
-    if (events.length === 0) {
-      const { data: recentMembers } = await anon
-        .from("members")
-        .select(MEMBER_SYNTH_COLUMNS)
-        .not("user_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(8);
-
       pushMemberEvents((recentMembers ?? []) as unknown as MemberSynthRow[]);
     }
   } catch (error) {
@@ -203,12 +178,8 @@ async function synthesizeMemberLiveEvents(
   return events;
 }
 
-/** Derive band/video Live cards when stored events are sparse. */
-async function synthesizeBandLiveEvents(
-  since: string,
-  limit: number,
-  now = Date.now()
-): Promise<LiveEvent[]> {
+/** Derive band/video Live cards from public activity. */
+async function synthesizeBandLiveEvents(limit: number, now = Date.now()): Promise<LiveEvent[]> {
   const events: LiveEvent[] = [];
   const anon = createAnonClient();
   const admin = createAdminClient();
@@ -219,14 +190,12 @@ async function synthesizeBandLiveEvents(
       reader
         .from("bands")
         .select("id, name, created_at, created_by_member_id")
-        .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(limit),
       reader
         .from("band_activities")
         .select("id, band_id, title, body, media_url, created_at")
         .eq("kind", "video")
-        .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(limit),
     ]);
@@ -297,14 +266,36 @@ async function synthesizeBandLiveEvents(
   return events;
 }
 
+function mergeLiveEvents(stored: LiveEvent[], synthesized: LiveEvent[]): LiveEvent[] {
+  const seen = new Set<string>();
+  const merged: LiveEvent[] = [];
+
+  for (const event of [...stored, ...synthesized]) {
+    const dedupeKey =
+      event.kind === "new_member" && event.actorMemberId
+        ? `member:${event.actorMemberId}`
+        : event.bandId
+          ? `${event.kind}:${event.bandId}`
+          : event.id;
+
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    merged.push(event);
+  }
+
+  return merged;
+}
+
 type LiveEventsCacheEntry = {
   expiresAt: number;
   events: LiveEvent[];
 };
 
 const LIVE_EVENTS_CACHE_TTL_MS = 30_000;
-/** 合成にはメンバー・バンド・動画で4〜5クエリかかるので、常時は走らせない */
-const SYNTHESIZE_THRESHOLD = 4;
+const LIVE_CANDIDATE_POOL_SIZE = LIVE_FEED_SIZE * 6;
 
 let liveEventsCache: LiveEventsCacheEntry | null = null;
 
@@ -312,7 +303,7 @@ export function clearLiveEventsCache() {
   liveEventsCache = null;
 }
 
-export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
+export async function getLiveEvents(limit = LIVE_FEED_SIZE): Promise<LiveEvent[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -323,37 +314,14 @@ export async function getLiveEvents(limit = 24): Promise<LiveEvent[]> {
     return sortAndLimit(liveEventsCache.events, limit, now);
   }
 
-  const since = new Date(now - LIVE_EVENT_WINDOW_MS).toISOString();
-
   try {
-    const stored = await getStoredLiveEvents(since, limit);
-    const [memberSynth, bandSynth] = await Promise.all([
-      synthesizeMemberLiveEvents(since, limit, now),
-      stored.length >= SYNTHESIZE_THRESHOLD
-        ? Promise.resolve([])
-        : synthesizeBandLiveEvents(since, limit, now),
+    const [stored, memberSynth, bandSynth] = await Promise.all([
+      getStoredLiveEvents(LIVE_CANDIDATE_POOL_SIZE),
+      synthesizeMemberLiveEvents(LIVE_CANDIDATE_POOL_SIZE, now),
+      synthesizeBandLiveEvents(LIVE_CANDIDATE_POOL_SIZE, now),
     ]);
-    const synthesized = [...memberSynth, ...bandSynth];
 
-    const seen = new Set<string>();
-    const merged: LiveEvent[] = [];
-
-    for (const event of [...stored, ...synthesized]) {
-      // Prefer stored events; skip synth duplicates for the same member/band/video.
-      const dedupeKey =
-        event.kind === "new_member" && event.actorMemberId
-          ? `member:${event.actorMemberId}`
-          : event.bandId
-            ? `${event.kind}:${event.bandId}`
-            : event.id;
-
-      if (seen.has(dedupeKey)) {
-        continue;
-      }
-
-      seen.add(dedupeKey);
-      merged.push(event);
-    }
+    const merged = mergeLiveEvents(stored, [...memberSynth, ...bandSynth]);
 
     liveEventsCache = {
       events: merged,

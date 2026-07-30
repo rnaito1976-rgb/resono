@@ -23,7 +23,7 @@ function getLiveEventMemberId(event: LiveEvent): string | undefined {
     return hrefMatch[1];
   }
 
-  if (event.kind === "new_member" || event.kind === "looking_for_updated") {
+  if (event.kind === "new_member") {
     return event.actorMemberId;
   }
 
@@ -94,7 +94,7 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
 
       {events.length === 0 ? (
         <p className="text-[14px] leading-relaxed text-white/40">
-          直近24時間の動きはまだありません
+          まだ動きはありません
         </p>
       ) : (
         <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">

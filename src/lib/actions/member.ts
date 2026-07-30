@@ -90,7 +90,6 @@ export async function saveMemberEditAction(input: {
   revalidateMemberPaths(input.member.id);
 
   void invalidateResonanceCacheForMember(input.member.id);
-  void publishLookingForUpdateIfChanged(existing, input.member);
 
   return { success: true };
 }
@@ -158,28 +157,6 @@ export async function updateMemberAction(member: Member) {
 
   // 応答をブロックしない後処理
   void invalidateResonanceCacheForMember(member.id);
-  void publishLookingForUpdateIfChanged(existing, member);
 
   return { success: true };
-}
-
-async function publishLookingForUpdateIfChanged(existing: Member, member: Member) {
-  try {
-    const { hasLookingForChanged } = await import("@/lib/live/looking-for");
-    if (!hasLookingForChanged(existing, member)) {
-      return;
-    }
-
-    const { publishLiveEvent } = await import("@/lib/live/events");
-    await publishLiveEvent({
-      kind: "looking_for_updated",
-      title: member.name,
-      subtitle: "Looking For を更新しました",
-      href: `/member/${member.id}`,
-      photo: member.photo,
-      actorMemberId: member.id,
-    });
-  } catch (error) {
-    console.error("[updateMemberAction] live event", error);
-  }
 }

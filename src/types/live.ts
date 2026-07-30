@@ -26,5 +26,21 @@ export const LIVE_EVENT_KIND_LABELS: Record<LiveEventKind, string> = {
   looking_for_updated: "Looking For Updated",
 };
 
+/** Home Live strip always shows this many cards (latest first). */
+export const LIVE_FEED_SIZE = 5;
+
+export const LIVE_FEED_KINDS = [
+  "new_member",
+  "new_band",
+  "band_formed",
+  "new_video",
+] as const satisfies readonly LiveEventKind[];
+
+export type LiveFeedKind = (typeof LIVE_FEED_KINDS)[number];
+
 export const LIVE_EVENT_WINDOW_MS = 24 * 60 * 60 * 1000;
 export const LIVE_EVENT_NEW_MS = 2 * 60 * 60 * 1000;
+
+export function isLiveFeedKind(kind: string): kind is LiveFeedKind {
+  return (LIVE_FEED_KINDS as readonly string[]).includes(kind);
+}
