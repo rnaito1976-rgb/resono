@@ -94,7 +94,7 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
 
       {events.length === 0 ? (
         <p className="text-[14px] leading-relaxed text-white/40">
-          直近24時間の動きはまだありません
+          直近48時間の動きはまだありません
         </p>
       ) : (
         <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">

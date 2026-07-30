@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useTransition } from "react";
+import { useCallback, useState } from "react";
 import {
   getResonanceStatusAction,
   toggleResonanceAction,
@@ -17,7 +17,7 @@ export function useResonance(
   initialStatus?: ResonanceStatus
 ) {
   const queryClient = useQueryClient();
-  const [isPending, startTransition] = useTransition();
+  const [isToggling, setIsToggling] = useState(false);
   const cachedStatus = queryClient.getQueryData<ResonanceStatus>(
     queryKeys.resonance.status(memberId)
   );
@@ -34,22 +34,25 @@ export function useResonance(
   });
 
   const toggle = useCallback(() => {
-    startTransition(async () => {
-      const result = await toggleResonanceAction(memberId);
+    setIsToggling(true);
+    void toggleResonanceAction(memberId)
+      .then((result) => {
+        if (result.error) {
+          return;
+        }
 
-      if (result.error) {
-        return;
-      }
+        const next: ResonanceStatus = {
+          isResonated: result.isResonated,
+          isMutual: result.isMutual,
+          conversationId: result.conversationId,
+        };
 
-      const next: ResonanceStatus = {
-        isResonated: result.isResonated,
-        isMutual: result.isMutual,
-        conversationId: result.conversationId,
-      };
-
-      queryClient.setQueryData(queryKeys.resonance.status(memberId), next);
-      window.dispatchEvent(new Event(RESONANCE_CHANGE_EVENT));
-    });
+        queryClient.setQueryData(queryKeys.resonance.status(memberId), next);
+        window.dispatchEvent(new Event(RESONANCE_CHANGE_EVENT));
+      })
+      .finally(() => {
+        setIsToggling(false);
+      });
   }, [memberId, queryClient]);
 
   const state = query.data ?? {
@@ -62,6 +65,6 @@ export function useResonance(
     ...state,
     toggle,
     mounted: query.isFetched || seedStatus != null,
-    isPending: isPending || query.isFetching,
+    isPending: isToggling,
   };
 }
