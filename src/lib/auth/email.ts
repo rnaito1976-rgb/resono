@@ -18,12 +18,17 @@ const AUTH_ERROR_CODE_MESSAGES: Record<string, string> = {
   weak_password: "パスワードは6文字以上で入力してください。",
   signup_disabled: "現在、新規登録を受け付けていません。",
   email_provider_disabled: "メールアドレスでの登録は現在ご利用いただけません。",
+  unexpected_failure:
+    "確認メールの送信に失敗しました。時間をおいて再試行するか、Google ログインをご利用ください。",
 };
 
 export type AuthErrorLike = {
   message?: string | null;
   code?: string | null;
+  status?: number | null;
 };
+
+export type AuthErrorContext = "signup" | "signin" | "callback";
 
 /** Normalize common IME / full-width mistakes before auth. */
 export function normalizeEmailInput(email: string): string {
@@ -81,10 +86,26 @@ export function translateEmailAuthError(error: AuthErrorLike): string | null {
     return "メールアドレスの形式が正しくありません。@を含む半角英数字で入力してください";
   }
 
+  if (normalized.includes("confirmation email")) {
+    return AUTH_ERROR_CODE_MESSAGES.unexpected_failure;
+  }
+
   return null;
 }
 
-export function translateAuthError(error: AuthErrorLike): string {
+function isEmptyAuthMessage(message: string): boolean {
+  return !message || message === "{}" || message === "[object Object]";
+}
+
+export function translateAuthError(
+  error: AuthErrorLike,
+  context: AuthErrorContext = "signin"
+): string {
+  const code = error.code?.trim();
+  if (code && AUTH_ERROR_CODE_MESSAGES[code]) {
+    return AUTH_ERROR_CODE_MESSAGES[code];
+  }
+
   const emailError = translateEmailAuthError(error);
   if (emailError) {
     return emailError;
@@ -100,14 +121,25 @@ export function translateAuthError(error: AuthErrorLike): string {
     return AUTH_ERROR_CODE_MESSAGES.over_email_send_rate_limit;
   }
 
+  if (normalized.includes("confirmation email")) {
+    return AUTH_ERROR_CODE_MESSAGES.unexpected_failure;
+  }
+
+  if (isEmptyAuthMessage(message)) {
+    if (context === "signup" || error.status === 500) {
+      return AUTH_ERROR_CODE_MESSAGES.unexpected_failure;
+    }
+
+    return "認証に失敗しました。もう一度お試しください。";
+  }
+
   const translations: Record<string, string> = {
-    "{}":
-      "認証に失敗しました。Googleログインをもう一度お試しください。",
     "Invalid login credentials": AUTH_ERROR_CODE_MESSAGES.invalid_credentials,
     "Email not confirmed": AUTH_ERROR_CODE_MESSAGES.email_not_confirmed,
     "User already registered": AUTH_ERROR_CODE_MESSAGES.user_already_exists,
     "Signup requires a valid password": AUTH_ERROR_CODE_MESSAGES.weak_password,
     "email rate limit exceeded": AUTH_ERROR_CODE_MESSAGES.over_email_send_rate_limit,
+    "Error sending confirmation email": AUTH_ERROR_CODE_MESSAGES.unexpected_failure,
   };
 
   return translations[message] ?? message;

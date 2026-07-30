@@ -88,7 +88,10 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
      - プレビュー URL を使う場合は `https://*.vercel.app/auth/callback` も追加
 4. **メール確認 / SMTP（重要）**:
    - Supabase **標準 SMTP** では、確認メールは **Supabase 組織メンバーのアドレスにしか送れません**。`@yahoo.co.jp` や `@gmail.com` など外部アドレスで登録するには **カスタム SMTP が必須** です。
-   - **Authentication → SMTP Settings** で Resend を設定:
+   - **Authentication → Emails → SMTP Settings** で Resend を設定（旧 UI では Authentication → SMTP Settings）:
+     - 左サイドバー **Authentication** → **NOTIFICATIONS** の **Emails**
+     - 上部タブ **SMTP Settings**（または Templates タブ内の **Set up SMTP**）
+     - **Enable Custom SMTP** を ON
      - Host: `smtp.resend.com`
      - Port: `465`
      - User: `resend`

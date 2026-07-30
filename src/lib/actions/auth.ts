@@ -83,8 +83,13 @@ export async function signUpWithEmailAction(email: string, password: string) {
   });
 
   if (error) {
-    console.error("[Auth] signUp:", error.code, error.message);
-    return { error: translateAuthError(error) };
+    console.error("[Auth] signUp:", error.code, error.status, error.message);
+    return {
+      error: translateAuthError(
+        { message: error.message, code: error.code, status: error.status },
+        "signup"
+      ),
+    };
   }
 
   if (isDuplicateSignup(data.user)) {
@@ -141,8 +146,13 @@ export async function resendConfirmationEmailAction(email: string) {
   });
 
   if (error) {
-    console.error("[Auth] resend:", error.code, error.message);
-    return { error: translateAuthError(error) };
+    console.error("[Auth] resend:", error.code, error.status, error.message);
+    return {
+      error: translateAuthError(
+        { message: error.message, code: error.code, status: error.status },
+        "signup"
+      ),
+    };
   }
 
   return {
