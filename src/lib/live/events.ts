@@ -65,28 +65,14 @@ function isWithinLiveWindow(iso: string, now: number): boolean {
 }
 
 function buildLiveFeed(events: LiveEvent[], limit: number, now = Date.now()): LiveEvent[] {
-  const newMembers = sortByNewest(
-    events.filter(
-      (event) =>
-        event.kind === "new_member" && isWithinLiveWindow(event.createdAt, now)
-    )
-  );
-  const others = sortByNewest(
-    events.filter(
-      (event) =>
-        event.kind !== "new_member" && isWithinLiveWindow(event.createdAt, now)
-    )
-  );
-
-  const selected = [
-    ...newMembers.slice(0, limit),
-    ...others.slice(0, Math.max(0, limit - newMembers.length)),
-  ].slice(0, limit);
-
-  return selected.map((event) => ({
-    ...event,
-    isNew: isLiveEventNew(event.createdAt, now),
-  }));
+  return sortByNewest(
+    events.filter((event) => isWithinLiveWindow(event.createdAt, now))
+  )
+    .slice(0, limit)
+    .map((event) => ({
+      ...event,
+      isNew: isLiveEventNew(event.createdAt, now),
+    }));
 }
 
 function sortAndLimit(events: LiveEvent[], limit: number, now = Date.now()): LiveEvent[] {
