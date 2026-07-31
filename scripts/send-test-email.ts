@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
+import { getEmailSiteUrl } from "../src/lib/supabase/env";
 
 config({ path: ".env.local" });
 
@@ -77,7 +78,7 @@ async function resolveRecipientEmail(): Promise<{ name: string; email: string }>
 
 async function sendTestEmail() {
   const recipient = await resolveRecipientEmail();
-  const settingsUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://resono-fwdi.vercel.app";
+  const settingsUrl = getEmailSiteUrl();
   const subject = "Resono: テストメール";
   const body = `${recipient.name}さん、Resono のメール通知テストです。`;
   const html = `

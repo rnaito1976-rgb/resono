@@ -5,7 +5,7 @@ import { calculateResonanceMatch, partsMatch } from "@/lib/resonance/matching";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { rowToMemberList } from "@/lib/supabase/mappers";
 import { MEMBER_LIST_COLUMNS } from "@/lib/supabase/member-columns";
-import { getSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
+import { getEmailSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Member } from "@/types/member";
 
 const COOLDOWN_MINUTES = 30;
@@ -90,33 +90,46 @@ async function recordCooldown(
   }
 }
 
-async function sendEncounterEmail(input: {
-  recipientMemberId: string;
-  kind: EncounterEmailKind;
-  scopeId: string;
-  preferenceKey: "resonanceMembers" | "bandRecruitment";
-  subject: string;
-  body: string;
-  actionUrl: string;
-}): Promise<void> {
+type SendEncounterEmailOptions = {
+  force?: boolean;
+};
+
+async function sendEncounterEmail(
+  input: {
+    recipientMemberId: string;
+    kind: EncounterEmailKind;
+    scopeId: string;
+    preferenceKey: "resonanceMembers" | "bandRecruitment";
+    subject: string;
+    body: string;
+    actionUrl: string;
+  },
+  options: SendEncounterEmailOptions = {}
+): Promise<boolean> {
   if (!isSupabaseConfigured() || !isEmailConfigured()) {
-    return;
+    return false;
   }
 
-  if (!(await isEmailNotificationEnabled(input.recipientMemberId, input.preferenceKey))) {
-    return;
+  if (
+    !options.force &&
+    !(await isEmailNotificationEnabled(input.recipientMemberId, input.preferenceKey))
+  ) {
+    return false;
   }
 
-  if (await isWithinCooldown(input.recipientMemberId, input.kind, input.scopeId)) {
-    return;
+  if (
+    !options.force &&
+    (await isWithinCooldown(input.recipientMemberId, input.kind, input.scopeId))
+  ) {
+    return false;
   }
 
   const email = await getEmailForMember(input.recipientMemberId);
   if (!email) {
-    return;
+    return false;
   }
 
-  const settingsUrl = `${getSiteUrl()}/menu/notifications`;
+  const settingsUrl = `${getEmailSiteUrl()}/menu/notifications`;
   const html = `
     <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
       <p>${input.body}</p>
@@ -137,6 +150,8 @@ async function sendEncounterEmail(input: {
   if (sent) {
     await recordCooldown(input.recipientMemberId, input.kind, input.scopeId);
   }
+
+  return sent;
 }
 
 async function fetchRegisteredMembers(excludeMemberId: string): Promise<Member[]> {
@@ -177,6 +192,95 @@ function matchesRecruitment(recipient: Member, poster: Member): boolean {
   );
 }
 
+export type BackfillNotificationEmailResult = {
+  actorMemberId: string;
+  actorName: string;
+  sent: number;
+  skipped: number;
+};
+
+export async function backfillNotificationEmailsForMember(
+  actorMemberId: string,
+  options: { force?: boolean } = { force: true }
+): Promise<BackfillNotificationEmailResult> {
+  const actor = await getMemberById(actorMemberId);
+  if (!actor) {
+    return {
+      actorMemberId,
+      actorName: actorMemberId,
+      sent: 0,
+      skipped: 0,
+    };
+  }
+
+  let sent = 0;
+  let skipped = 0;
+
+  const candidates = await fetchRegisteredMembers(actorMemberId);
+  const scored = candidates
+    .map((recipient) => ({
+      recipient,
+      score: calculateResonanceMatch(recipient, actor),
+    }))
+    .filter(({ score }) => score >= COMPATIBLE_SCORE_THRESHOLD)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_RECIPIENTS);
+
+  for (const { recipient, score } of scored) {
+    const delivered = await sendEncounterEmail(
+      {
+        recipientMemberId: recipient.id,
+        kind: "resonance_member",
+        scopeId: actorMemberId,
+        preferenceKey: "resonanceMembers",
+        subject: "Resono: 相性の良いメンバーが参加しました",
+        body: `${actor.name}さんがResonoに参加しました。共鳴度 ${score}%。プロフィールを見てみましょう。`,
+        actionUrl: `${getEmailSiteUrl()}/member/${actorMemberId}`,
+      },
+      options
+    );
+
+    if (delivered) {
+      sent += 1;
+    } else {
+      skipped += 1;
+    }
+  }
+
+  if (actor.lookingFor.parts.some((part) => part.trim().length > 0)) {
+    const partsLabel = actor.lookingFor.parts.slice(0, 3).join("・");
+    const matched = candidates.filter((recipient) => matchesRecruitment(recipient, actor));
+
+    for (const recipient of matched.slice(0, MAX_RECIPIENTS)) {
+      const delivered = await sendEncounterEmail(
+        {
+          recipientMemberId: recipient.id,
+          kind: "band_recruitment",
+          scopeId: actorMemberId,
+          preferenceKey: "bandRecruitment",
+          subject: "Resono: あなたに合うバンド募集",
+          body: `${actor.name}さんが${partsLabel}の募集を公開しました。`,
+          actionUrl: `${getEmailSiteUrl()}/member/${actorMemberId}`,
+        },
+        options
+      );
+
+      if (delivered) {
+        sent += 1;
+      } else {
+        skipped += 1;
+      }
+    }
+  }
+
+  return {
+    actorMemberId,
+    actorName: actor.name,
+    sent,
+    skipped,
+  };
+}
+
 export async function notifyCompatibleMemberJoinedEmail(actorMemberId: string): Promise<void> {
   const actor = await getMemberById(actorMemberId);
   if (!actor) {
@@ -202,7 +306,7 @@ export async function notifyCompatibleMemberJoinedEmail(actorMemberId: string): 
         preferenceKey: "resonanceMembers",
         subject: `Resono: 相性の良いメンバーが参加しました`,
         body: `${actor.name}さんがResonoに参加しました。共鳴度 ${score}%。プロフィールを見てみましょう。`,
-        actionUrl: `${getSiteUrl()}/member/${actorMemberId}`,
+        actionUrl: `${getEmailSiteUrl()}/member/${actorMemberId}`,
       })
     )
   );
@@ -233,7 +337,7 @@ export async function notifyCompatibleMemberUpdatedEmail(actorMemberId: string):
         preferenceKey: "resonanceMembers",
         subject: `Resono: 相性の良いメンバーがプロフィールを更新`,
         body: `${actor.name}さんがプロフィールを更新しました。共鳴度 ${score}%。`,
-        actionUrl: `${getSiteUrl()}/member/${actorMemberId}`,
+        actionUrl: `${getEmailSiteUrl()}/member/${actorMemberId}`,
       })
     )
   );
@@ -259,7 +363,7 @@ export async function notifyMatchingRecruitmentEmail(posterMemberId: string): Pr
         preferenceKey: "bandRecruitment",
         subject: `Resono: あなたに合うバンド募集`,
         body: `${poster.name}さんが${partsLabel}の募集を公開しました。`,
-        actionUrl: `${getSiteUrl()}/member/${posterMemberId}`,
+        actionUrl: `${getEmailSiteUrl()}/member/${posterMemberId}`,
       })
     )
   );

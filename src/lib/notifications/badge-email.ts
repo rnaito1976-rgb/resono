@@ -2,7 +2,7 @@ import { getMemberById } from "@/lib/members";
 import { isEmailNotificationEnabled } from "@/lib/notifications/preferences";
 import { isEmailConfigured, sendEmail } from "@/lib/notifications/send-email";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
+import { getEmailSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 
 const COOLDOWN_MINUTES = 30;
 
@@ -109,7 +109,7 @@ async function sendBadgeEmail(
     return;
   }
 
-  const settingsUrl = `${getSiteUrl()}/menu/notifications`;
+  const settingsUrl = `${getEmailSiteUrl()}/menu/notifications`;
   const html = `
     <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
       <p>${body}</p>
@@ -146,6 +146,6 @@ export async function notifyMessageBadgeEmail(input: {
     input.conversationId,
     `Resono: ${senderName}さんから新しいメッセージ`,
     `${senderName}さんから新しいメッセージが届きました。`,
-    `${getSiteUrl()}/messages/${input.conversationId}`
+    `${getEmailSiteUrl()}/messages/${input.conversationId}`
   );
 }
