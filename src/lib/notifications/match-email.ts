@@ -1,4 +1,5 @@
 import { getMemberById } from "@/lib/members";
+import { orderedMemberPair } from "@/lib/messages/types";
 import { isEmailNotificationEnabled } from "@/lib/notifications/preferences";
 import { isEmailConfigured, sendEmail } from "@/lib/notifications/send-email";
 import { calculateResonanceMatch, partsMatch } from "@/lib/resonance/matching";
@@ -192,6 +193,63 @@ function matchesRecruitment(recipient: Member, poster: Member): boolean {
   );
 }
 
+type ResonancePartner = {
+  partnerId: string;
+  isMutual: boolean;
+};
+
+async function fetchResonancePartners(actorMemberId: string): Promise<ResonancePartner[]> {
+  const admin = createAdminClient();
+  if (!admin) {
+    return [];
+  }
+
+  const [{ data: outgoing }, { data: incoming }] = await Promise.all([
+    admin
+      .from("resonances")
+      .select("to_member_id")
+      .eq("from_member_id", actorMemberId),
+    admin
+      .from("resonances")
+      .select("from_member_id")
+      .eq("to_member_id", actorMemberId),
+  ]);
+
+  const outgoingSet = new Set((outgoing ?? []).map((row) => row.to_member_id));
+  const incomingSet = new Set((incoming ?? []).map((row) => row.from_member_id));
+  const partnerIds = new Set([...outgoingSet, ...incomingSet]);
+
+  return [...partnerIds].map((partnerId) => ({
+    partnerId,
+    isMutual: outgoingSet.has(partnerId) && incomingSet.has(partnerId),
+  }));
+}
+
+async function fetchConversationId(
+  actorMemberId: string,
+  partnerId: string
+): Promise<string | null> {
+  const admin = createAdminClient();
+  if (!admin) {
+    return null;
+  }
+
+  const [memberAId, memberBId] = orderedMemberPair(actorMemberId, partnerId);
+  const { data, error } = await admin
+    .from("conversations")
+    .select("id")
+    .eq("member_a_id", memberAId)
+    .eq("member_b_id", memberBId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[MatchEmail] conversation lookup:", error.message);
+    return null;
+  }
+
+  return data?.id ?? null;
+}
+
 export type BackfillNotificationEmailResult = {
   actorMemberId: string;
   actorName: string;
@@ -226,7 +284,10 @@ export async function backfillNotificationEmailsForMember(
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_RECIPIENTS);
 
+  const notifiedRecipientIds = new Set<string>();
+
   for (const { recipient, score } of scored) {
+    notifiedRecipientIds.add(recipient.id);
     const delivered = await sendEncounterEmail(
       {
         recipientMemberId: recipient.id,
@@ -247,11 +308,62 @@ export async function backfillNotificationEmailsForMember(
     }
   }
 
+  const resonancePartners = await fetchResonancePartners(actorMemberId);
+  const candidateMap = new Map(candidates.map((member) => [member.id, member]));
+
+  for (const { partnerId, isMutual } of resonancePartners) {
+    if (notifiedRecipientIds.has(partnerId)) {
+      continue;
+    }
+
+    const recipient = candidateMap.get(partnerId) ?? (await getMemberById(partnerId));
+    if (!recipient || !recipient.userId) {
+      skipped += 1;
+      continue;
+    }
+
+    const score = calculateResonanceMatch(recipient, actor);
+    const conversationId = isMutual
+      ? await fetchConversationId(actorMemberId, partnerId)
+      : null;
+    const actionUrl = conversationId
+      ? `${getEmailSiteUrl()}/messages/${conversationId}`
+      : `${getEmailSiteUrl()}/member/${actorMemberId}`;
+
+    const delivered = await sendEncounterEmail(
+      {
+        recipientMemberId: partnerId,
+        kind: "resonance_member",
+        scopeId: `${actorMemberId}:resonance`,
+        preferenceKey: "resonanceMembers",
+        subject: isMutual
+          ? "Resono: 相互共鳴のメンバーからのお知らせ"
+          : "Resono: 共鳴しているメンバーからのお知らせ",
+        body: isMutual
+          ? `${actor.name}さんと相互共鳴しています。共鳴度 ${score}%。メッセージやプロフィールを確認しましょう。`
+          : `${actor.name}さんと共鳴しています。共鳴度 ${score}%。プロフィールを見てみましょう。`,
+        actionUrl,
+      },
+      options
+    );
+
+    if (delivered) {
+      sent += 1;
+      notifiedRecipientIds.add(partnerId);
+    } else {
+      skipped += 1;
+    }
+  }
+
   if (actor.lookingFor.parts.some((part) => part.trim().length > 0)) {
     const partsLabel = actor.lookingFor.parts.slice(0, 3).join("・");
     const matched = candidates.filter((recipient) => matchesRecruitment(recipient, actor));
 
     for (const recipient of matched.slice(0, MAX_RECIPIENTS)) {
+      if (notifiedRecipientIds.has(recipient.id)) {
+        continue;
+      }
+
       const delivered = await sendEncounterEmail(
         {
           recipientMemberId: recipient.id,
@@ -267,6 +379,7 @@ export async function backfillNotificationEmailsForMember(
 
       if (delivered) {
         sent += 1;
+        notifiedRecipientIds.add(recipient.id);
       } else {
         skipped += 1;
       }
