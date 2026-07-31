@@ -48,7 +48,9 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 # 未読バッジのメール通知（Resend）
 RESEND_API_KEY=re_...
-EMAIL_FROM=Resono <onboarding@resend.dev>
+EMAIL_FROM=Resono <notify@resono.band>
+# メール内リンク（省略時は本番 URL）
+EMAIL_SITE_URL=https://resono-fwdi.vercel.app
 ```
 
 ### 4. ダミーデータ投入
@@ -90,7 +92,7 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
    - Supabase SMTP が不安定な場合、**Resend API + Send Email Hook** を使います（本番 URL: `https://resono-fwdi.vercel.app/api/auth/send-email`）。
    - Vercel に以下を設定:
      - `RESEND_API_KEY` = `re_...`
-     - `EMAIL_FROM` = `Resono <onboarding@resend.dev>`
+     - `EMAIL_FROM` = `Resono <notify@resono.band>`
      - `SEND_EMAIL_HOOK_SECRET` = Supabase で生成した Hook Secret（`v1,whsec_...`）
    - Supabase Dashboard:
      1. **Authentication → Hooks → Send Email** を有効化
@@ -109,6 +111,38 @@ npm run auth:confirm -- user@example.com
 ```
 
 （`SUPABASE_SERVICE_ROLE_KEY` が必要）
+
+### Resend（`resono.band`）
+
+送信元は **`notify.resono.band`** サブドメインを使います（ルート `resono.band` より届き率・運用が安定しやすいです）。
+
+1. [Resend → Domains](https://resend.com/domains) → **Add Domain**
+2. Name: `notify.resono.band` → **Add**
+3. **Records** タブに表示される DNS を、`resono.band` の DNS 管理画面に追加
+   - 通常 **TXT（SPF）**、**TXT（DKIM）**、**MX（任意）** の3件
+   - ホスト名は Resend の表示どおり（多くは `notify` や `resend._domainkey.notify` など）
+4. Resend で **Verify DNS Records** → ステータスが **Verified** になるまで待つ
+5. 環境変数を更新して Redeploy:
+   - `EMAIL_FROM` = `Resono <notify@resono.band>`
+   - `RESEND_API_KEY` = 既存のキー
+   - （任意）`EMAIL_SITE_URL` = `https://resono-fwdi.vercel.app`
+6. 確認:
+
+```bash
+npm run email:test -- r.naito1976@gmail.com
+npm run email:backfill -- --send
+```
+
+**Vercel Production** にも同じ `EMAIL_FROM` を設定してください。
+
+**DNS プロバイダー例（お名前.com / Cloudflare）**
+
+| Resend の Type | お名前.com 等での設定 |
+|----------------|----------------------|
+| TXT | ホスト名 + 値をそのまま追加 |
+| MX | ホスト `notify`、優先度・値を Resend 表示どおり |
+
+**注意:** 以前 `resono.jp` を Resend に追加して **failed** のまま残っている場合は、不要なら Dashboard から削除して OK です。
 
 ### 画面
 

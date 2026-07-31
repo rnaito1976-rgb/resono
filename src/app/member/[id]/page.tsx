@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getBandActivityFeedForMember, getMutualResonateMembers } from "@/lib/bands/queries";
+import {
+  getBandActivityFeedForMember,
+  getBandsForMember,
+  getMutualResonateMembers,
+} from "@/lib/bands/queries";
 import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
@@ -39,7 +43,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, mutualMembers, bandActivities, resonanceStatus, cachedReasons] =
+  const [viewer, mutualMembers, memberBands, bandActivities, resonanceStatus, cachedReasons] =
     await Promise.all([
       viewerMemberId && viewerMemberId !== member.id
         ? getMemberListById(viewerMemberId)
@@ -47,9 +51,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
       isOwnProfile && viewerMemberId
         ? getMutualResonateMembers(viewerMemberId)
         : Promise.resolve([]),
-      viewerMemberId && !isOwnProfile
-        ? getBandActivityFeedForMember(member.id)
-        : Promise.resolve([]),
+      isOwnProfile ? getBandsForMember(member.id) : Promise.resolve([]),
+      getBandActivityFeedForMember(member.id),
       needsResonance
         ? getResonanceStatusForMember(viewerMemberId!, member.id)
         : Promise.resolve(undefined),
@@ -85,6 +88,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         resonanceStatus={resonanceStatus}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
         mutualMembers={mutualMembers}
+        memberBands={memberBands}
         bandActivities={bandActivities}
         priorityPhoto
       />

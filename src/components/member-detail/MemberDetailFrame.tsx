@@ -60,6 +60,7 @@ export type MemberDetailFrameProps = {
   resonanceStatus?: ResonanceStatus;
   showResonateButton?: boolean;
   mutualMembers?: import("@/types/band").MutualResonateMember[];
+  memberBands?: import("@/types/band").Band[];
   bandActivities?: import("@/types/band").BandActivityFeedItem[];
   memberActivities?: import("@/types/activity").MemberActivityFeedItem[];
   variant?: "page" | "sheet";
@@ -76,6 +77,7 @@ export function MemberDetailFrame({
   resonanceStatus,
   showResonateButton = false,
   mutualMembers = [],
+  memberBands = [],
   bandActivities = [],
   memberActivities = [],
   variant = "page",
@@ -144,7 +146,8 @@ export function MemberDetailFrame({
             member={member}
             isOwnProfile={isOwnProfile}
             mutualMembers={mutualMembers}
-            bandActivities={isOwnProfile ? [] : bandActivities}
+            memberBands={memberBands}
+            bandActivities={bandActivities}
           />
         );
       case "activity":

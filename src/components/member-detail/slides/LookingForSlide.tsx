@@ -3,11 +3,12 @@ import Link from "next/link";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { BandActivityFeed } from "@/components/member-detail/BandActivityFeed";
 import { ProfileTabHeading } from "@/components/member-detail/ProfileTabHeading";
+import { BandListItem } from "@/components/bands/BandsEmptyState";
 import {
   getProfilePhotoSrc,
 } from "@/lib/images/profilePhoto";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import type { BandActivityFeedItem, MutualResonateMember } from "@/types/band";
+import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
 import { SectionBlock } from "@/components/ui";
 
@@ -15,6 +16,7 @@ type LookingForSlideProps = {
   member: Member;
   isOwnProfile?: boolean;
   mutualMembers?: MutualResonateMember[];
+  memberBands?: Band[];
   bandActivities?: BandActivityFeedItem[];
 };
 
@@ -22,6 +24,7 @@ export function LookingForSlide({
   member,
   isOwnProfile = false,
   mutualMembers = [],
+  memberBands = [],
   bandActivities = [],
 }: LookingForSlideProps) {
   return (
@@ -101,6 +104,20 @@ export function LookingForSlide({
               </Link>
             </div>
           )}
+        </SectionBlock>
+      ) : null}
+      {isOwnProfile && memberBands.length > 0 ? (
+        <SectionBlock label="所属Band">
+          <div className="space-y-3">
+            {memberBands.map((band) => (
+              <BandListItem key={band.id} band={band} />
+            ))}
+          </div>
+        </SectionBlock>
+      ) : null}
+      {isOwnProfile ? (
+        <SectionBlock label="Activity">
+          <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
         </SectionBlock>
       ) : null}
       <SectionBlock label="募集パート">
