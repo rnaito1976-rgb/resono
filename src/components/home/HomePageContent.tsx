@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
-import { HomeFeedList } from "@/components/home/HomeFeedList";
+import { HomeFeedSection } from "@/components/home/HomeFeedSection";
 import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
-import { buildMembersFeedPage } from "@/lib/members/feed-builder";
-import { INITIAL_FEED_PAGE_SIZE } from "@/lib/members/feed";
 import { getLiveEvents } from "@/lib/live/events";
 import { LIVE_FEED_SIZE } from "@/types/live";
 import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
@@ -34,23 +33,14 @@ export function HomePageFallback() {
 }
 
 export async function HomePageContent() {
-  const { user, member, frequencyColor } = await getHomeViewer();
+  const [{ user, member, frequencyColor }, liveEvents] = await Promise.all([
+    getHomeViewer(),
+    getLiveEvents(LIVE_FEED_SIZE),
+  ]);
 
   if (user && !member) {
     redirect(buildWelcomeOnboardingHref());
   }
-
-  const [liveEvents, initialFeedPage] = await Promise.all([
-    getLiveEvents(LIVE_FEED_SIZE),
-    member || user
-      ? buildMembersFeedPage({
-          limit: INITIAL_FEED_PAGE_SIZE,
-          viewer: member,
-          userId: user?.id,
-          fast: true,
-        })
-      : Promise.resolve(undefined),
-  ]);
 
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
@@ -65,11 +55,13 @@ export async function HomePageContent() {
         <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
           <HomeLiveFeed events={liveEvents} />
           {member ? <PersonCard member={member} isOwnCard priority /> : null}
-          <HomeFeedList
-            viewerId={member?.id ?? user?.id}
-            showSectionHeader={Boolean(member)}
-            initialFeedPage={initialFeedPage}
-          />
+          <Suspense fallback={<HomeFeedSkeleton count={2} />}>
+            <HomeFeedSection
+              member={member}
+              userId={user?.id}
+              showSectionHeader={Boolean(member)}
+            />
+          </Suspense>
         </div>
       </main>
     </>

@@ -9,6 +9,8 @@ import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { HeaderActionLink } from "@/components/navigation/HeaderActionLink";
 import { ResonateButton } from "@/components/ResonateButton";
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
+import { getMemberProfileBandDataAction } from "@/lib/actions/profile";
+import type { MemberProfileBandPayload } from "@/lib/actions/profile";
 import type { ResonanceStatus } from "@/lib/resonance/status";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
@@ -63,6 +65,7 @@ export type MemberDetailFrameProps = {
   memberBands?: import("@/types/band").Band[];
   bandActivities?: import("@/types/band").BandActivityFeedItem[];
   memberActivities?: import("@/types/activity").MemberActivityFeedItem[];
+  lazyLoadBandData?: boolean;
   variant?: "page" | "sheet";
   onClose?: () => void;
   priorityPhoto?: boolean;
@@ -80,6 +83,7 @@ export function MemberDetailFrame({
   memberBands = [],
   bandActivities = [],
   memberActivities = [],
+  lazyLoadBandData = false,
   variant = "page",
   onClose,
   priorityPhoto = false,
@@ -87,8 +91,20 @@ export function MemberDetailFrame({
 }: MemberDetailFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lazyBandData, setLazyBandData] = useState<MemberProfileBandPayload | null>(null);
+  const [bandDataLoading, setBandDataLoading] = useState(false);
   const isSheet = variant === "sheet";
   const sections = isOwnProfile ? getOwnProfileDetailSections() : DETAIL_SECTIONS;
+  const lookingForIndex = sections.findIndex((section) => section.id === "lookingFor");
+  const resolvedMutualMembers = lazyBandData?.mutualMembers ?? mutualMembers;
+  const resolvedMemberBands = lazyBandData?.memberBands ?? memberBands;
+  const resolvedBandActivities = lazyBandData?.bandActivities ?? bandActivities;
+  const hasBandData =
+    resolvedMutualMembers.length > 0 ||
+    resolvedMemberBands.length > 0 ||
+    resolvedBandActivities.length > 0;
+  const shouldLazyLoadBandData =
+    lazyLoadBandData || isSheet || (lookingForIndex >= 0 && !hasBandData);
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";
@@ -118,6 +134,47 @@ export function MemberDetailFrame({
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!shouldLazyLoadBandData || lazyBandData || bandDataLoading || hasBandData) {
+      return;
+    }
+
+    const shouldPrefetch =
+      isSheet || (lookingForIndex >= 0 && activeIndex >= Math.max(0, lookingForIndex - 1));
+
+    if (!shouldPrefetch) {
+      return;
+    }
+
+    let cancelled = false;
+    setBandDataLoading(true);
+
+    void getMemberProfileBandDataAction(member.id).then((result) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (result.data) {
+        setLazyBandData(result.data);
+      }
+
+      setBandDataLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeIndex,
+    bandDataLoading,
+    hasBandData,
+    isSheet,
+    lazyBandData,
+    lookingForIndex,
+    member.id,
+    shouldLazyLoadBandData,
+  ]);
+
   function renderSlide(sectionId: DetailSection) {
     switch (sectionId) {
       case "portrait":
@@ -142,9 +199,10 @@ export function MemberDetailFrame({
           <LookingForSlide
             member={member}
             isOwnProfile={isOwnProfile}
-            mutualMembers={mutualMembers}
-            memberBands={memberBands}
-            bandActivities={bandActivities}
+            mutualMembers={resolvedMutualMembers}
+            memberBands={resolvedMemberBands}
+            bandActivities={resolvedBandActivities}
+            bandDataLoading={bandDataLoading && !hasBandData}
           />
         );
       case "activity":

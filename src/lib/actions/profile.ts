@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
@@ -14,6 +15,7 @@ import { getAuthSession } from "@/lib/supabase/auth";
 import {
   getBandActivityFeedForMember,
   getBandsForMember,
+  getMutualResonateMembers,
 } from "@/lib/bands/queries";
 import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
@@ -33,7 +35,13 @@ export type MemberProfilePayload = {
   bandActivities: BandActivityFeedItem[];
 };
 
-/** シート初回表示向け — 重い band / mutual 取得は省略 */
+export type MemberProfileBandPayload = {
+  mutualMembers: MutualResonateMember[];
+  memberBands: Band[];
+  bandActivities: BandActivityFeedItem[];
+};
+
+/** シート初回表示向け — band / mutual は別途 lazy load */
 export async function getMemberProfileAction(
   memberId: string
 ): Promise<{ data?: MemberProfilePayload; error?: string }> {
@@ -71,8 +79,7 @@ export async function getMemberProfileAction(
         ? getMemberListById(viewerMemberId)
         : Promise.resolve(undefined);
 
-  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities] =
-    await Promise.all([
+  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
     viewerPromise,
     needsResonance
       ? getResonanceStatusForMember(viewerMemberId!, member.id)
@@ -80,8 +87,6 @@ export async function getMemberProfileAction(
     needsResonance
       ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
-    getBandsForMember(member.id),
-    getBandActivityFeedForMember(member.id),
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -109,8 +114,46 @@ export async function getMemberProfileAction(
       resonanceStatus,
       showResonateButton: Boolean(viewer && needsResonance),
       mutualMembers: [],
-      memberBands,
-      bandActivities,
+      memberBands: [],
+      bandActivities: [],
     },
   };
+}
+
+const loadMemberProfileBandData = cache(
+  async (
+    memberId: string,
+    isOwnProfile: boolean,
+    viewerMemberId: string | null
+  ): Promise<MemberProfileBandPayload> => {
+    const [mutualMembers, memberBands, bandActivities] = await Promise.all([
+      isOwnProfile && viewerMemberId
+        ? getMutualResonateMembers(viewerMemberId)
+        : Promise.resolve([]),
+      getBandsForMember(memberId),
+      getBandActivityFeedForMember(memberId),
+    ]);
+
+    return { mutualMembers, memberBands, bandActivities };
+  }
+);
+
+/** Band タブ表示時に lazy load */
+export async function getMemberProfileBandDataAction(
+  memberId: string
+): Promise<{ data?: MemberProfileBandPayload; error?: string }> {
+  const [member, user, viewerMemberId] = await Promise.all([
+    getMemberById(memberId),
+    getAuthSession(),
+    resolveCurrentMemberId(),
+  ]);
+
+  if (!member) {
+    return { error: "not_found" };
+  }
+
+  const isOwnProfile = Boolean(user && isMemberOwnedByUser(member, user.id));
+  const data = await loadMemberProfileBandData(memberId, isOwnProfile, viewerMemberId);
+
+  return { data };
 }

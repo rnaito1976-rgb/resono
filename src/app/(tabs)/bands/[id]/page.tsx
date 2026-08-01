@@ -1,14 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BandPageClient } from "@/components/bands/BandPageClientLoader";
 import { getBandDetail } from "@/lib/bands/queries";
-import { getMemberByUserId } from "@/lib/members";
+import { getMemberById } from "@/lib/members";
 import {
   collectMemberCoverSongEntries,
   filterNewCoverSongEntries,
 } from "@/lib/music/band-cover-songs";
-import { createClient } from "@/lib/supabase/server";
-
-export const dynamic = "force-dynamic";
+import { requireViewer } from "@/lib/navigation/require-viewer";
 
 type BandPageProps = {
   params: Promise<{ id: string }>;
@@ -16,22 +14,14 @@ type BandPageProps = {
 
 export default async function BandPage({ params }: BandPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { memberId } = await requireViewer({ loginNext: `/bands/${id}` });
 
-  if (!user) {
-    redirect(`/login?next=/bands/${id}`);
-  }
+  const [member, detail] = await Promise.all([
+    getMemberById(memberId),
+    getBandDetail(id, memberId),
+  ]);
 
-  const member = await getMemberByUserId(user.id);
-  if (!member) {
-    redirect("/onboarding");
-  }
-
-  const detail = await getBandDetail(id, member.id);
-  if (!detail) {
+  if (!member || !detail) {
     notFound();
   }
 

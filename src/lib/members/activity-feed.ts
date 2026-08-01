@@ -3,6 +3,7 @@ import {
   getMemberActivityMilestones,
   memberActivityMilestonesToFeedItems,
 } from "@/lib/members/initial-activities";
+import { getMemberBandIds } from "@/lib/bands/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { MemberActivityFeedItem, MemberActivityKind } from "@/types/activity";
@@ -114,12 +115,7 @@ export async function getOwnMemberActivityFeed(
   const viewerName = resolvedMember?.name;
   const registeredAt = memberMeta?.created_at;
 
-  const { data: memberships } = await supabase
-    .from("band_members")
-    .select("band_id")
-    .eq("member_id", memberId);
-
-  const bandIds = (memberships ?? []).map((row) => row.band_id);
+  const bandIds = await getMemberBandIds(memberId);
 
   const [outgoingResult, incomingResult, timelineResult, activitiesResult] =
     await Promise.all([
@@ -236,12 +232,7 @@ export async function getMemberActivityFeed(
   }
 
   const supabase = await createClient();
-  const { data: memberships } = await supabase
-    .from("band_members")
-    .select("band_id")
-    .eq("member_id", memberId);
-
-  const bandIds = (memberships ?? []).map((row) => row.band_id);
+  const bandIds = await getMemberBandIds(memberId);
 
   const [outgoingResult, incomingResult, timelineResult, activitiesResult] =
     await Promise.all([

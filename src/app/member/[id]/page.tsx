@@ -1,9 +1,4 @@
 import { notFound } from "next/navigation";
-import {
-  getBandActivityFeedForMember,
-  getBandsForMember,
-  getMutualResonateMembers,
-} from "@/lib/bands/queries";
 import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
@@ -20,8 +15,6 @@ import { MemberDetail } from "@/components/MemberDetail";
 import { getAuthSession } from "@/lib/supabase/auth";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { MusicPageView } from "@/types/music-profile";
-
-export const dynamic = "force-dynamic";
 
 type MemberPageProps = {
   params: Promise<{ id: string }>;
@@ -43,24 +36,17 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, mutualMembers, memberBands, bandActivities, resonanceStatus, cachedReasons] =
-    await Promise.all([
-      viewerMemberId && viewerMemberId !== member.id
-        ? getMemberListById(viewerMemberId)
-        : Promise.resolve(undefined),
-      isOwnProfile && viewerMemberId
-        ? getMutualResonateMembers(viewerMemberId)
-        : Promise.resolve([]),
-      getBandsForMember(member.id),
-      getBandActivityFeedForMember(member.id),
-      needsResonance
-        ? getResonanceStatusForMember(viewerMemberId!, member.id)
-        : Promise.resolve(undefined),
-      // 閲覧者の詳細取得を待たずに読めるので、同じ波で取りに行く
-      needsResonance
-        ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
-        : Promise.resolve(undefined),
-    ]);
+  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
+    viewerMemberId && viewerMemberId !== member.id
+      ? getMemberListById(viewerMemberId)
+      : Promise.resolve(undefined),
+    needsResonance
+      ? getResonanceStatusForMember(viewerMemberId!, member.id)
+      : Promise.resolve(undefined),
+    needsResonance
+      ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
+      : Promise.resolve(undefined),
+  ]);
 
   let resonanceReason: ResonanceReason | undefined;
   let musicResonance: MusicPageView["sectionResonance"] | undefined;
@@ -87,9 +73,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         musicResonance={musicResonance}
         resonanceStatus={resonanceStatus}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
-        mutualMembers={mutualMembers}
-        memberBands={memberBands}
-        bandActivities={bandActivities}
+        lazyLoadBandData
         priorityPhoto
       />
     </main>

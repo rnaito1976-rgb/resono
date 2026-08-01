@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getFrequencyColorsByUserIds } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { getMemberById, getMembersByIds } from "@/lib/members";
@@ -47,7 +48,7 @@ function rowToBand(row: BandRow): Band {
   };
 }
 
-export async function getBandsForMember(memberId: string): Promise<Band[]> {
+export const getMemberBandIds = cache(async (memberId: string): Promise<string[]> => {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -55,19 +56,45 @@ export async function getBandsForMember(memberId: string): Promise<Band[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("band_members")
-    .select("bands(*)")
-    .eq("member_id", memberId)
-    .order("joined_at", { ascending: false });
+    .select("band_id")
+    .eq("member_id", memberId);
+
+  if (error) {
+    console.error("[Supabase] getMemberBandIds:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => row.band_id);
+});
+
+export async function getBandsForMember(memberId: string): Promise<Band[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const bandIds = await getMemberBandIds(memberId);
+  if (bandIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("bands")
+    .select(BAND_DETAIL_COLUMNS)
+    .in("id", bandIds);
 
   if (error) {
     console.error("[Supabase] getBandsForMember:", error.message);
     return [];
   }
 
-  return (data ?? [])
-    .map((row) => row.bands as unknown as BandRow | null)
-    .filter((band): band is BandRow => Boolean(band))
-    .map(rowToBand);
+  const bandMap = new Map(
+    (data ?? []).map((row) => [row.id, rowToBand(row as BandRow)])
+  );
+
+  return bandIds
+    .map((bandId) => bandMap.get(bandId))
+    .filter((band): band is Band => Boolean(band));
 }
 
 export async function getMutualResonateMembers(
@@ -370,17 +397,7 @@ export async function getBandActivityFeedForMember(
   }
 
   const supabase = await createClient();
-  const { data: memberships, error: membershipError } = await supabase
-    .from("band_members")
-    .select("band_id")
-    .eq("member_id", memberId);
-
-  if (membershipError) {
-    console.error("[Supabase] getBandActivityFeed memberships:", membershipError.message);
-    return [];
-  }
-
-  const bandIds = (memberships ?? []).map((row) => row.band_id);
+  const bandIds = await getMemberBandIds(memberId);
   if (bandIds.length === 0) {
     return [];
   }

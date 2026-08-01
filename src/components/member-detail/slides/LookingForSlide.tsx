@@ -18,6 +18,7 @@ type LookingForSlideProps = {
   mutualMembers?: MutualResonateMember[];
   memberBands?: Band[];
   bandActivities?: BandActivityFeedItem[];
+  bandDataLoading?: boolean;
 };
 
 export function LookingForSlide({
@@ -26,6 +27,7 @@ export function LookingForSlide({
   mutualMembers = [],
   memberBands = [],
   bandActivities = [],
+  bandDataLoading = false,
 }: LookingForSlideProps) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
@@ -117,7 +119,11 @@ export function LookingForSlide({
       ) : null}
       {isOwnProfile ? (
         <SectionBlock label="Activity">
-          <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
+          {bandDataLoading ? (
+            <p className="text-[15px] leading-relaxed text-white/45">読み込み中...</p>
+          ) : (
+            <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
+          )}
         </SectionBlock>
       ) : null}
       <SectionBlock label="募集パート">
@@ -182,7 +188,11 @@ export function LookingForSlide({
       ) : null}
       {!isOwnProfile ? (
         <SectionBlock label="Activity">
-          <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
+          {bandDataLoading ? (
+            <p className="text-[15px] leading-relaxed text-white/45">読み込み中...</p>
+          ) : (
+            <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
+          )}
         </SectionBlock>
       ) : null}
     </div>
