@@ -11,7 +11,11 @@ import { buildResonanceReason } from "@/lib/resonance/matching";
 import { buildMusicSectionResonance } from "@/lib/music/profile-display";
 import { getResonanceStatusForMember } from "@/lib/resonance/status";
 import { getAuthSession } from "@/lib/supabase/auth";
-import type { BandActivityFeedItem, MutualResonateMember } from "@/types/band";
+import {
+  getBandActivityFeedForMember,
+  getBandsForMember,
+} from "@/lib/bands/queries";
+import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
 import type { MusicPageView } from "@/types/music-profile";
 import type { ResonanceReason } from "@/lib/resonance/matching";
@@ -25,6 +29,7 @@ export type MemberProfilePayload = {
   resonanceStatus?: ResonanceStatus;
   showResonateButton: boolean;
   mutualMembers: MutualResonateMember[];
+  memberBands: Band[];
   bandActivities: BandActivityFeedItem[];
 };
 
@@ -49,6 +54,7 @@ export async function getMemberProfileAction(
         isOwnProfile: false,
         showResonateButton: false,
         mutualMembers: [],
+        memberBands: [],
         bandActivities: [],
       },
     };
@@ -65,7 +71,8 @@ export async function getMemberProfileAction(
         ? getMemberListById(viewerMemberId)
         : Promise.resolve(undefined);
 
-  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
+  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities] =
+    await Promise.all([
     viewerPromise,
     needsResonance
       ? getResonanceStatusForMember(viewerMemberId!, member.id)
@@ -73,6 +80,8 @@ export async function getMemberProfileAction(
     needsResonance
       ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
+    getBandsForMember(member.id),
+    getBandActivityFeedForMember(member.id),
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -100,7 +109,8 @@ export async function getMemberProfileAction(
       resonanceStatus,
       showResonateButton: Boolean(viewer && needsResonance),
       mutualMembers: [],
-      bandActivities: [],
+      memberBands,
+      bandActivities,
     },
   };
 }

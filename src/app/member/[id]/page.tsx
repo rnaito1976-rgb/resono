@@ -51,7 +51,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
       isOwnProfile && viewerMemberId
         ? getMutualResonateMembers(viewerMemberId)
         : Promise.resolve([]),
-      isOwnProfile ? getBandsForMember(member.id) : Promise.resolve([]),
+      getBandsForMember(member.id),
       getBandActivityFeedForMember(member.id),
       needsResonance
         ? getResonanceStatusForMember(viewerMemberId!, member.id)

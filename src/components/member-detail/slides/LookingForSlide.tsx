@@ -171,6 +171,15 @@ export function LookingForSlide({
           </div>
         </SectionBlock>
       ) : null}
+      {!isOwnProfile && memberBands.length > 0 ? (
+        <SectionBlock label="所属Band">
+          <div className="space-y-3">
+            {memberBands.map((band) => (
+              <BandListItem key={band.id} band={band} />
+            ))}
+          </div>
+        </SectionBlock>
+      ) : null}
       {!isOwnProfile ? (
         <SectionBlock label="Activity">
           <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
