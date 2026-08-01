@@ -60,13 +60,13 @@ export const OWN_PROFILE_DETAIL_SECTIONS: {
   id: DetailSection;
   label: string;
 }[] = [
-  ...DETAIL_SECTIONS,
   { id: "activity", label: "Activity" },
+  ...DETAIL_SECTIONS,
 ];
 
 const ACTIVITY_SECTION = { id: "activity" as const, label: "Activity" };
 
-/** Activity は常に末尾（About / Music / Band の後） */
-export function getOwnProfileDetailSections(_hasActivityContent = false) {
-  return [...DETAIL_SECTIONS, ACTIVITY_SECTION];
+/** Activity を先頭（About / Music / Band の前） */
+export function getOwnProfileDetailSections() {
+  return [ACTIVITY_SECTION, ...DETAIL_SECTIONS];
 }

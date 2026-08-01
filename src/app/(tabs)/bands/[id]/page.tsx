@@ -2,6 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { BandPageClient } from "@/components/bands/BandPageClientLoader";
 import { getBandDetail } from "@/lib/bands/queries";
 import { getMemberByUserId } from "@/lib/members";
+import {
+  collectMemberCoverSongEntries,
+  filterNewCoverSongEntries,
+} from "@/lib/music/band-cover-songs";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -31,5 +35,10 @@ export default async function BandPage({ params }: BandPageProps) {
     notFound();
   }
 
-  return <BandPageClient detail={detail} />;
+  const profileCoverSongs = filterNewCoverSongEntries(
+    collectMemberCoverSongEntries(member),
+    detail.coverSongs.map((song) => ({ artist: song.artist, title: song.title }))
+  );
+
+  return <BandPageClient detail={detail} profileCoverSongs={profileCoverSongs} />;
 }

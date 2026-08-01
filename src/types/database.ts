@@ -273,6 +273,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      band_cover_songs: {
+        Row: {
+          id: string;
+          band_id: string;
+          added_by_member_id: string;
+          artist: string;
+          title: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          band_id: string;
+          added_by_member_id: string;
+          artist?: string;
+          title: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          band_id?: string;
+          added_by_member_id?: string;
+          artist?: string;
+          title?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       band_member_reads: {
         Row: {
           band_id: string;

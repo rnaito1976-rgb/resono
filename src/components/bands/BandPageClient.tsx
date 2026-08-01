@@ -6,15 +6,21 @@ import Image from "next/image";
 import { AppSubNav } from "@/components/navigation/AppSubNav";
 import { AppTopBar } from "@/components/navigation/AppTopBar";
 import {
+  addBandCoverSongAction,
+  addBandCoverSongsAction,
   createBandActivityAction,
   markBandAsSeenAction,
+  removeBandCoverSongAction,
 } from "@/lib/actions/bands";
 import { dispatchBandsChange } from "@/lib/bands/events";
 import {
   buildBandGradientStyle,
   formatBandGradientLabel,
 } from "@/lib/bands/gradient";
-import type { BandDetail, BandModuleId } from "@/types/band";
+import { formatArtistSongLine } from "@/lib/form";
+import type { CoverSongEntry } from "@/lib/music/band-cover-songs";
+import type { BandCoverSong, BandDetail, BandModuleId } from "@/types/band";
+import { CoverSongCard } from "@/components/member-detail/music/CoverSongCard";
 import { AddBandMembersPanel } from "@/components/bands/AddBandMembersPanel";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -22,6 +28,7 @@ import { Button } from "@/components/ui/button";
 
 const TABS: { id: BandModuleId; label: string }[] = [
   { id: "timeline", label: "Timeline" },
+  { id: "setlist", label: "Set List" },
   { id: "activity", label: "Activity" },
   { id: "videos", label: "Videos" },
   { id: "members", label: "Members" },
@@ -36,9 +43,13 @@ const STATUS_LABELS = {
 
 type BandPageClientProps = {
   detail: BandDetail;
+  profileCoverSongs?: CoverSongEntry[];
 };
 
-export function BandPageClient({ detail }: BandPageClientProps) {
+export function BandPageClient({
+  detail,
+  profileCoverSongs = [],
+}: BandPageClientProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const gradientStyle = useMemo(
@@ -108,16 +119,25 @@ export function BandPageClient({ detail }: BandPageClientProps) {
             </>
           ) : null}
         </section>
-        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-8 pt-8">
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
           {shouldRenderTab(1) ? (
+            <SetListTab
+              bandId={detail.band.id}
+              coverSongs={detail.coverSongs}
+              profileCoverSongs={profileCoverSongs}
+            />
+          ) : null}
+        </section>
+        <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-8 pt-8">
+          {shouldRenderTab(2) ? (
             <ActivityTab bandId={detail.band.id} activities={detail.activities} />
           ) : null}
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          {shouldRenderTab(2) ? <VideosTab videos={videos} /> : null}
+          {shouldRenderTab(3) ? <VideosTab videos={videos} /> : null}
         </section>
         <section className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain px-5 pb-10 pt-8">
-          {shouldRenderTab(3) ? (
+          {shouldRenderTab(4) ? (
             <MembersTab
               bandId={detail.band.id}
               bandName={detail.band.name}
@@ -189,6 +209,179 @@ function TimelineTab({
           ) : null}
         </article>
       ))}
+    </div>
+  );
+}
+
+function SetListTab({
+  bandId,
+  coverSongs,
+  profileCoverSongs,
+}: {
+  bandId: string;
+  coverSongs: BandCoverSong[];
+  profileCoverSongs: CoverSongEntry[];
+}) {
+  const [raw, setRaw] = useState("");
+  const [selectedProfileSongs, setSelectedProfileSongs] = useState<CoverSongEntry[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  function toggleProfileSong(song: CoverSongEntry) {
+    setSelectedProfileSongs((current) => {
+      const key = `${song.artist}::${song.title}`;
+      const exists = current.some((item) => `${item.artist}::${item.title}` === key);
+      if (exists) {
+        return current.filter((item) => `${item.artist}::${item.title}` !== key);
+      }
+      return [...current, song];
+    });
+  }
+
+  function handleAddSong() {
+    setError(null);
+    startTransition(async () => {
+      const result = await addBandCoverSongAction({ bandId, raw });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      setRaw("");
+      dispatchBandsChange();
+      router.refresh();
+    });
+  }
+
+  function handleAddFromProfile() {
+    setError(null);
+    startTransition(async () => {
+      const result = await addBandCoverSongsAction({
+        bandId,
+        songs: selectedProfileSongs,
+      });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      setSelectedProfileSongs([]);
+      dispatchBandsChange();
+      router.refresh();
+    });
+  }
+
+  function handleRemove(songId: string) {
+    setError(null);
+    startTransition(async () => {
+      const result = await removeBandCoverSongAction({ bandId, songId });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      dispatchBandsChange();
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-10">
+      <section className="space-y-5">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Set List</p>
+        <p className="text-[15px] leading-relaxed text-white/50">
+          このBandでコピーした曲や、これからやりたい曲を残せます。
+        </p>
+        <input
+          value={raw}
+          onChange={(event) => setRaw(event.target.value)}
+          placeholder="アーティスト - 曲名"
+          className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
+        />
+        {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+        <Button disabled={isPending || !raw.trim()} onClick={handleAddSong} className="w-full">
+          {isPending ? "追加中..." : "曲を追加"}
+        </Button>
+      </section>
+
+      {profileCoverSongs.length > 0 ? (
+        <section className="space-y-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+            プロフィールから追加
+          </p>
+          <p className="text-[14px] leading-relaxed text-white/45">
+            プロフィールに登録したコピー曲や Set List から選べます。
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {profileCoverSongs.map((song) => {
+              const key = `${song.artist}::${song.title}`;
+              const selected = selectedProfileSongs.some(
+                (item) => `${item.artist}::${item.title}` === key
+              );
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleProfileSong(song)}
+                  className={`rounded-full border px-3 py-2 text-[13px] transition-quiet ${
+                    selected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-white/60"
+                  }`}
+                >
+                  {formatArtistSongLine(song.artist, song.title)}
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            disabled={isPending || selectedProfileSongs.length === 0}
+            onClick={handleAddFromProfile}
+            variant="outline"
+            className="w-full"
+          >
+            {isPending ? "追加中..." : `選択した曲を追加 (${selectedProfileSongs.length})`}
+          </Button>
+        </section>
+      ) : null}
+
+      <section className="space-y-6">
+        {coverSongs.length > 0 ? (
+          coverSongs.map((song) => (
+            <article
+              key={song.id}
+              className="rounded-[24px] border border-border bg-subtle px-5 py-5"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <CoverSongCard
+                  song={{
+                    id: song.id,
+                    artist: song.artist,
+                    title: song.title,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemove(song.id)}
+                  disabled={isPending}
+                  className="shrink-0 text-[13px] text-white/35 transition-quiet hover:text-white/60"
+                >
+                  削除
+                </button>
+              </div>
+              {song.addedBy ? (
+                <p className="mt-3 text-[12px] text-white/35">
+                  {song.addedBy.name} が追加 ·{" "}
+                  {new Date(song.createdAt).toLocaleDateString("ja-JP")}
+                </p>
+              ) : null}
+            </article>
+          ))
+        ) : (
+          <p className="text-[15px] leading-relaxed text-white/45">
+            まだSet Listがありません。上から曲を追加してみましょう。
+          </p>
+        )}
+      </section>
     </div>
   );
 }

@@ -88,10 +88,7 @@ export function MemberDetailFrame({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const isSheet = variant === "sheet";
-  const hasActivityContent = isOwnProfile && memberActivities.length > 0;
-  const sections = isOwnProfile
-    ? getOwnProfileDetailSections(hasActivityContent)
-    : DETAIL_SECTIONS;
+  const sections = isOwnProfile ? getOwnProfileDetailSections() : DETAIL_SECTIONS;
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";

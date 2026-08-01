@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { BandActivityFeedItem } from "@/types/band";
-import { SectionBlock } from "@/components/ui";
 
 type BandActivityFeedProps = {
   activities: BandActivityFeedItem[];
@@ -23,12 +22,9 @@ export function BandActivityFeed({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="divide-y divide-border">
       {activities.map((activity) => (
-        <article
-          key={activity.id}
-          className="space-y-3 rounded-[24px] border border-border bg-subtle px-5 py-5"
-        >
+        <article key={activity.id} className="space-y-3 py-6 first:pt-0 last:pb-0">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Link

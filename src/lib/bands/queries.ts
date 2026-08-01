@@ -10,6 +10,7 @@ import type {
   Band,
   BandActivity,
   BandActivityFeedItem,
+  BandCoverSong,
   BandDetail,
   BandMember,
   BandTimelineEvent,
@@ -23,6 +24,8 @@ const BAND_TIMELINE_COLUMNS =
   "id,band_id,kind,title,body,occurred_at,activity_id" as const;
 const BAND_ACTIVITY_COLUMNS =
   "id,band_id,author_member_id,kind,title,body,media_url,created_at" as const;
+const BAND_COVER_SONG_COLUMNS =
+  "id,band_id,added_by_member_id,artist,title,created_at" as const;
 
 type BandRow = {
   id: string;
@@ -278,7 +281,8 @@ export async function getBandDetail(
     return null;
   }
 
-  const [members, timelineResult, activitiesResult] = await Promise.all([
+  const [members, timelineResult, activitiesResult, coverSongsResult] =
+    await Promise.all([
     loadBandMembers(bandId, viewer ?? undefined),
     supabase
       .from("band_timeline_events")
@@ -291,6 +295,11 @@ export async function getBandDetail(
       .eq("band_id", bandId)
       .order("created_at", { ascending: false })
       .limit(30),
+    supabase
+      .from("band_cover_songs")
+      .select(BAND_COVER_SONG_COLUMNS)
+      .eq("band_id", bandId)
+      .order("created_at", { ascending: false }),
   ]);
 
   const timeline = (timelineResult.data ?? []).map(
@@ -308,7 +317,10 @@ export async function getBandDetail(
   const authorIds = [
     ...new Set((activitiesResult.data ?? []).map((row) => row.author_member_id)),
   ];
-  const authorMap = await getMembersByIds(authorIds);
+  const addedByIds = [
+    ...new Set((coverSongsResult.data ?? []).map((row) => row.added_by_member_id)),
+  ];
+  const memberMap = await getMembersByIds([...new Set([...authorIds, ...addedByIds])]);
   const activities = (activitiesResult.data ?? []).map((row): BandActivity => ({
     id: row.id,
     bandId: row.band_id,
@@ -318,7 +330,17 @@ export async function getBandDetail(
     body: row.body ?? undefined,
     mediaUrl: row.media_url ?? undefined,
     createdAt: row.created_at,
-    author: authorMap.get(row.author_member_id),
+    author: memberMap.get(row.author_member_id),
+  }));
+
+  const coverSongs = (coverSongsResult.data ?? []).map((row): BandCoverSong => ({
+    id: row.id,
+    bandId: row.band_id,
+    addedByMemberId: row.added_by_member_id,
+    artist: row.artist,
+    title: row.title,
+    createdAt: row.created_at,
+    addedBy: memberMap.get(row.added_by_member_id),
   }));
 
   const gradientColors = members
@@ -330,6 +352,7 @@ export async function getBandDetail(
     members,
     timeline,
     activities,
+    coverSongs,
     gradientColors,
   };
 }

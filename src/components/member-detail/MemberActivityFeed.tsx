@@ -22,13 +22,13 @@ type MemberActivityFeedProps = {
 export function MemberActivityFeed({ activities }: MemberActivityFeedProps) {
   if (activities.length === 0) {
     return (
-      <div className="rounded-[28px] border border-border bg-subtle px-6 py-10 text-center">
+      <div className="space-y-4">
         <p className="text-[15px] leading-relaxed text-white/55">
           まだActivityはありません。
           <br />
           共鳴やBandの活動がここに記録されます。
         </p>
-        <Link href="/" className="mt-6 inline-flex text-[15px] text-primary">
+        <Link href="/" className="inline-flex text-[15px] text-primary">
           Homeへ戻る
         </Link>
       </div>
@@ -36,15 +36,15 @@ export function MemberActivityFeed({ activities }: MemberActivityFeedProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="divide-y divide-border">
       {activities.map((activity) => (
-        <ActivityCard key={activity.id} activity={activity} />
+        <ActivityListItem key={activity.id} activity={activity} />
       ))}
     </div>
   );
 }
 
-function ActivityCard({ activity }: { activity: MemberActivityFeedItem }) {
+function ActivityListItem({ activity }: { activity: MemberActivityFeedItem }) {
   const label = KIND_LABELS[activity.kind];
   const date = new Date(activity.occurredAt).toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -53,18 +53,18 @@ function ActivityCard({ activity }: { activity: MemberActivityFeedItem }) {
   });
 
   return (
-    <article className="rounded-[24px] border border-border bg-subtle px-5 py-5">
+    <article className="space-y-3 py-6 first:pt-0 last:pb-0">
       <div className="flex items-start gap-4">
         {activity.partnerMember ? (
           <Link href={`/member/${activity.partnerMember.id}`} className="shrink-0">
-            <ProfilePhotoRing className="h-12 w-12 rounded-full">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full">
+            <ProfilePhotoRing className="h-11 w-11 rounded-full">
+              <div className="relative h-11 w-11 overflow-hidden rounded-full">
                 <Image
-                  src={getProfilePhotoSrc(activity.partnerMember.photo, 96)}
+                  src={getProfilePhotoSrc(activity.partnerMember.photo, 88)}
                   alt={activity.partnerMember.name}
                   fill
                   className="object-cover"
-                  sizes="48px"
+                  sizes="44px"
                   loading="lazy"
                 />
               </div>

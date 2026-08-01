@@ -5,6 +5,11 @@ import { blendFrequencyColors } from "@/lib/frequency-color/utils";
 import { getMemberByUserId } from "@/lib/members";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { getMutualResonateMembers, getAddableMutualMembersForBand } from "@/lib/bands/queries";
+import { parseArtistSongLine } from "@/lib/form";
+import {
+  type CoverSongEntry,
+  normalizeCoverSongKey,
+} from "@/lib/music/band-cover-songs";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { BandActivityKind } from "@/types/band";
@@ -397,6 +402,197 @@ export async function createBandActivityAction(input: {
   revalidatePath("/");
   revalidatePath("/me");
   revalidatePath(`/bands/${input.bandId}`);
+  return { success: true };
+}
+
+async function assertBandMembership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  bandId: string,
+  memberId: string
+) {
+  const { data: membership } = await supabase
+    .from("band_members")
+    .select("member_id")
+    .eq("band_id", bandId)
+    .eq("member_id", memberId)
+    .maybeSingle();
+
+  return Boolean(membership);
+}
+
+function normalizeCoverSongInput(raw: string): CoverSongEntry | null {
+  const parsed = parseArtistSongLine(raw.trim());
+  const title = parsed.title.trim();
+  if (!title) {
+    return null;
+  }
+
+  return {
+    artist: parsed.artist?.trim() ?? "",
+    title,
+  };
+}
+
+export async function addBandCoverSongAction(input: {
+  bandId: string;
+  raw: string;
+}) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabaseが設定されていません。" };
+  }
+
+  const song = normalizeCoverSongInput(input.raw);
+  if (!song) {
+    return { error: "曲名を入力してください。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です。" };
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return { error: "プロフィールが見つかりません。" };
+  }
+
+  if (!(await assertBandMembership(supabase, input.bandId, member.id))) {
+    return { error: "このBandのメンバーではありません。" };
+  }
+
+  const { error } = await supabase.from("band_cover_songs").insert({
+    band_id: input.bandId,
+    added_by_member_id: member.id,
+    artist: song.artist,
+    title: song.title,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "この曲はすでにSet Listにあります。" };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath(`/bands/${input.bandId}`);
+  revalidatePath("/me");
+  return { success: true };
+}
+
+export async function addBandCoverSongsAction(input: {
+  bandId: string;
+  songs: CoverSongEntry[];
+}) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabaseが設定されていません。" };
+  }
+
+  const songs = input.songs
+    .map((song) => ({
+      artist: song.artist.trim(),
+      title: song.title.trim(),
+    }))
+    .filter((song) => song.title.length > 0);
+
+  if (songs.length === 0) {
+    return { error: "追加する曲がありません。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です。" };
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return { error: "プロフィールが見つかりません。" };
+  }
+
+  if (!(await assertBandMembership(supabase, input.bandId, member.id))) {
+    return { error: "このBandのメンバーではありません。" };
+  }
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("band_cover_songs")
+    .select("artist, title")
+    .eq("band_id", input.bandId);
+
+  if (existingError) {
+    return { error: existingError.message };
+  }
+
+  const existingKeys = new Set(
+    (existingRows ?? []).map((row) => normalizeCoverSongKey(row.artist, row.title))
+  );
+  const rows = songs
+    .filter((song) => !existingKeys.has(normalizeCoverSongKey(song.artist, song.title)))
+    .map((song) => ({
+      band_id: input.bandId,
+      added_by_member_id: member.id,
+      artist: song.artist,
+      title: song.title,
+    }));
+
+  if (rows.length === 0) {
+    return { error: "選択した曲はすでにSet Listにあります。" };
+  }
+
+  const { error } = await supabase.from("band_cover_songs").insert(rows);
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/bands/${input.bandId}`);
+  revalidatePath("/me");
+  return { success: true, addedCount: rows.length };
+}
+
+export async function removeBandCoverSongAction(input: {
+  bandId: string;
+  songId: string;
+}) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabaseが設定されていません。" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "ログインが必要です。" };
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return { error: "プロフィールが見つかりません。" };
+  }
+
+  if (!(await assertBandMembership(supabase, input.bandId, member.id))) {
+    return { error: "このBandのメンバーではありません。" };
+  }
+
+  const { error } = await supabase
+    .from("band_cover_songs")
+    .delete()
+    .eq("id", input.songId)
+    .eq("band_id", input.bandId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/bands/${input.bandId}`);
+  revalidatePath("/me");
   return { success: true };
 }
 

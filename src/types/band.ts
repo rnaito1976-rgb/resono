@@ -17,6 +17,7 @@ export type BandActivityKind = "text" | "photo" | "video";
 /** Future modules: sessions, live, discography, archive */
 export type BandModuleId =
   | "timeline"
+  | "setlist"
   | "activity"
   | "videos"
   | "members"
@@ -70,11 +71,22 @@ export type BandActivityFeedItem = BandActivity & {
   bandName: string;
 };
 
+export type BandCoverSong = {
+  id: string;
+  bandId: string;
+  addedByMemberId: string;
+  artist: string;
+  title: string;
+  createdAt: string;
+  addedBy?: Member;
+};
+
 export type BandDetail = {
   band: Band;
   members: BandMember[];
   timeline: BandTimelineEvent[];
   activities: BandActivity[];
+  coverSongs: BandCoverSong[];
   gradientColors: FrequencyColorHex[];
 };
 
