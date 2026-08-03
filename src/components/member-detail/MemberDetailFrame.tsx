@@ -98,13 +98,13 @@ export function MemberDetailFrame({
   const [activeIndex, setActiveIndex] = useState(0);
   const [lazyBandData, setLazyBandData] = useState<MemberProfileBandPayload | null>(null);
   const [bandDataLoading, setBandDataLoading] = useState(false);
+  const bandDataFetchRef = useRef<"idle" | "loading" | "done">("idle");
   const isSheet = variant === "sheet";
   const sections = isOwnProfile ? getOwnProfileDetailSections() : DETAIL_SECTIONS;
   const lookingForIndex = sections.findIndex((section) => section.id === "lookingFor");
   const resolvedMutualMembers = lazyBandData?.mutualMembers ?? mutualMembers;
   const resolvedMemberBands = lazyBandData?.memberBands ?? memberBands;
   const resolvedBandActivities = lazyBandData?.bandActivities ?? bandActivities;
-  const hasLazyBandPayload = lazyBandData !== null;
   const hasInitialBandData =
     mutualMembers.length > 0 || memberBands.length > 0 || bandActivities.length > 0;
   const shouldLazyLoadBandData =
@@ -142,10 +142,11 @@ export function MemberDetailFrame({
   useEffect(() => {
     setLazyBandData(null);
     setBandDataLoading(false);
+    bandDataFetchRef.current = "idle";
   }, [member.id]);
 
   useEffect(() => {
-    if (!shouldLazyLoadBandData || hasLazyBandPayload || bandDataLoading) {
+    if (!shouldLazyLoadBandData || bandDataFetchRef.current !== "idle") {
       return;
     }
 
@@ -157,38 +158,25 @@ export function MemberDetailFrame({
       return;
     }
 
-    let cancelled = false;
+    bandDataFetchRef.current = "loading";
     setBandDataLoading(true);
 
     void getMemberProfileBandDataAction(member.id)
       .then((result) => {
-        if (cancelled) {
-          return;
-        }
-
-        if (result.data) {
-          setLazyBandData(result.data);
-          return;
-        }
-
-        setLazyBandData({
-          mutualMembers: [],
-          memberBands: [],
-          bandActivities: [],
-        });
+        setLazyBandData(
+          result.data ?? {
+            mutualMembers: [],
+            memberBands: [],
+            bandActivities: [],
+          }
+        );
       })
       .finally(() => {
+        bandDataFetchRef.current = "done";
         setBandDataLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [
     activeIndex,
-    bandDataLoading,
-    hasLazyBandPayload,
-    isSheet,
     lazyLoadBandData,
     lookingForIndex,
     member.id,
@@ -222,7 +210,7 @@ export function MemberDetailFrame({
             mutualMembers={resolvedMutualMembers}
             memberBands={resolvedMemberBands}
             bandActivities={resolvedBandActivities}
-            bandDataLoading={bandDataLoading && !hasLazyBandPayload}
+            bandDataLoading={bandDataLoading}
             initialAppliedParts={recruitmentAppliedParts}
             initialApplicants={recruitmentApplicants}
           />

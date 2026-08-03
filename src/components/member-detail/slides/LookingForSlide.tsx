@@ -125,8 +125,11 @@ export function LookingForSlide({
       ) : null}
       {isOwnProfile ? (
         <SectionBlock label="Activity">
-          {bandDataLoading ? (
-            <p className="text-[15px] leading-relaxed text-white/45">読み込み中...</p>
+          {bandDataLoading && bandActivities.length === 0 ? (
+            <div className="space-y-3 py-1" aria-label="読み込み中">
+              <div className="h-16 animate-pulse rounded-2xl bg-white/[0.06]" />
+              <div className="h-14 animate-pulse rounded-2xl bg-white/[0.04]" />
+            </div>
           ) : (
             <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
           )}
@@ -191,8 +194,11 @@ export function LookingForSlide({
       ) : null}
       {!isOwnProfile ? (
         <SectionBlock label="Activity">
-          {bandDataLoading ? (
-            <p className="text-[15px] leading-relaxed text-white/45">読み込み中...</p>
+          {bandDataLoading && bandActivities.length === 0 ? (
+            <div className="space-y-3 py-1" aria-label="読み込み中">
+              <div className="h-16 animate-pulse rounded-2xl bg-white/[0.06]" />
+              <div className="h-14 animate-pulse rounded-2xl bg-white/[0.04]" />
+            </div>
           ) : (
             <BandActivityFeed activities={bandActivities} isOwnProfile={isOwnProfile} />
           )}
