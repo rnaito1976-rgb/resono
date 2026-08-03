@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -27,6 +28,56 @@ export async function getCommunityCatalogItems(
   return (data ?? []).map((row) => row.value).filter(Boolean);
 }
 
+export async function getAllCommunityCatalogItemsGrouped(): Promise<
+  Record<string, string[]>
+> {
+  if (!isSupabaseConfigured()) {
+    return {};
+  }
+
+  const supabase = createAnonClient();
+  const { data, error } = await supabase
+    .from("community_catalog_items")
+    .select("catalog_key, value")
+    .order("created_at", { ascending: false })
+    .limit(3000);
+
+  if (error) {
+    console.error("[CommunityCatalog] getAllCommunityCatalogItemsGrouped:", error.message);
+    return {};
+  }
+
+  const seenByKey = new Map<string, Set<string>>();
+  const result: Record<string, string[]> = {};
+
+  for (const row of data ?? []) {
+    const catalogKey = row.catalog_key;
+    const value = row.value?.trim();
+    if (!catalogKey || !value) {
+      continue;
+    }
+
+    const normalized = normalizeCatalogValue(value);
+    let seen = seenByKey.get(catalogKey);
+    if (!seen) {
+      seen = new Set<string>();
+      seenByKey.set(catalogKey, seen);
+    }
+
+    if (seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    if (!result[catalogKey]) {
+      result[catalogKey] = [];
+    }
+    result[catalogKey].push(value);
+  }
+
+  return result;
+}
+
 export async function upsertCommunityCatalogItem(input: {
   catalogKey: CommunityCatalogKey;
   value: string;
@@ -47,20 +98,40 @@ export async function upsertCommunityCatalogItem(input: {
     return { error: "保存できませんでした" };
   }
 
-  const admin = createAdminClient();
-  if (!admin) {
-    return { error: "保存できませんでした" };
+  const payload = {
+    catalog_key: input.catalogKey,
+    value: trimmed,
+    value_normalized: valueNormalized,
+    created_by_member_id: input.createdByMemberId ?? null,
+  };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const { error } = await supabase.from("community_catalog_items").upsert(payload, {
+      onConflict: "catalog_key,value_normalized",
+      ignoreDuplicates: true,
+    });
+
+    if (!error) {
+      return { success: true };
+    }
+
+    console.error("[CommunityCatalog] upsert authenticated:", error.message);
   }
 
-  const { error } = await admin.from("community_catalog_items").upsert(
-    {
-      catalog_key: input.catalogKey,
-      value: trimmed,
-      value_normalized: valueNormalized,
-      created_by_member_id: input.createdByMemberId ?? null,
-    },
-    { onConflict: "catalog_key,value_normalized", ignoreDuplicates: true }
-  );
+  const admin = createAdminClient();
+  if (!admin) {
+    return { error: user ? "保存に失敗しました" : "ログインが必要です" };
+  }
+
+  const { error } = await admin.from("community_catalog_items").upsert(payload, {
+    onConflict: "catalog_key,value_normalized",
+    ignoreDuplicates: true,
+  });
 
   if (error) {
     console.error("[CommunityCatalog] upsertCommunityCatalogItem:", error.message);

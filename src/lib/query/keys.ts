@@ -16,4 +16,7 @@ export const queryKeys = {
     applicants: (targetMemberId: string) =>
       ["recruitment", "applicants", targetMemberId] as const,
   },
+  communityCatalog: {
+    items: (catalogKey: string) => ["community-catalog", catalogKey] as const,
+  },
 } as const;

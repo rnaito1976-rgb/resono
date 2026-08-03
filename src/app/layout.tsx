@@ -7,6 +7,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthUserProvider } from "@/providers/AuthUserProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
 import { getViewerTheme } from "@/lib/members/viewer-theme";
+import { getAllCommunityCatalogItemsGrouped } from "@/lib/catalog/queries";
 import { getAuthSession } from "@/lib/supabase/auth";
 import { getSupabaseUrl } from "@/lib/supabase/env";
 import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
@@ -28,10 +29,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [supabaseUrl, viewerColor, user] = await Promise.all([
+  const [supabaseUrl, viewerColor, user, communityCatalog] = await Promise.all([
     Promise.resolve(getSupabaseUrl()),
     getViewerTheme(),
     getAuthSession(),
+    getAllCommunityCatalogItemsGrouped(),
   ]);
 
   return (
@@ -47,7 +49,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
-        <QueryProvider>
+        <QueryProvider initialCommunityCatalog={communityCatalog}>
           <AuthUserProvider initialUser={user}>
             <FrequencyColorProvider initialColor={viewerColor}>
               <ProfileSheetProvider>

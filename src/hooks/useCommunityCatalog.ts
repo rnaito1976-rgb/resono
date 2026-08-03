@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addCommunityCatalogItemAction,
   listCommunityCatalogItemsAction,
 } from "@/lib/actions/community-catalog";
+import { prependCommunityCatalogItem } from "@/lib/catalog/cache";
 import {
   type CommunityCatalogKey,
   isInStaticCatalog,
@@ -12,6 +14,7 @@ import {
   mergeGroupsWithCommunity,
   normalizeCatalogValue,
 } from "@/lib/catalog/community-catalog";
+import { queryKeys } from "@/lib/query/keys";
 import type { WelcomeOptionGroup } from "@/lib/welcome/onboarding-data";
 
 type UseCommunityCatalogOptions = {
@@ -21,41 +24,30 @@ type UseCommunityCatalogOptions = {
   enabled?: boolean;
 };
 
+const COMMUNITY_CATALOG_STALE_MS = 5 * 60 * 1000;
+
 export function useCommunityCatalog({
   catalogKey,
   baseCatalog,
   baseGroups,
   enabled = true,
 }: UseCommunityCatalogOptions) {
-  const [communityItems, setCommunityItems] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+  const queryKey = queryKeys.communityCatalog.items(catalogKey);
 
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
+  const query = useQuery({
+    queryKey,
+    queryFn: () => listCommunityCatalogItemsAction(catalogKey),
+    enabled,
+    staleTime: COMMUNITY_CATALOG_STALE_MS,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
-    let cancelled = false;
+  const communityItems = query.data ?? [];
 
-    void listCommunityCatalogItemsAction(catalogKey).then((items) => {
-      if (!cancelled) {
-        setCommunityItems(items);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [catalogKey, enabled]);
-
-  const catalog = useMemo(
-    () => mergeCatalogUnique(baseCatalog, communityItems),
-    [baseCatalog, communityItems]
-  );
-
-  const groups = useMemo(
-    () => mergeGroupsWithCommunity(baseGroups, communityItems),
-    [baseGroups, communityItems]
-  );
+  const catalog = mergeCatalogUnique(baseCatalog, communityItems);
+  const groups = mergeGroupsWithCommunity(baseGroups, communityItems);
 
   const recordCustomItem = useCallback(
     (value: string) => {
@@ -69,22 +61,21 @@ export function useCommunityCatalog({
       }
 
       const normalized = normalizeCatalogValue(trimmed);
-      if (communityItems.some((item) => normalizeCatalogValue(item) === normalized)) {
+      const current = queryClient.getQueryData<string[]>(queryKey) ?? [];
+      if (current.some((item) => normalizeCatalogValue(item) === normalized)) {
         return;
       }
 
-      setCommunityItems((current) => [trimmed, ...current]);
+      prependCommunityCatalogItem(queryClient, catalogKey, trimmed);
 
       void addCommunityCatalogItemAction({ catalogKey, value: trimmed }).then((result) => {
         if ("error" in result && result.error) {
           console.error("[useCommunityCatalog]", result.error);
-          setCommunityItems((current) =>
-            current.filter((item) => normalizeCatalogValue(item) !== normalized)
-          );
+          queryClient.setQueryData<string[]>(queryKey, current);
         }
       });
     },
-    [baseCatalog, catalogKey, communityItems, enabled]
+    [baseCatalog, catalogKey, enabled, queryClient, queryKey]
   );
 
   return {
