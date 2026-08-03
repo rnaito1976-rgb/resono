@@ -11,6 +11,7 @@ import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
 import { SectionBlock } from "@/components/ui";
+import { RecruitmentPartsList } from "@/components/recruitment/RecruitmentPartsList";
 
 type LookingForSlideProps = {
   member: Member;
@@ -127,23 +128,18 @@ export function LookingForSlide({
         </SectionBlock>
       ) : null}
       <SectionBlock label="募集パート">
-        <div className="space-y-3">
-          {member.lookingFor.parts.length > 0 ? (
-            member.lookingFor.parts.map((part) => (
-              <div
-                key={part}
-                className="flex items-center justify-between rounded-2xl border border-border bg-white/5 px-5 py-4"
-              >
-                <span className="text-base font-medium">{part}</span>
-                <span className="text-xs uppercase tracking-[0.15em] text-primary">Open</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-[15px] leading-relaxed text-white/50">
-              まだ募集パートは設定されていません。
-            </p>
-          )}
-        </div>
+        {member.lookingFor.parts.length > 0 ? (
+          <RecruitmentPartsList
+            targetMemberId={member.id}
+            parts={member.lookingFor.parts}
+            isOwnProfile={isOwnProfile}
+            variant="rows"
+          />
+        ) : (
+          <p className="text-[15px] leading-relaxed text-white/50">
+            まだ募集パートは設定されていません。
+          </p>
+        )}
       </SectionBlock>
       {member.lookingFor.bandVision ? (
         <SectionBlock label="Band Vision">

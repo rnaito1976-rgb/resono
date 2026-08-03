@@ -14,6 +14,7 @@ import {
   getRecruitmentMatchLabelText,
 } from "@/lib/recommendation/scoring";
 import { ResonanceBadge, TagList } from "@/components/ui";
+import { RecruitmentPartsList } from "@/components/recruitment/RecruitmentPartsList";
 import type { PersonCardData } from "@/components/person-card/types";
 import type { ReactNode } from "react";
 
@@ -118,31 +119,13 @@ export function PersonCardContent({
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/50">
               募集パート
             </p>
-            <div className="flex flex-wrap gap-2">
-              {openParts.map((part) => {
-                const isHighlighted = highlightedParts.has(part);
-
-                return (
-                  <span
-                    key={part}
-                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] ${
-                      isHighlighted
-                        ? "border border-primary/40 bg-primary/10 text-white"
-                        : "border border-border bg-white/[0.04] text-white/90"
-                    }`}
-                  >
-                    {part}
-                    <span
-                      className={`text-[10px] font-medium uppercase tracking-[0.12em] ${
-                        isHighlighted ? "text-primary" : "text-primary/70"
-                      }`}
-                    >
-                      Open
-                    </span>
-                  </span>
-                );
-              })}
-            </div>
+            <RecruitmentPartsList
+              targetMemberId={member.id}
+              parts={openParts}
+              isOwnProfile={isOwnCard}
+              highlightedParts={[...highlightedParts]}
+              variant="chips"
+            />
           </div>
         ) : null}
 

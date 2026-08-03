@@ -378,6 +378,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      band_recruitment_applications: {
+        Row: {
+          id: string;
+          target_member_id: string;
+          applicant_member_id: string;
+          part: string;
+          part_normalized: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          target_member_id: string;
+          applicant_member_id: string;
+          part: string;
+          part_normalized: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          target_member_id?: string;
+          applicant_member_id?: string;
+          part?: string;
+          part_normalized?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       community_catalog_items: {
         Row: {
           id: string;
