@@ -1,15 +1,17 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { PersonCardClient } from "@/components/person-card/PersonCardClient";
+import { RecruitmentApplicationsPrefetch } from "@/components/recruitment/RecruitmentApplicationsPrefetch";
 import {
   dedupeFeedItems,
   FEED_PAGE_SIZE,
   INITIAL_FEED_PAGE_SIZE,
   type MembersFeedPage,
 } from "@/lib/members/feed";
+import { seedRecruitmentAppliedCache } from "@/lib/recruitment/cache";
 import { queryKeys } from "@/lib/query/keys";
 import { RESONANCE_CHANGE_EVENT } from "@/lib/resonance";
 import type { ResonanceStatus } from "@/lib/resonance/status";
@@ -21,8 +23,10 @@ const FEED_STALE_MS = 2 * 60 * 1000;
 
 type HomeFeedListProps = {
   viewerId?: string;
+  viewerMemberId?: string;
   showSectionHeader?: boolean;
   initialFeedPage?: MembersFeedPage;
+  initialAppliedByTarget?: Record<string, string[]>;
 };
 
 function getFeedCacheKey(viewerId?: string) {
@@ -102,13 +106,25 @@ async function fetchFeedPage(
 
 export function HomeFeedList({
   viewerId,
+  viewerMemberId,
   showSectionHeader = false,
   initialFeedPage,
+  initialAppliedByTarget = {},
 }: HomeFeedListProps) {
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
   const initialHasReasons = initialFeedPage ? feedItemsHaveReasons(initialFeedPage) : true;
+  const seededAppliedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (seededAppliedRef.current || Object.keys(initialAppliedByTarget).length === 0) {
+      return;
+    }
+
+    seedRecruitmentAppliedCache(queryClient, initialAppliedByTarget);
+    seededAppliedRef.current = true;
+  }, [initialAppliedByTarget, queryClient]);
 
   const { data, error, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -223,12 +239,21 @@ export function HomeFeedList({
       resonanceReason={reason}
       resonanceStatus={resonanceStatus}
       priority={!showSectionHeader && index === 0}
+      initialAppliedParts={initialAppliedByTarget[member.id] ?? undefined}
     />
   ));
+
+  const prefetch = (
+    <RecruitmentApplicationsPrefetch
+      members={feedItems.map((item) => item.member)}
+      viewerMemberId={viewerMemberId}
+    />
+  );
 
   if (showSectionHeader) {
     return (
       <>
+        {prefetch}
         <section className="space-y-8">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
@@ -248,6 +273,7 @@ export function HomeFeedList({
 
   return (
     <>
+      {prefetch}
       <div className="flex flex-col gap-14">{cards}</div>
       {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
       <div ref={loadMoreRef} aria-hidden className="h-8" />

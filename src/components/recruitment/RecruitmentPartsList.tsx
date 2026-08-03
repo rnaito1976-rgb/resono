@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Check } from "lucide-react";
-import {
-  getMyRecruitmentApplicationsAction,
-  getRecruitmentApplicantsAction,
-  toggleRecruitmentApplicationAction,
-} from "@/lib/actions/recruitment";
+import { useRecruitmentApplications } from "@/hooks/useRecruitmentApplications";
+import { useRecruitmentApplicants } from "@/hooks/useRecruitmentApplicants";
 import { normalizeRecruitmentPart } from "@/lib/recruitment/part";
+import type { RecruitmentPartApplicants } from "@/lib/recruitment/applications";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { buildLoginHref } from "@/lib/navigation/login-redirect";
 import { cn } from "@/lib/utils";
@@ -20,11 +18,7 @@ type RecruitmentPartsListProps = {
   highlightedParts?: string[];
   variant?: "chips" | "rows";
   initialAppliedParts?: string[];
-};
-
-type ApplicantGroup = {
-  part: string;
-  applicants: { id: string; name: string }[];
+  initialApplicants?: RecruitmentPartApplicants[];
 };
 
 export function RecruitmentPartsList({
@@ -34,15 +28,22 @@ export function RecruitmentPartsList({
   highlightedParts = [],
   variant = "chips",
   initialAppliedParts = [],
+  initialApplicants = [],
 }: RecruitmentPartsListProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isLoggedIn } = useAuthUser();
   const loginHref = buildLoginHref(pathname);
-  const [appliedParts, setAppliedParts] = useState<string[]>(initialAppliedParts);
-  const [applicantGroups, setApplicantGroups] = useState<ApplicantGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+
+  const { appliedParts, toggle, pendingParts } = useRecruitmentApplications(
+    targetMemberId,
+    initialAppliedParts
+  );
+  const { applicantGroups } = useRecruitmentApplicants(
+    targetMemberId,
+    initialApplicants
+  );
 
   const highlightedSet = useMemo(() => new Set(highlightedParts), [highlightedParts]);
   const appliedNormalized = useMemo(
@@ -51,40 +52,15 @@ export function RecruitmentPartsList({
   );
 
   const applicantsByPart = useMemo(() => {
-    const map = new Map<string, ApplicantGroup["applicants"]>();
+    const map = new Map<string, RecruitmentPartApplicants["applicants"]>();
     for (const group of applicantGroups) {
       map.set(normalizeRecruitmentPart(group.part), group.applicants);
     }
     return map;
   }, [applicantGroups]);
 
-  useEffect(() => {
-    setAppliedParts(initialAppliedParts);
-  }, [initialAppliedParts, targetMemberId]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setAppliedParts([]);
-      setApplicantGroups([]);
-      return;
-    }
-
-    if (isOwnProfile) {
-      void getRecruitmentApplicantsAction(targetMemberId).then((result) => {
-        if ("parts" in result && result.parts) {
-          setApplicantGroups(result.parts);
-        }
-      });
-      return;
-    }
-
-    void getMyRecruitmentApplicationsAction(targetMemberId).then((result) => {
-      setAppliedParts(result.appliedParts);
-    });
-  }, [isLoggedIn, isOwnProfile, targetMemberId]);
-
   function togglePart(part: string) {
-    if (isOwnProfile || isPending) {
+    if (isOwnProfile) {
       return;
     }
 
@@ -95,38 +71,15 @@ export function RecruitmentPartsList({
 
     setError(null);
 
-    startTransition(async () => {
-      const result = await toggleRecruitmentApplicationAction({
-        targetMemberId,
-        part,
-      });
-
-      if ("error" in result && result.error) {
+    void toggle(part).then((result) => {
+      if (result && "error" in result && result.error) {
         if ("requiresLogin" in result && result.requiresLogin) {
           router.push(loginHref);
           return;
         }
 
         setError(result.error);
-        return;
       }
-
-      if (!("applied" in result)) {
-        return;
-      }
-
-      const normalized = normalizeRecruitmentPart(part);
-
-      setAppliedParts((current) => {
-        if (result.applied) {
-          if (current.some((item) => normalizeRecruitmentPart(item) === normalized)) {
-            return current;
-          }
-          return [...current, part];
-        }
-
-        return current.filter((item) => normalizeRecruitmentPart(item) !== normalized);
-      });
     });
   }
 
@@ -138,8 +91,10 @@ export function RecruitmentPartsList({
     return (
       <div className="space-y-3">
         {parts.map((part) => {
-          const isApplied = appliedNormalized.has(normalizeRecruitmentPart(part));
-          const applicants = applicantsByPart.get(normalizeRecruitmentPart(part)) ?? [];
+          const normalized = normalizeRecruitmentPart(part);
+          const isApplied = appliedNormalized.has(normalized);
+          const isPending = pendingParts.has(normalized);
+          const applicants = applicantsByPart.get(normalized) ?? [];
 
           return (
             <div key={part} className="space-y-2">
@@ -152,7 +107,8 @@ export function RecruitmentPartsList({
                   isApplied
                     ? "border-primary/35 bg-primary/10"
                     : "border-border bg-white/5 active:opacity-85",
-                  isOwnProfile && "cursor-default"
+                  isOwnProfile && "cursor-default",
+                  isPending && "opacity-70"
                 )}
               >
                 <span className="text-base font-medium">{part}</span>
@@ -194,9 +150,11 @@ export function RecruitmentPartsList({
     <div className="space-y-2.5">
       <div className="flex flex-wrap gap-2">
         {parts.map((part) => {
+          const normalized = normalizeRecruitmentPart(part);
           const isHighlighted = highlightedSet.has(part);
-          const isApplied = appliedNormalized.has(normalizeRecruitmentPart(part));
-          const applicants = applicantsByPart.get(normalizeRecruitmentPart(part)) ?? [];
+          const isApplied = appliedNormalized.has(normalized);
+          const isPending = pendingParts.has(normalized);
+          const applicants = applicantsByPart.get(normalized) ?? [];
 
           return (
             <div key={part} className="space-y-1">
@@ -211,7 +169,8 @@ export function RecruitmentPartsList({
                     : isHighlighted
                       ? "border border-primary/40 bg-primary/10 text-white"
                       : "border border-border bg-white/[0.04] text-white/90",
-                  !isOwnProfile && "active:opacity-85"
+                  !isOwnProfile && "active:opacity-85",
+                  isPending && "opacity-70"
                 )}
               >
                 {part}

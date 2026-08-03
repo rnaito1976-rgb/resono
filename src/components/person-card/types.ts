@@ -1,6 +1,7 @@
 import type { RecommendationResult } from "@/lib/recommendation/scoring";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { ResonanceStatus } from "@/lib/resonance/status";
+import type { RecruitmentPartApplicants } from "@/lib/recruitment/applications";
 import type { Member } from "@/types/member";
 
 export type PersonCardData = {
@@ -11,4 +12,6 @@ export type PersonCardData = {
   resonanceStatus?: ResonanceStatus;
   isOwnCard?: boolean;
   priority?: boolean;
+  initialAppliedParts?: string[];
+  initialRecruitmentApplicants?: RecruitmentPartApplicants[];
 };

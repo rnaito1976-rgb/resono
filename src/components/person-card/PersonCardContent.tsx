@@ -35,6 +35,8 @@ export function PersonCardContent({
   isOwnCard = false,
   priority = false,
   actions,
+  initialAppliedParts = [],
+  initialRecruitmentApplicants = [],
 }: PersonCardContentProps) {
   const isAmbient = variant === "ambient";
   const score = resonanceReason?.score;
@@ -125,6 +127,8 @@ export function PersonCardContent({
               isOwnProfile={isOwnCard}
               highlightedParts={[...highlightedParts]}
               variant="chips"
+              initialAppliedParts={initialAppliedParts}
+              initialApplicants={initialRecruitmentApplicants}
             />
           </div>
         ) : null}

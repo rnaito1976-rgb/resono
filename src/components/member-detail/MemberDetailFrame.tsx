@@ -12,6 +12,7 @@ import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleto
 import { getMemberProfileBandDataAction } from "@/lib/actions/profile";
 import type { MemberProfileBandPayload } from "@/lib/actions/profile";
 import type { ResonanceStatus } from "@/lib/resonance/status";
+import type { RecruitmentPartApplicants } from "@/lib/recruitment/applications";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
 
@@ -65,6 +66,8 @@ export type MemberDetailFrameProps = {
   memberBands?: import("@/types/band").Band[];
   bandActivities?: import("@/types/band").BandActivityFeedItem[];
   memberActivities?: import("@/types/activity").MemberActivityFeedItem[];
+  recruitmentAppliedParts?: string[];
+  recruitmentApplicants?: RecruitmentPartApplicants[];
   lazyLoadBandData?: boolean;
   variant?: "page" | "sheet";
   onClose?: () => void;
@@ -83,6 +86,8 @@ export function MemberDetailFrame({
   memberBands = [],
   bandActivities = [],
   memberActivities = [],
+  recruitmentAppliedParts = [],
+  recruitmentApplicants = [],
   lazyLoadBandData = false,
   variant = "page",
   onClose,
@@ -219,6 +224,8 @@ export function MemberDetailFrame({
             memberBands={resolvedMemberBands}
             bandActivities={resolvedBandActivities}
             bandDataLoading={bandDataLoading && !hasLazyBandPayload}
+            initialAppliedParts={recruitmentAppliedParts}
+            initialApplicants={recruitmentApplicants}
           />
         );
       case "activity":

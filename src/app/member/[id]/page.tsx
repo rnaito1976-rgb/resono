@@ -18,6 +18,10 @@ import {
   getBandsForMember,
 } from "@/lib/bands/queries";
 import { getOwnMemberActivityFeed } from "@/lib/members/activity-feed";
+import {
+  getAppliedPartsForViewer,
+  getRecruitmentApplicantsByPart,
+} from "@/lib/recruitment/applications";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { MusicPageView } from "@/types/music-profile";
 
@@ -41,7 +45,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities, ownMemberActivities] =
+  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities, ownMemberActivities, recruitmentAppliedParts, recruitmentApplicants] =
     await Promise.all([
     viewerMemberId && viewerMemberId !== member.id
       ? getMemberListById(viewerMemberId)
@@ -56,6 +60,12 @@ export default async function MemberPage({ params }: MemberPageProps) {
     user ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
     isOwnProfile
       ? getOwnMemberActivityFeed(member.id, 40, member)
+      : Promise.resolve([]),
+    needsResonance
+      ? getAppliedPartsForViewer(viewerMemberId!, member.id)
+      : Promise.resolve([]),
+    isOwnProfile && member.lookingFor?.parts?.some(Boolean)
+      ? getRecruitmentApplicantsByPart(member.id)
       : Promise.resolve([]),
   ]);
 
@@ -87,6 +97,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
         memberBands={memberBands}
         bandActivities={bandActivities}
         memberActivities={isOwnProfile ? ownMemberActivities : undefined}
+        recruitmentAppliedParts={recruitmentAppliedParts}
+        recruitmentApplicants={recruitmentApplicants}
         priorityPhoto
       />
     </main>

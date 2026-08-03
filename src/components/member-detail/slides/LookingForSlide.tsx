@@ -12,6 +12,7 @@ import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/b
 import type { Member } from "@/types/member";
 import { SectionBlock } from "@/components/ui";
 import { RecruitmentPartsList } from "@/components/recruitment/RecruitmentPartsList";
+import type { RecruitmentPartApplicants } from "@/lib/recruitment/applications";
 
 type LookingForSlideProps = {
   member: Member;
@@ -20,6 +21,8 @@ type LookingForSlideProps = {
   memberBands?: Band[];
   bandActivities?: BandActivityFeedItem[];
   bandDataLoading?: boolean;
+  initialAppliedParts?: string[];
+  initialApplicants?: RecruitmentPartApplicants[];
 };
 
 export function LookingForSlide({
@@ -29,6 +32,8 @@ export function LookingForSlide({
   memberBands = [],
   bandActivities = [],
   bandDataLoading = false,
+  initialAppliedParts = [],
+  initialApplicants = [],
 }: LookingForSlideProps) {
   return (
     <div className="flex h-full flex-col space-y-8 px-6 pb-8 pt-4">
@@ -134,6 +139,8 @@ export function LookingForSlide({
             parts={member.lookingFor.parts}
             isOwnProfile={isOwnProfile}
             variant="rows"
+            initialAppliedParts={initialAppliedParts}
+            initialApplicants={initialApplicants}
           />
         ) : (
           <p className="text-[15px] leading-relaxed text-white/50">

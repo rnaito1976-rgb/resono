@@ -10,4 +10,10 @@ export const queryKeys = {
   bands: {
     unreadCount: () => ["bands", "unread-count"] as const,
   },
+  recruitment: {
+    applied: (targetMemberId: string) =>
+      ["recruitment", "applied", targetMemberId] as const,
+    applicants: (targetMemberId: string) =>
+      ["recruitment", "applicants", targetMemberId] as const,
+  },
 } as const;

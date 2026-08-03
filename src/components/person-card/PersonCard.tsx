@@ -12,6 +12,8 @@ export function PersonCard({
   resonanceStatus,
   isOwnCard = false,
   priority = false,
+  initialAppliedParts,
+  initialRecruitmentApplicants,
 }: PersonCardData) {
   const actions = isOwnCard ? (
     <PersonCardOwnLinks />
@@ -28,6 +30,8 @@ export function PersonCard({
       isOwnCard={isOwnCard}
       priority={priority}
       actions={actions}
+      initialAppliedParts={initialAppliedParts}
+      initialRecruitmentApplicants={initialRecruitmentApplicants}
     />
   );
 }

@@ -10,6 +10,7 @@ import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCar
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
+import { getRecruitmentApplicantsByPart } from "@/lib/recruitment/applications";
 import { LIVE_FEED_SIZE } from "@/types/live";
 
 export function HomePageFallback() {
@@ -42,6 +43,11 @@ export async function HomePageContent() {
     redirect("/welcome");
   }
 
+  const ownRecruitmentApplicants =
+    member?.lookingFor?.parts?.some(Boolean)
+      ? await getRecruitmentApplicantsByPart(member.id)
+      : [];
+
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
   return (
@@ -55,7 +61,14 @@ export async function HomePageContent() {
         <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
           {user ? <IntroOnboardingCards userId={user.id} /> : null}
           <HomeLiveFeed events={liveEvents} />
-          {member ? <PersonCard member={member} isOwnCard priority /> : null}
+          {member ? (
+            <PersonCard
+              member={member}
+              isOwnCard
+              priority
+              initialRecruitmentApplicants={ownRecruitmentApplicants}
+            />
+          ) : null}
           <Suspense fallback={<HomeFeedSkeleton count={2} />}>
             <HomeFeedSection
               member={member}

@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import {
   getAppliedPartsBatchForViewer,
   getAppliedPartsForViewer,
@@ -95,10 +94,6 @@ export async function toggleRecruitmentApplicationAction(input: {
       return { error: "保存に失敗しました" };
     }
 
-    revalidatePath("/");
-    revalidatePath(`/member/${input.targetMemberId}`);
-    revalidatePath("/me");
-
     return { applied: false, part: trimmed };
   }
 
@@ -115,10 +110,6 @@ export async function toggleRecruitmentApplicationAction(input: {
     console.error("[Recruitment] toggle insert:", insertError.message);
     return { error: "保存に失敗しました" };
   }
-
-  revalidatePath("/");
-  revalidatePath(`/member/${input.targetMemberId}`);
-  revalidatePath("/me");
 
   return { applied: true, part: trimmed };
 }

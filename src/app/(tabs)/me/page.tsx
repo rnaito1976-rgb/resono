@@ -6,6 +6,7 @@ import {
 } from "@/lib/bands/queries";
 import { getMemberById } from "@/lib/members";
 import { getOwnMemberActivityFeed } from "@/lib/members/activity-feed";
+import { getRecruitmentApplicantsByPart } from "@/lib/recruitment/applications";
 import { requireViewer } from "@/lib/navigation/require-viewer";
 import { MemberDetail } from "@/components/MemberDetail";
 
@@ -13,7 +14,7 @@ export default async function MyPage() {
   const { memberId } = await requireViewer({ loginNext: "/me" });
 
   const memberPromise = getMemberById(memberId);
-  const [member, mutualMembers, memberActivities, memberBands, bandActivities] =
+  const [member, mutualMembers, memberActivities, memberBands, bandActivities, recruitmentApplicants] =
     await Promise.all([
       memberPromise,
       getMutualResonateMembers(memberId),
@@ -22,6 +23,11 @@ export default async function MyPage() {
       ),
       getBandsForMember(memberId),
       getBandActivityFeedForMember(memberId),
+      memberPromise.then((loaded) =>
+        loaded?.lookingFor?.parts?.some(Boolean)
+          ? getRecruitmentApplicantsByPart(memberId)
+          : []
+      ),
     ]);
 
   if (!member) {
@@ -37,6 +43,7 @@ export default async function MyPage() {
         memberBands={memberBands}
         bandActivities={bandActivities}
         memberActivities={memberActivities}
+        recruitmentApplicants={recruitmentApplicants}
         priorityPhoto
       />
     </main>
