@@ -1,7 +1,7 @@
 export const queryKeys = {
   members: {
     feed: (viewerId?: string) => ["members", "feed", viewerId ?? "anonymous"] as const,
-    profile: (memberId: string) => ["members", "profile", memberId] as const,
+    profile: (memberId: string) => ["members", "profile", memberId, "v2"] as const,
   },
   resonance: {
     status: (memberId: string) => ["resonance", "status", memberId] as const,

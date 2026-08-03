@@ -17,11 +17,13 @@ import {
   getBandsForMember,
   getMutualResonateMembers,
 } from "@/lib/bands/queries";
+import { getOwnMemberActivityFeed } from "@/lib/members/activity-feed";
 import type { Band, BandActivityFeedItem, MutualResonateMember } from "@/types/band";
 import type { Member } from "@/types/member";
 import type { MusicPageView } from "@/types/music-profile";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { ResonanceStatus } from "@/lib/resonance/status";
+import type { MemberActivityFeedItem } from "@/types/activity";
 
 export type MemberProfilePayload = {
   member: Member;
@@ -33,6 +35,7 @@ export type MemberProfilePayload = {
   mutualMembers: MutualResonateMember[];
   memberBands: Band[];
   bandActivities: BandActivityFeedItem[];
+  memberActivities?: MemberActivityFeedItem[];
 };
 
 export type MemberProfileBandPayload = {
@@ -102,7 +105,12 @@ export async function getMemberProfileAction(
     viewerMemberId
   );
 
-  const [viewer, resonanceStatus, cachedReasons, bandData] = await Promise.all([
+  const memberActivitiesPromise = isOwnProfile
+    ? getOwnMemberActivityFeed(memberId, 40, member)
+    : Promise.resolve([] as MemberActivityFeedItem[]);
+
+  const [viewer, resonanceStatus, cachedReasons, bandData, memberActivities] =
+    await Promise.all([
     viewerPromise,
     needsResonance
       ? getResonanceStatusForMember(viewerMemberId!, member.id)
@@ -111,6 +119,7 @@ export async function getMemberProfileAction(
       ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
     bandDataPromise,
+    memberActivitiesPromise,
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -140,6 +149,7 @@ export async function getMemberProfileAction(
       mutualMembers: bandData.mutualMembers,
       memberBands: bandData.memberBands,
       bandActivities: bandData.bandActivities,
+      memberActivities: isOwnProfile ? memberActivities : undefined,
     },
   };
 }

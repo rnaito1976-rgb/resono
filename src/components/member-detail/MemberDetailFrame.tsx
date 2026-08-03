@@ -102,7 +102,8 @@ export function MemberDetailFrame({
   const hasLazyBandPayload = lazyBandData !== null;
   const hasInitialBandData =
     mutualMembers.length > 0 || memberBands.length > 0 || bandActivities.length > 0;
-  const shouldLazyLoadBandData = lazyLoadBandData && !hasInitialBandData;
+  const shouldLazyLoadBandData =
+    !hasInitialBandData && (lazyLoadBandData || isSheet);
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";

@@ -17,6 +17,7 @@ import {
   getBandActivityFeedForMember,
   getBandsForMember,
 } from "@/lib/bands/queries";
+import { getOwnMemberActivityFeed } from "@/lib/members/activity-feed";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { MusicPageView } from "@/types/music-profile";
 
@@ -40,7 +41,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities] =
+  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities, ownMemberActivities] =
     await Promise.all([
     viewerMemberId && viewerMemberId !== member.id
       ? getMemberListById(viewerMemberId)
@@ -53,6 +54,9 @@ export default async function MemberPage({ params }: MemberPageProps) {
       : Promise.resolve(undefined),
     user ? getBandsForMember(member.id) : Promise.resolve([]),
     user ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
+    isOwnProfile
+      ? getOwnMemberActivityFeed(member.id, 40, member)
+      : Promise.resolve([]),
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -82,6 +86,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         showResonateButton={Boolean(viewer && !isOwnProfile)}
         memberBands={memberBands}
         bandActivities={bandActivities}
+        memberActivities={isOwnProfile ? ownMemberActivities : undefined}
         priorityPhoto
       />
     </main>
