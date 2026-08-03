@@ -1,10 +1,14 @@
 import { getMemberById } from "@/lib/members";
+import {
+  buildResonoBodyParagraph,
+  buildResonoEmailHtml,
+  buildResonoEmailText,
+  buildResonoSettingsFooter,
+} from "@/lib/notifications/email-template";
 import { isEmailNotificationEnabled } from "@/lib/notifications/preferences";
 import { isEmailConfigured, sendEmail } from "@/lib/notifications/send-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEmailSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
-
-const COOLDOWN_MINUTES = 30;
 
 type BadgeEmailKind = "message";
 
@@ -32,7 +36,7 @@ async function getEmailForMember(memberId: string): Promise<string | null> {
   return data.user.email;
 }
 
-async function isWithinCooldown(
+async function hasAlreadySent(
   memberId: string,
   kind: BadgeEmailKind,
   scopeId: string
@@ -42,21 +46,20 @@ async function isWithinCooldown(
     return true;
   }
 
-  const cutoff = new Date(Date.now() - COOLDOWN_MINUTES * 60 * 1000).toISOString();
   const { data, error } = await admin
     .from("badge_email_cooldowns")
-    .select("last_sent_at")
+    .select("member_id")
     .eq("member_id", memberId)
     .eq("kind", kind)
     .eq("scope_id", scopeId)
     .maybeSingle();
 
   if (error) {
-    console.error("[BadgeEmail] cooldown lookup:", error.message);
+    console.error("[BadgeEmail] sent lookup:", error.message);
     return false;
   }
 
-  return Boolean(data?.last_sent_at && data.last_sent_at > cutoff);
+  return Boolean(data);
 }
 
 async function recordCooldown(
@@ -100,7 +103,7 @@ async function sendBadgeEmail(
     return;
   }
 
-  if (await isWithinCooldown(memberId, kind, scopeId)) {
+  if (await hasAlreadySent(memberId, kind, scopeId)) {
     return;
   }
 
@@ -110,15 +113,26 @@ async function sendBadgeEmail(
   }
 
   const settingsUrl = `${getEmailSiteUrl()}/menu/notifications`;
-  const html = `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
-      <p>${body}</p>
-      <p><a href="${actionUrl}" style="color: #111;">Resonoで確認する</a></p>
-      <p style="color: #666; font-size: 12px;">通知設定は<a href="${settingsUrl}" style="color: #666;">こちら</a>から変更できます。</p>
-    </div>
-  `.trim();
+  const settingsFooter = buildResonoSettingsFooter(settingsUrl);
+  const html = buildResonoEmailHtml({
+    preheader: body,
+    eyebrow: "Message",
+    bodyHtml: buildResonoBodyParagraph(body),
+    cta: {
+      label: "Resonoで確認する",
+      href: actionUrl,
+    },
+    secondaryHtml: settingsFooter.html,
+  });
 
-  const text = `${body}\n\nResonoで確認する: ${actionUrl}\n\n通知設定: ${settingsUrl}`;
+  const text = buildResonoEmailText({
+    paragraphs: [body],
+    cta: {
+      label: "Resonoで確認する",
+      href: actionUrl,
+    },
+    footerLines: [settingsFooter.textLine],
+  });
 
   const sent = await sendEmail({
     to: email,
@@ -136,6 +150,7 @@ export async function notifyMessageBadgeEmail(input: {
   recipientMemberId: string;
   senderMemberId: string;
   conversationId: string;
+  messageId: string;
 }): Promise<void> {
   const sender = await getMemberById(input.senderMemberId);
   const senderName = sender?.name ?? "メンバー";
@@ -143,7 +158,7 @@ export async function notifyMessageBadgeEmail(input: {
   await sendBadgeEmail(
     input.recipientMemberId,
     "message",
-    input.conversationId,
+    input.messageId,
     `Resono: ${senderName}さんから新しいメッセージ`,
     `${senderName}さんから新しいメッセージが届きました。`,
     `${getEmailSiteUrl()}/messages/${input.conversationId}`

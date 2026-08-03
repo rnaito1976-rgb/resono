@@ -48,7 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 # 未読バッジのメール通知（Resend）
 RESEND_API_KEY=re_...
-EMAIL_FROM=Resono <notify@resono.band>
+EMAIL_FROM=Resono <hello@notify.resono.band>
 # メール内リンク（省略時は本番 URL）
 EMAIL_SITE_URL=https://resono-fwdi.vercel.app
 ```
@@ -92,7 +92,7 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
    - Supabase SMTP が不安定な場合、**Resend API + Send Email Hook** を使います（本番 URL: `https://resono-fwdi.vercel.app/api/auth/send-email`）。
    - Vercel に以下を設定:
      - `RESEND_API_KEY` = `re_...`
-     - `EMAIL_FROM` = `Resono <notify@resono.band>`
+     - `EMAIL_FROM` = `Resono <hello@notify.resono.band>`
      - `SEND_EMAIL_HOOK_SECRET` = Supabase で生成した Hook Secret（`v1,whsec_...`）
    - Supabase Dashboard:
      1. **Authentication → Hooks → Send Email** を有効化
@@ -123,7 +123,7 @@ npm run auth:confirm -- user@example.com
    - ホスト名は Resend の表示どおり（多くは `notify` や `resend._domainkey.notify` など）
 4. Resend で **Verify DNS Records** → ステータスが **Verified** になるまで待つ
 5. 環境変数を更新して Redeploy:
-   - `EMAIL_FROM` = `Resono <notify@resono.band>`
+   - `EMAIL_FROM` = `Resono <hello@notify.resono.band>`
    - `RESEND_API_KEY` = 既存のキー
    - （任意）`EMAIL_SITE_URL` = `https://resono-fwdi.vercel.app`
 6. 確認:

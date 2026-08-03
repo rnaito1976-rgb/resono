@@ -19,6 +19,10 @@ export type Member = {
     influences: string[];
     /** 初回登録（最低限プロフィール）が完了している */
     dialogueCompleted?: boolean;
+    /** 新規登録後のイントロオンボーディングを表示する */
+    introOnboardingPending?: boolean;
+    /** イントロオンボーディングを完了した */
+    introOnboardingCompleted?: boolean;
     /** AI会話で増えていくプロフィール項目 */
     profileItems?: ProfileItem[];
     /** 初回登録時の Activity マイルストーン */

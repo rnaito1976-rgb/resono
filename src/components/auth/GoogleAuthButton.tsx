@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { markWelcomeSignupIntent } from "@/components/auth/PostAuthOnboardingRedirect";
+import { markWelcomeSignupIntent } from "@/components/auth/WelcomeRegistrationGate";
 
 type GoogleAuthButtonProps = {
   label: string;

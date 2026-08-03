@@ -1,4 +1,11 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
+import {
+  buildResonoBodyParagraph,
+  buildResonoCodeBlock,
+  buildResonoEmailHtml,
+  buildResonoEmailText,
+  buildResonoMutedParagraph,
+} from "@/lib/notifications/email-template";
 import { getSiteUrl } from "@/lib/supabase/env";
 
 export type AuthEmailHookPayload = {
@@ -55,16 +62,47 @@ export function buildAuthEmailBodies(input: {
         ? "Resono のパスワード再設定リクエストを受け付けました。"
         : "Resono の認証メールです。";
 
-  const html = `
-    <div style="font-family: sans-serif; line-height: 1.7; color: #111;">
-      <p>${intro}</p>
-      <p><a href="${input.confirmationUrl}" style="color: #111;">こちらをクリックして続行</a></p>
-      <p style="color: #666; font-size: 13px;">確認コード: ${input.token}</p>
-      <p style="color: #666; font-size: 12px;">心当たりがない場合はこのメールを無視してください。</p>
-    </div>
-  `.trim();
+  const ctaLabel =
+    input.actionType === "signup"
+      ? "メールアドレスを確認する"
+      : input.actionType === "recovery"
+        ? "パスワードを再設定する"
+        : "続行する";
 
-  const text = `${intro}\n\n${input.confirmationUrl}\n\n確認コード: ${input.token}`;
+  const html = buildResonoEmailHtml({
+    preheader: intro,
+    eyebrow: "Account",
+    title:
+      input.actionType === "signup"
+        ? "メールアドレスの確認"
+        : input.actionType === "recovery"
+          ? "パスワードの再設定"
+          : "認証メール",
+    bodyHtml: [
+      buildResonoBodyParagraph(intro),
+      buildResonoMutedParagraph("下のボタンから続行してください。"),
+      buildResonoCodeBlock(input.token),
+      buildResonoMutedParagraph("心当たりがない場合は、このメールを無視してください。"),
+    ].join(""),
+    cta: {
+      label: ctaLabel,
+      href: input.confirmationUrl,
+    },
+  });
+
+  const text = buildResonoEmailText({
+    title:
+      input.actionType === "signup"
+        ? "メールアドレスの確認"
+        : input.actionType === "recovery"
+          ? "パスワードの再設定"
+          : "認証メール",
+    paragraphs: [intro, `確認コード: ${input.token}`, "心当たりがない場合は、このメールを無視してください。"],
+    cta: {
+      label: ctaLabel,
+      href: input.confirmationUrl,
+    },
+  });
 
   return { subject, html, text };
 }

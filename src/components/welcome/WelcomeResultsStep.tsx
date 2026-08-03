@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { markWelcomeSignupIntent } from "@/components/auth/PostAuthOnboardingRedirect";
+import { markWelcomeSignupIntent } from "@/components/auth/WelcomeRegistrationGate";
 import { WelcomeStartResonoButton } from "@/components/welcome/WelcomeStartResonoButton";
 import { getProfilePhotoSrc } from "@/lib/images/profilePhoto";
 import type { Member } from "@/types/member";

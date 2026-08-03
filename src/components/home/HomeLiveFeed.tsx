@@ -1,5 +1,6 @@
 "use client";
 
+import { BandGradientThumbnail } from "@/components/bands/BandGradientThumbnail";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -116,6 +117,11 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
 function LiveEventCardContent({ event }: { event: LiveEvent }) {
   const hasPhoto = Boolean(event.photo && event.photo !== NO_PHOTO_URL);
   const showNewBadge = event.isNew || isLiveEventNew(event.createdAt);
+  const isBandEvent =
+    event.kind === "new_video" ||
+    event.kind === "new_band" ||
+    event.kind === "band_formed";
+  const showBandGradient = isBandEvent && event.bandId && !hasPhoto;
 
   return (
     <>
@@ -134,11 +140,11 @@ function LiveEventCardContent({ event }: { event: LiveEvent }) {
             sizes="56px"
             className="object-cover"
           />
+        ) : showBandGradient ? (
+          <BandGradientThumbnail colors={event.gradientColors} className="h-full w-full" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[11px] tracking-[0.12em] text-white/30">
-            {event.kind === "new_video" || event.kind === "new_band" || event.kind === "band_formed"
-              ? "BAND"
-              : "NEW"}
+            {isBandEvent ? "BAND" : "NEW"}
           </div>
         )}
       </div>

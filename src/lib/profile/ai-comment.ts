@@ -29,7 +29,7 @@ const IMPRESSION_FOCUSES: ImpressionFocus[] = [
 ];
 
 const BANNED_PATTERN =
-  /(会話では|話している|会話の中|会話の途中|話をした|話していた|話題にな|語っていた|やり取り|本人の言葉|名前が何度も|会話の温度|空気感|世界観|きっと|音を重ね|ジャンルの壁|時間になりそう|という印象|タイプ|空気だった|饒舌|編集された自己紹介|具体例を)/u;
+  /(会話では|話している|会話の中|会話の途中|話をした|話していた|話題にな|語っていた|やり取り|本人の言葉|名前が何度も|会話の温度|空気感|世界観|きっと|音を重ね|ジャンルの壁|時間になりそう|という印象|タイプ|空気だった|饒舌|編集された自己紹介|具体例を|物語|響く|余韻|壁を越える|向き合い方|解像度|輪郭|佇まい|内側への|詩的|エッセイ|温度が|温度を|芯が|筆頭|信条|偏り|地図|判断の|隣で鳴らす|一緒に組む|同じスタジオ|同じバンド|演奏の|言葉の精度|人柄が|自然に湧|距離感です|イメージが)/u;
 
 export type BuildProfileAiCommentOptions = {
   /** 直前のメンバーと同じ切り口を避ける（一括再生成用） */
@@ -293,11 +293,22 @@ function collectFocusCandidates(facts: MemberFacts): FocusCandidate[] {
 
 function pickFocusCandidate(
   candidates: FocusCandidate[],
+  facts: MemberFacts,
   seed: string,
   avoid?: ImpressionFocus
 ): FocusCandidate {
   if (candidates.length === 0) {
-    return { focus: "music-taste", hero: "音楽への向き合い方" };
+    const hero =
+      facts.instrument && facts.artist
+        ? `${facts.instrument}で${facts.artist}`
+        : facts.artist ??
+          facts.coverLabel ??
+          facts.gear ??
+          facts.liveMemory ??
+          facts.instrument ??
+          facts.genre ??
+          "音楽";
+    return { focus: "music-taste", hero };
   }
 
   const pool = avoid
@@ -307,106 +318,122 @@ function pickFocusCandidate(
   return pickStable(pool.length > 0 ? pool : candidates, `${seed}:candidate`) ?? candidates[0]!;
 }
 
-type ImpressionTemplate = (hero: string, seed: string) => string;
+type TemplateContext = {
+  hero: string;
+  seed: string;
+  facts: MemberFacts;
+  member: Member;
+};
+
+type ImpressionTemplate = (ctx: TemplateContext) => string;
 
 const IMPRESSION_TEMPLATES: Record<ImpressionFocus, ImpressionTemplate[]> = {
   "music-taste": [
-    (hero, seed) =>
-      pickStable(
-        [
-          `${hero}——この人の音楽地図の中心。一緒に組むと、軸がぶれない`,
-          `${hero}が好みの頂点。リハが始まる前から、音の色が見えている`,
-          `${hero}への偏りが強い。同じスタジオに入ると、好みの温度が先に立つ`,
-          `音楽の芯は${hero}。隣で鳴らすと、その方向性が伝わってくる`,
-        ],
-        `${seed}:taste`
-      ) ?? `音楽の芯は${hero}`,
+    ({ hero, facts, seed }) => {
+      const part = facts.instrument ? `${facts.instrument}やってて、` : "";
+      return (
+        pickStable(
+          [
+            `${part}${hero}好き。プレイリストだいたいそれ`,
+            `${part}${hero}推し。曲の話になると止まらなさそう`,
+            `${hero}と${facts.genreDuo ?? facts.genre ?? "好きな曲"}あたり。好みははっきりしてる`,
+            `${hero}の話、結構する人。ライブも行ってそう`,
+          ],
+          `${seed}:taste`
+        ) ?? `${part}${hero}好き`
+      );
+    },
   ],
   "favorite-song": [
-    (hero) => `${hero}を語るとき、目の色が変わる。隣で鳴らすと、その熱が伝わる`,
-    (hero) => `${hero}が、この人の音楽の起点。一緒に組むと、芯がはっきりする`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}——忘れられない一曲。同じスタジオで、温度が合いそう`,
-          `${hero}の余韻が残った。演奏の輪郭を、一緒に描けそう`,
+          `${hero}の話になると急に詳しくなる`,
+          `${hero}——最近もずっと聴いてるらしい`,
+          `${hero}が好きすぎる。カラオケでも出てきそう`,
+          `${hero}から入るタイプ。曲名出したら話広がる`,
         ],
         `${seed}:favorite`
-      ) ?? `${hero}の余韻が残った`,
+      ) ?? `${hero}が好き`,
+    ({ hero, facts }) =>
+      `${hero}が原点。${facts.instrument ? `${facts.instrument}の` : ""}参考曲にもなってそう`,
   ],
   "play-song": [
-    (hero) => `${hero}を鳴らしたい——その想いが残った。譜面より入り方にこだわりがある`,
-    (hero) => `${hero}を前にすると、リハの輪郭が見える。隣で鳴らすと、温度が合う`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}——演奏したい曲の筆頭。同じスタジオで、入り方から作れそう`,
-          `${hero}が候補の筆頭。一緒に鳴らすと、ノリが先に合いそう`,
+          `バンドで${hero}やりたがってる`,
+          `コピー候補は${hero}が第一希望`,
+          `${hero}、リハで一度通したいタイプ`,
+          `${hero}を前にするとテンション上がりそう`,
         ],
         `${seed}:play`
-      ) ?? `${hero}が候補の筆頭`,
+      ) ?? `${hero}をコピーしたい`,
+    ({ hero, facts }) =>
+      `${hero}を鳴らしたい。${facts.instrument ? `${facts.instrument}パート` : "パート"}は要相談`,
   ],
   "band-stance": [
-    (hero) => `${hero}——バンドへの向き合い方がはっきりしている`,
-    (hero) => `目指しているのは${hero}。一緒に組むと、その芯がぶれない`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}がバンドの芯。同じリハ室に入ると、方向が見える`,
-          `${hero}——この人のバンド観の中心。隣で鳴らすと、解像度が上がる`,
+          `${hero}みたいなバンドやりたいらしい`,
+          `目指してるのは${hero}。メンバー募集中`,
+          `${hero}——バンドの方向性はここ`,
+          `${hero}で活動したい。スタジオは割り勘派`,
         ],
         `${seed}:band`
-      ) ?? `${hero}がバンドの芯`,
+      ) ?? `${hero}をやりたい`,
+    ({ hero, facts }) =>
+      `${hero}。${facts.commitment ? `活動ペースは${facts.commitment}` : "活動ペースは要ヒアリング"}`,
   ],
   "live-memory": [
-    (hero) => `${hero}の余韻が残った。ライブの熱が、まだ消えていない`,
-    (hero) => `${hero}——忘れられないライブ。同じステージに立つと、温度が合いそう`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}が原点。一緒に鳴らすと、ライブへの向き合い方が伝わる`,
-          `${hero}の記憶が強い。隣で演奏すると、会場の熱が思い出される`,
+          `${hero}のライブ行ってた。まだ話題に出る`,
+          `${hero}——忘れられないライブらしい`,
+          `最近${hero}の話してた。客席で見てたタイプ`,
+          `${hero}の余計な話はしない。行った事実がデカい`,
         ],
         `${seed}:live`
-      ) ?? `${hero}の記憶が強い`,
+      ) ?? `${hero}のライブ経験あり`,
   ],
   gear: [
-    (hero) => `${hero}へのこだわりが強い。隣で鳴らすと、音作りの精度が伝わる`,
-    (hero) => `${hero}——機材選びに時間をかけている。同じスタジオで、音色が合いそう`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}が音の芯。一緒に組むと、機材の解像度が先に分かる`,
-          `${hero}への愛が強い。リハが始まる前から、音色の方向が見える`,
+          `${hero}にこだわってる。機材の話は長くなりそう`,
+          `愛用は${hero}。音色の話になると急に詳しい`,
+          `${hero}メイン。買い替え話も出てきそう`,
+          `${hero}——機材選びはここ`,
         ],
         `${seed}:gear`
-      ) ?? `${hero}が音の芯`,
+      ) ?? `${hero}使ってる`,
+    ({ hero, facts }) =>
+      `${hero}推し。${facts.playingStyle ? `演奏は${facts.playingStyle}寄り` : "サウンド作りにうるさい"}`,
   ],
   "memorable-line": [
-    (hero) => `「${hero}」——その一言が残った。一緒に鳴らすと、言葉の精度が伝わる`,
-    (hero) => `「${hero}」が忘れられない。隣で演奏すると、人柄がはっきりする`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `「${hero}」——短い一言に、音楽への向き合い方が詰まっている`,
-          `「${hero}」が残った。同じバンドに入ると、その価値観が芯になる`,
+          `「${hero}」って言ってた。それがだいたいこの人`,
+          `「${hero}」——これだけ覚えとけばだいたい合う`,
+          `「${hero}」が忘れられない。短いけどはっきりしてる`,
         ],
         `${seed}:line`
-      ) ?? `「${hero}」が残った`,
+      ) ?? `「${hero}」が印象的`,
   ],
   values: [
-    (hero) =>
-      `${hero}を大切にする人。バンドに入ると、その価値観が芯になる`,
-    (hero) =>
-      `${hero}——この人の軸。一緒に鳴らすと、判断の輪郭が見える`,
-    (hero, seed) =>
+    ({ hero, seed }) =>
       pickStable(
         [
-          `${hero}が信条。同じスタジオに入ると、大切にしたいことが伝わる`,
-          `${hero}——価値観の中心。隣で演奏すると、バンドの芯が見える`,
+          `${hero}を大事にしてる。スタジオもライブもそれ優先`,
+          `${hero}——活動のルールはここ`,
+          `${hero}が口癖。バンド探しもそれ基準`,
+          `${hero}。割と譲らない。相性見るならここ`,
         ],
         `${seed}:values`
-      ) ?? `${hero}が信条`,
+      ) ?? `${hero}を大事にしてる`,
   ],
 };
 
@@ -440,9 +467,9 @@ function fitLength(text: string, seed: string): string {
 
   const pad = pickStable(
     [
-      "同じバンドに入りたくなる",
-      "リハの温度が自然と想像できる",
-      "隣で鳴らすと温度が合う",
+      "話してみたい",
+      "ちょい話しかけやすそう",
+      "一度リハ入ってみたい",
     ],
     `${seed}:pad`
   );
@@ -463,7 +490,15 @@ function composeImpression(ctx: ImpressionContext): string {
   const templates = IMPRESSION_TEMPLATES[ctx.candidate.focus];
   const index = (ctx.templateIndex + stableIndex(ctx.seed, templates.length)) % templates.length;
   const template = templates[index] ?? templates[0]!;
-  return fitLength(template(ctx.candidate.hero, ctx.seed), ctx.seed);
+  return fitLength(
+    template({
+      hero: ctx.candidate.hero,
+      seed: ctx.seed,
+      facts: ctx.facts,
+      member: ctx.member,
+    }),
+    ctx.seed
+  );
 }
 
 function buildSeed(member: Member): string {
@@ -486,7 +521,7 @@ export function resolveProfileAiIntro(
   const facts = collectFacts(member);
   const avoid = options?.avoidFocus ?? options?.avoidAngle;
   const candidates = collectFocusCandidates(facts);
-  const candidate = pickFocusCandidate(candidates, seed, avoid);
+  const candidate = pickFocusCandidate(candidates, facts, seed, avoid);
 
   const attempts: Array<{ focus: ImpressionFocus; comment: string }> = [];
 
@@ -536,7 +571,7 @@ export function resolveProfileAiIntro(
   };
 }
 
-/** 会話由来の具体情報から About 向け AI 印象文（80〜100字）を生成 */
+/** 会話由来の具体情報から About 向け紹介文（80〜100字）を生成。小説調ではなく、音楽友達がラフに紹介する文体。 */
 export function buildProfileAiComment(
   member: Member,
   options?: BuildProfileAiCommentOptions

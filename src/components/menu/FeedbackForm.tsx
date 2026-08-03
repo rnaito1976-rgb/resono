@@ -1,29 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { MenuPageShell } from "@/components/menu/MenuPageShell";
 import { Button } from "@/components/ui/button";
+import { submitFeedbackAction } from "@/lib/actions/feedback";
+import type { FeedbackCategory } from "@/lib/feedback/send-feedback-email";
 import { MENU_FEEDBACK } from "@/lib/menu/copy";
 import { cn } from "@/lib/utils";
-
-type FeedbackCategory = (typeof MENU_FEEDBACK.categories)[number]["id"];
 
 export function FeedbackForm() {
   const [category, setCategory] = useState<FeedbackCategory | null>(null);
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!category || !message.trim()) {
       return;
     }
 
-    setIsSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 600));
-    setIsSubmitting(false);
-    setSubmitted(true);
+    setError(null);
+
+    startTransition(async () => {
+      const result = await submitFeedbackAction({ category, message });
+      if ("error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setSubmitted(true);
+    });
   }
 
   if (submitted) {
@@ -69,16 +77,21 @@ export function FeedbackForm() {
           onChange={(event) => setMessage(event.target.value)}
           placeholder={MENU_FEEDBACK.placeholder}
           rows={6}
-          disabled={!category}
+          disabled={!category || isPending}
           className="w-full resize-none rounded-[14px] border border-border/80 bg-subtle/60 px-4 py-4 text-[16px] leading-relaxed text-foreground placeholder:text-muted focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-45"
         />
+        {error ? (
+          <p className="text-[13px] text-red-300" role="alert">
+            {error}
+          </p>
+        ) : null}
         <Button
           type="submit"
           size="lg"
           className="w-full"
-          disabled={!category || !message.trim() || isSubmitting}
+          disabled={!category || !message.trim() || isPending}
         >
-          {isSubmitting ? "送信中…" : MENU_FEEDBACK.submit}
+          {isPending ? "送信中…" : MENU_FEEDBACK.submit}
         </Button>
       </form>
     </div>

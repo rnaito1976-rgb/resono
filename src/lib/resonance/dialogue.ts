@@ -334,7 +334,15 @@ export function enrichMemberFromDiscover(
 
 function buildBio(answers: DialogueAnswers): string {
   const genres = answers.genres.slice(0, 3).join("・");
-  return `${genres}あたりの音楽を、${answers.part}で。${answers.bandGoal}。`;
+  const part = answers.part?.trim();
+  const goal = answers.bandGoal?.trim();
+  if (part && goal) {
+    return `${genres}あたり好き。${part}で、${goal}やりたい`;
+  }
+  if (part) {
+    return `${genres}あたり好き。${part}やってる`;
+  }
+  return `${genres}あたり好き。${goal || "バンド募集中"}`;
 }
 
 export function mergeDialogueAnswers(

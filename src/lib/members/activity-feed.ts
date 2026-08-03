@@ -3,7 +3,7 @@ import {
   getMemberActivityMilestones,
   memberActivityMilestonesToFeedItems,
 } from "@/lib/members/initial-activities";
-import { getMemberBandIds } from "@/lib/bands/queries";
+import { getMemberBandIds, getBandGradientColorsMap } from "@/lib/bands/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { MemberActivityFeedItem, MemberActivityKind } from "@/types/activity";
@@ -95,6 +95,30 @@ function buildResonanceItems(
   }
 
   return items;
+}
+
+async function attachBandGradientsToActivities(
+  items: MemberActivityFeedItem[]
+): Promise<MemberActivityFeedItem[]> {
+  const bandIds = [
+    ...new Set(
+      items
+        .map((item) => item.bandId)
+        .filter((bandId): bandId is string => Boolean(bandId))
+    ),
+  ];
+
+  if (bandIds.length === 0) {
+    return items;
+  }
+
+  const gradientMap = await getBandGradientColorsMap(bandIds);
+
+  return items.map((item) =>
+    item.bandId && gradientMap.has(item.bandId)
+      ? { ...item, gradientColors: gradientMap.get(item.bandId) }
+      : item
+  );
 }
 
 /** My Page: only the viewer's own actions and milestones. */
@@ -220,7 +244,7 @@ export async function getOwnMemberActivityFeed(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
   );
 
-  return items.slice(0, limit);
+  return attachBandGradientsToActivities(items.slice(0, limit));
 }
 
 export async function getMemberActivityFeed(
@@ -317,5 +341,5 @@ export async function getMemberActivityFeed(
     (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
   );
 
-  return items.slice(0, limit);
+  return attachBandGradientsToActivities(items.slice(0, limit));
 }

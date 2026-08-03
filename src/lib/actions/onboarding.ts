@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
+import { DEFAULT_FREQUENCY_COLOR, isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import { saveFrequencyColorForUser } from "@/lib/frequency-color/server";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import { ensureMemberForUser, getMemberByUserId, updateMember } from "@/lib/members";
@@ -97,6 +97,7 @@ export async function completeMinimalRegistrationAction(
     );
 
     revalidatePath("/");
+    revalidatePath("/discover");
     revalidatePath(`/member/${member.id}`);
 
     return { success: true };
@@ -212,6 +213,24 @@ export async function saveFrequencyColorAction(color: FrequencyColorHex) {
   }
 }
 
+export async function needsProfileRegistrationAction(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return false;
+  }
+
+  const member = await getMemberByUserId(user.id);
+  if (!member) {
+    return true;
+  }
+
+  return member.portrait.dialogueCompleted !== true;
+}
+
 export async function startResonoFromWelcomeAction(
   answers: WelcomeOnboardingAnswers
 ) {
@@ -237,6 +256,10 @@ export async function startResonoFromWelcomeAction(
       };
     }
 
+    if (member.portrait.dialogueCompleted === true) {
+      return { success: true, redirectTo: "/" as const };
+    }
+
     const parts = effectiveWelcomeParts(answers.parts);
     const input: MinimalRegistrationInput = {
       name: member.name.trim() || "Member",
@@ -247,27 +270,20 @@ export async function startResonoFromWelcomeAction(
       sounds: answers.sounds,
     };
 
-    if (answers.frequencyColor && isValidFrequencyColor(answers.frequencyColor)) {
-      const registrationResult = await completeMinimalRegistrationAction(
-        input,
-        answers.frequencyColor
-      );
-      if (registrationResult.error) {
-        return registrationResult;
-      }
+    const frequencyColor =
+      answers.frequencyColor && isValidFrequencyColor(answers.frequencyColor)
+        ? answers.frequencyColor
+        : DEFAULT_FREQUENCY_COLOR;
 
-      return { success: true, redirectTo: "/" as const };
-    }
-
-    const registrationResult = await completeMinimalRegistrationAction(input);
+    const registrationResult = await completeMinimalRegistrationAction(
+      input,
+      frequencyColor
+    );
     if (registrationResult.error) {
       return registrationResult;
     }
 
-    return {
-      success: true,
-      redirectTo: "/onboarding?skipPhoto=1&phase=frequency" as const,
-    };
+    return { success: true, redirectTo: "/" as const };
   } catch (error) {
     console.error("[startResonoFromWelcomeAction]", error);
     return { error: "保存中に問題が発生しました。もう一度お試しください。" };

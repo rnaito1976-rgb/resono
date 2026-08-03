@@ -144,6 +144,8 @@ function normalizePortrait(raw: unknown): Member["portrait"] {
       ? value.influences.filter((item): item is string => typeof item === "string")
       : [],
     dialogueCompleted: value.dialogueCompleted === true,
+    introOnboardingPending: value.introOnboardingPending === true,
+    introOnboardingCompleted: value.introOnboardingCompleted === true,
     profileItems: normalizeProfileItems(raw),
     activityMilestones: normalizeActivityMilestones(value.activityMilestones),
     resonanceSignals: normalizeResonanceSignals(value.resonanceSignals),

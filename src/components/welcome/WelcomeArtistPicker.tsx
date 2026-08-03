@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
+import { isInStaticCatalog } from "@/lib/catalog/community-catalog";
+import { useCommunityCatalog } from "@/hooks/useCommunityCatalog";
 import {
   PROFILE_GROW_NONE_LABEL,
   applyNoneAwareSelection,
@@ -27,27 +29,34 @@ function normalize(value: string) {
 
 export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerProps) {
   const [query, setQuery] = useState("");
+  const { catalog, groups, recordCustomItem } = useCommunityCatalog({
+    catalogKey: "artists",
+    baseCatalog: WELCOME_ARTIST_CATALOG,
+    baseGroups: WELCOME_ARTIST_GROUPS,
+  });
 
   const atMax = selected.length >= WELCOME_ARTIST_MAX;
 
   const filteredGroups = useMemo(() => {
     const normalized = normalize(query);
 
-    return WELCOME_ARTIST_GROUPS.map((group) => ({
-      ...group,
-      items: group.items.filter((artist) => {
-        if (selected.includes(artist)) {
-          return false;
-        }
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((artist) => {
+          if (selected.includes(artist)) {
+            return false;
+          }
 
-        if (!normalized) {
-          return true;
-        }
+          if (!normalized) {
+            return true;
+          }
 
-        return normalize(artist).includes(normalized);
-      }),
-    })).filter((group) => group.items.length > 0);
-  }, [query, selected]);
+          return normalize(artist).includes(normalized);
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [groups, query, selected]);
 
   const customCandidate = useMemo(() => {
     const value = query.trim();
@@ -56,11 +65,11 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
     }
 
     const exists =
-      WELCOME_ARTIST_CATALOG.some((artist) => normalize(artist) === normalize(value)) ||
+      catalog.some((artist) => normalize(artist) === normalize(value)) ||
       selected.some((artist) => normalize(artist) === normalize(value));
 
     return exists ? null : value;
-  }, [atMax, query, selected]);
+  }, [atMax, catalog, query, selected]);
 
   function addArtist(name: string) {
     const value = name.trim();
@@ -84,6 +93,9 @@ export function WelcomeArtistPicker({ selected, onChange }: WelcomeArtistPickerP
     }
 
     onChange(applyNoneAwareSelection(selected, value));
+    if (!isInStaticCatalog(value, WELCOME_ARTIST_CATALOG)) {
+      recordCustomItem(value);
+    }
     setQuery("");
   }
 

@@ -81,6 +81,7 @@ export async function sendMessageAction(conversationId: string, body: string) {
       recipientMemberId,
       senderMemberId: member.id,
       conversationId,
+      messageId: data.id,
     }).catch((error) => {
       console.error("[BadgeEmail] message notification:", error);
     })

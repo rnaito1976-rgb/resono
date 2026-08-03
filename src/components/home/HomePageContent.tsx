@@ -10,7 +10,6 @@ import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
 import { LIVE_FEED_SIZE } from "@/types/live";
-import { buildWelcomeOnboardingHref } from "@/lib/navigation/onboarding";
 
 export function HomePageFallback() {
   return (
@@ -39,7 +38,7 @@ export async function HomePageContent() {
   ]);
 
   if (user && !member) {
-    redirect(buildWelcomeOnboardingHref());
+    redirect("/welcome");
   }
 
   const lcpImageHref = getHomeLcpImageHref(member, undefined);

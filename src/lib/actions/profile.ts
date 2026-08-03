@@ -41,7 +41,24 @@ export type MemberProfileBandPayload = {
   bandActivities: BandActivityFeedItem[];
 };
 
-/** シート初回表示向け — band / mutual は別途 lazy load */
+const loadMemberProfileBandData = cache(
+  async (
+    memberId: string,
+    isOwnProfile: boolean,
+    viewerMemberId: string | null
+  ): Promise<MemberProfileBandPayload> => {
+    const [mutualMembers, memberBands, bandActivities] = await Promise.all([
+      isOwnProfile && viewerMemberId
+        ? getMutualResonateMembers(viewerMemberId)
+        : Promise.resolve([]),
+      getBandsForMember(memberId),
+      getBandActivityFeedForMember(memberId),
+    ]);
+
+    return { mutualMembers, memberBands, bandActivities };
+  }
+);
+
 export async function getMemberProfileAction(
   memberId: string
 ): Promise<{ data?: MemberProfilePayload; error?: string }> {
@@ -79,7 +96,13 @@ export async function getMemberProfileAction(
         ? getMemberListById(viewerMemberId)
         : Promise.resolve(undefined);
 
-  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
+  const bandDataPromise = loadMemberProfileBandData(
+    memberId,
+    isOwnProfile,
+    viewerMemberId
+  );
+
+  const [viewer, resonanceStatus, cachedReasons, bandData] = await Promise.all([
     viewerPromise,
     needsResonance
       ? getResonanceStatusForMember(viewerMemberId!, member.id)
@@ -87,6 +110,7 @@ export async function getMemberProfileAction(
     needsResonance
       ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
+    bandDataPromise,
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -113,32 +137,14 @@ export async function getMemberProfileAction(
       musicResonance,
       resonanceStatus,
       showResonateButton: Boolean(viewer && needsResonance),
-      mutualMembers: [],
-      memberBands: [],
-      bandActivities: [],
+      mutualMembers: bandData.mutualMembers,
+      memberBands: bandData.memberBands,
+      bandActivities: bandData.bandActivities,
     },
   };
 }
 
-const loadMemberProfileBandData = cache(
-  async (
-    memberId: string,
-    isOwnProfile: boolean,
-    viewerMemberId: string | null
-  ): Promise<MemberProfileBandPayload> => {
-    const [mutualMembers, memberBands, bandActivities] = await Promise.all([
-      isOwnProfile && viewerMemberId
-        ? getMutualResonateMembers(viewerMemberId)
-        : Promise.resolve([]),
-      getBandsForMember(memberId),
-      getBandActivityFeedForMember(memberId),
-    ]);
-
-    return { mutualMembers, memberBands, bandActivities };
-  }
-);
-
-/** Band タブ表示時に lazy load */
+/** Band タブ向け fallback lazy load */
 export async function getMemberProfileBandDataAction(
   memberId: string
 ): Promise<{ data?: MemberProfileBandPayload; error?: string }> {

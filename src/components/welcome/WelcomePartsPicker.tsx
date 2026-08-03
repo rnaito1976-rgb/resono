@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { WelcomePickerSection } from "@/components/welcome/WelcomePickerSection";
+import {
+  isInStaticCatalog,
+  normalizeCatalogValue,
+} from "@/lib/catalog/community-catalog";
+import { useCommunityCatalog } from "@/hooks/useCommunityCatalog";
 import {
   PROFILE_GROW_NONE_LABEL,
   applyNoneAwareSelection,
@@ -20,15 +25,11 @@ type WelcomePartsPickerProps = {
   onChange: (next: string[]) => void;
 };
 
-const PRESET_SET = new Set<string>(WELCOME_PART_PRESETS);
-const PRESET_GROUPS = WELCOME_PART_GROUPS.filter((group) => group.label !== "Other");
+const BASE_PRESET_SET = new Set<string>(WELCOME_PART_PRESETS);
+const BASE_GROUPS = WELCOME_PART_GROUPS.filter((group) => group.label !== "Other");
 
 function normalize(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function isPresetPart(part: string) {
-  return PRESET_SET.has(part);
+  return normalizeCatalogValue(value);
 }
 
 function isDisplayPart(part: string) {
@@ -37,9 +38,16 @@ function isDisplayPart(part: string) {
 
 export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerProps) {
   const [otherText, setOtherText] = useState("");
+  const { groups, recordCustomItem } = useCommunityCatalog({
+    catalogKey: "parts",
+    baseCatalog: WELCOME_PART_PRESETS,
+    baseGroups: BASE_GROUPS,
+  });
 
   const displaySelected = selected.filter(isDisplayPart);
-  const customParts = selected.filter((part) => !isPresetPart(part));
+  const customParts = selected.filter(
+    (part) => !BASE_PRESET_SET.has(part) && isDisplayPart(part)
+  );
   const otherSelected = selected.includes(WELCOME_OTHER_PART_LABEL) || customParts.length > 0;
 
   function removePart(part: string) {
@@ -50,7 +58,7 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
     if (otherSelected) {
       onChange(
         selected.filter(
-          (entry) => isPresetPart(entry) && entry !== WELCOME_OTHER_PART_LABEL
+          (entry) => BASE_PRESET_SET.has(entry) && entry !== WELCOME_OTHER_PART_LABEL
         )
       );
       setOtherText("");
@@ -89,6 +97,10 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
 
     onChange(next);
     setOtherText("");
+
+    if (!isInStaticCatalog(value, WELCOME_PART_PRESETS)) {
+      recordCustomItem(value);
+    }
   }
 
   return (
@@ -153,7 +165,7 @@ export function WelcomePartsPicker({ selected, onChange }: WelcomePartsPickerPro
       </WelcomePickerSection>
 
       <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pb-2 scrollbar-hide">
-        {PRESET_GROUPS.map((group) => (
+        {groups.map((group) => (
           <WelcomePickerSection key={group.label} label={group.label}>
             <div className="flex flex-wrap gap-2.5">
               {group.items.map((part) => (

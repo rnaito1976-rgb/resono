@@ -22,7 +22,7 @@ const resolveTabViewer = cache(async (): Promise<TabViewer> => {
 
   const memberId = await resolveCurrentMemberId();
   if (!memberId) {
-    redirect("/onboarding");
+    redirect("/welcome");
   }
 
   return { user, memberId };

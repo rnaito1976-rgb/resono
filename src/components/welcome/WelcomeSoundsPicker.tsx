@@ -6,6 +6,8 @@ import {
   WelcomePickerSection,
   WelcomeSelectedTags,
 } from "@/components/welcome/WelcomePickerSection";
+import { isInStaticCatalog } from "@/lib/catalog/community-catalog";
+import { useCommunityCatalog } from "@/hooks/useCommunityCatalog";
 import {
   PROFILE_GROW_NONE_LABEL,
   applyNoneAwareSelection,
@@ -32,26 +34,34 @@ export function WelcomeSoundsPicker({
   maxSelected,
 }: WelcomeSoundsPickerProps) {
   const [query, setQuery] = useState("");
+  const { catalog, groups, recordCustomItem } = useCommunityCatalog({
+    catalogKey: "genres",
+    baseCatalog: WELCOME_SOUND_PRESETS,
+    baseGroups: WELCOME_SOUND_GROUPS,
+  });
+
   const atMax = maxSelected ? selected.length >= maxSelected : false;
 
   const filteredGroups = useMemo(() => {
     const normalized = normalize(query);
 
-    return WELCOME_SOUND_GROUPS.map((group) => ({
-      ...group,
-      items: group.items.filter((item) => {
-        if (selected.includes(item)) {
-          return false;
-        }
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (selected.includes(item)) {
+            return false;
+          }
 
-        if (!normalized) {
-          return true;
-        }
+          if (!normalized) {
+            return true;
+          }
 
-        return normalize(item).includes(normalized);
-      }),
-    })).filter((group) => group.items.length > 0);
-  }, [query, selected]);
+          return normalize(item).includes(normalized);
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [groups, query, selected]);
 
   const customCandidate = useMemo(() => {
     const value = query.trim();
@@ -60,11 +70,11 @@ export function WelcomeSoundsPicker({
     }
 
     const exists =
-      WELCOME_SOUND_PRESETS.some((item) => normalize(item) === normalize(value)) ||
+      catalog.some((item) => normalize(item) === normalize(value)) ||
       selected.some((item) => normalize(item) === normalize(value));
 
     return exists ? null : value;
-  }, [atMax, query, selected]);
+  }, [atMax, catalog, query, selected]);
 
   function toggleItem(name: string) {
     const value = name.trim();
@@ -82,7 +92,13 @@ export function WelcomeSoundsPicker({
       return;
     }
 
-    onChange(applyNoneAwareSelection(selected, value));
+    const next = applyNoneAwareSelection(selected, value);
+    onChange(next);
+
+    if (!selected.includes(value) && !isInStaticCatalog(value, WELCOME_SOUND_PRESETS)) {
+      recordCustomItem(value);
+    }
+
     setQuery("");
   }
 

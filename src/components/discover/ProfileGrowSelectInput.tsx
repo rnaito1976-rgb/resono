@@ -83,6 +83,7 @@ export function ProfileGrowSelectInput({
     case "songs":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="songs"
           groups={PROFILE_GROW_SONG_GROUPS}
           catalog={SONG_CATALOG}
           placeholder="曲名やアーティストを検索"
@@ -93,6 +94,7 @@ export function ProfileGrowSelectInput({
     case "liveHouses":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="live_houses"
           groups={PROFILE_GROW_LIVE_HOUSE_GROUPS}
           catalog={LIVE_HOUSE_CATALOG}
           placeholder="ライブハウスを検索"
@@ -103,6 +105,7 @@ export function ProfileGrowSelectInput({
     case "studios":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="studios"
           groups={PROFILE_GROW_STUDIO_GROUPS}
           catalog={STUDIO_CATALOG}
           placeholder="スタジオを検索"
@@ -113,6 +116,7 @@ export function ProfileGrowSelectInput({
     case "festivals":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="festivals"
           groups={PROFILE_GROW_FESTIVAL_GROUPS}
           catalog={FESTIVAL_CATALOG}
           placeholder="フェスを検索"
@@ -123,6 +127,7 @@ export function ProfileGrowSelectInput({
     case "gear":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="gear"
           groups={PROFILE_GROW_GEAR_GROUPS}
           catalog={GEAR_CATALOG}
           placeholder="機材を検索"
@@ -133,6 +138,7 @@ export function ProfileGrowSelectInput({
     case "wantedGear":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="wanted_gear"
           groups={PROFILE_GROW_WANTED_GEAR_GROUPS}
           catalog={WANTED_GEAR_CATALOG}
           placeholder="欲しい機材を検索"
@@ -143,6 +149,7 @@ export function ProfileGrowSelectInput({
     case "production":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="production"
           groups={PROFILE_GROW_PRODUCTION_GROUPS}
           catalog={PRODUCTION_CATALOG}
           placeholder="DAWや制作機材を検索"
@@ -153,6 +160,7 @@ export function ProfileGrowSelectInput({
     case "style":
       return (
         <ProfileGrowSearchPicker
+          catalogKey="style"
           groups={PROFILE_GROW_STYLE_GROUPS}
           catalog={STYLE_CATALOG}
           placeholder="スタイルを検索"
@@ -164,6 +172,7 @@ export function ProfileGrowSelectInput({
     default:
       return (
         <ProfileGrowSearchPicker
+          catalogKey="artists"
           groups={[{ label: "Suggestions", items: [...WELCOME_ARTIST_CATALOG.slice(0, 12)] }]}
           catalog={WELCOME_ARTIST_CATALOG}
           {...pickerProps}

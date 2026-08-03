@@ -1,3 +1,5 @@
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+
 export type LiveEventKind =
   | "new_member"
   | "new_band"
@@ -14,6 +16,7 @@ export type LiveEvent = {
   photo?: string;
   actorMemberId?: string;
   bandId?: string;
+  gradientColors?: FrequencyColorHex[];
   createdAt: string;
   isNew: boolean;
 };

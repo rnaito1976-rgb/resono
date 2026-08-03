@@ -1,5 +1,11 @@
 import { getMemberById } from "@/lib/members";
 import { orderedMemberPair } from "@/lib/messages/types";
+import {
+  buildResonoBodyParagraph,
+  buildResonoEmailHtml,
+  buildResonoEmailText,
+  buildResonoSettingsFooter,
+} from "@/lib/notifications/email-template";
 import { isEmailNotificationEnabled } from "@/lib/notifications/preferences";
 import { isEmailConfigured, sendEmail } from "@/lib/notifications/send-email";
 import { calculateResonanceMatch, partsMatch } from "@/lib/resonance/matching";
@@ -9,7 +15,6 @@ import { MEMBER_LIST_COLUMNS } from "@/lib/supabase/member-columns";
 import { getEmailSiteUrl, isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Member } from "@/types/member";
 
-const COOLDOWN_MINUTES = 30;
 const COMPATIBLE_SCORE_THRESHOLD = 55;
 const MAX_RECIPIENTS = 25;
 
@@ -39,7 +44,7 @@ async function getEmailForMember(memberId: string): Promise<string | null> {
   return data.user.email;
 }
 
-async function isWithinCooldown(
+async function hasAlreadySent(
   memberId: string,
   kind: EncounterEmailKind,
   scopeId: string
@@ -49,21 +54,20 @@ async function isWithinCooldown(
     return true;
   }
 
-  const cutoff = new Date(Date.now() - COOLDOWN_MINUTES * 60 * 1000).toISOString();
   const { data, error } = await admin
     .from("badge_email_cooldowns")
-    .select("last_sent_at")
+    .select("member_id")
     .eq("member_id", memberId)
     .eq("kind", kind)
     .eq("scope_id", scopeId)
     .maybeSingle();
 
   if (error) {
-    console.error("[MatchEmail] cooldown lookup:", error.message);
+    console.error("[MatchEmail] sent lookup:", error.message);
     return false;
   }
 
-  return Boolean(data?.last_sent_at && data.last_sent_at > cutoff);
+  return Boolean(data);
 }
 
 async function recordCooldown(
@@ -120,7 +124,7 @@ async function sendEncounterEmail(
 
   if (
     !options.force &&
-    (await isWithinCooldown(input.recipientMemberId, input.kind, input.scopeId))
+    (await hasAlreadySent(input.recipientMemberId, input.kind, input.scopeId))
   ) {
     return false;
   }
@@ -131,15 +135,26 @@ async function sendEncounterEmail(
   }
 
   const settingsUrl = `${getEmailSiteUrl()}/menu/notifications`;
-  const html = `
-    <div style="font-family: sans-serif; line-height: 1.6; color: #111;">
-      <p>${input.body}</p>
-      <p><a href="${input.actionUrl}" style="color: #111;">Resonoで確認する</a></p>
-      <p style="color: #666; font-size: 12px;">通知設定は<a href="${settingsUrl}" style="color: #666;">こちら</a>から変更できます。</p>
-    </div>
-  `.trim();
+  const settingsFooter = buildResonoSettingsFooter(settingsUrl);
+  const html = buildResonoEmailHtml({
+    preheader: input.body,
+    eyebrow: input.kind === "band_recruitment" ? "Band" : "Resonance",
+    bodyHtml: buildResonoBodyParagraph(input.body),
+    cta: {
+      label: "Resonoで確認する",
+      href: input.actionUrl,
+    },
+    secondaryHtml: settingsFooter.html,
+  });
 
-  const text = `${input.body}\n\nResonoで確認する: ${input.actionUrl}\n\n通知設定: ${settingsUrl}`;
+  const text = buildResonoEmailText({
+    paragraphs: [input.body],
+    cta: {
+      label: "Resonoで確認する",
+      href: input.actionUrl,
+    },
+    footerLines: [settingsFooter.textLine],
+  });
 
   const sent = await sendEmail({
     to: email,
@@ -292,7 +307,7 @@ export async function backfillNotificationEmailsForMember(
       {
         recipientMemberId: recipient.id,
         kind: "resonance_member",
-        scopeId: actorMemberId,
+        scopeId: `${actorMemberId}:joined`,
         preferenceKey: "resonanceMembers",
         subject: "Resono: 相性の良いメンバーが参加しました",
         body: `${actor.name}さんがResonoに参加しました。共鳴度 ${score}%。プロフィールを見てみましょう。`,
@@ -415,7 +430,7 @@ export async function notifyCompatibleMemberJoinedEmail(actorMemberId: string): 
       sendEncounterEmail({
         recipientMemberId: recipient.id,
         kind: "resonance_member",
-        scopeId: actorMemberId,
+        scopeId: `${actorMemberId}:joined`,
         preferenceKey: "resonanceMembers",
         subject: `Resono: 相性の良いメンバーが参加しました`,
         body: `${actor.name}さんがResonoに参加しました。共鳴度 ${score}%。プロフィールを見てみましょう。`,
@@ -446,7 +461,7 @@ export async function notifyCompatibleMemberUpdatedEmail(actorMemberId: string):
       sendEncounterEmail({
         recipientMemberId: recipient.id,
         kind: "resonance_member",
-        scopeId: actorMemberId,
+        scopeId: `${actorMemberId}:updated`,
         preferenceKey: "resonanceMembers",
         subject: `Resono: 相性の良いメンバーがプロフィールを更新`,
         body: `${actor.name}さんがプロフィールを更新しました。共鳴度 ${score}%。`,

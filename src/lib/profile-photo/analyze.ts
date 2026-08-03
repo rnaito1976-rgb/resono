@@ -106,7 +106,7 @@ function buildTips(metrics: AnalysisMetrics): string[] {
   }
 
   if (tips.length === 0) {
-    tips.push("この写真は、あなたの世界観がよく伝わる一枚です。");
+    tips.push("この写真、ライブハウスでもスタジオでも使えそうです。");
   }
 
   return tips.slice(0, 3);

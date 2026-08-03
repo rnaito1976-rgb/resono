@@ -1,6 +1,6 @@
 import type { NextRequest, NextResponse } from "next/server";
 import { sanitizeNextPath } from "@/lib/auth/urls";
-import { WELCOME_ONBOARDING_HREF } from "@/lib/navigation/onboarding";
+import { POST_SIGNUP_HOME_PATH } from "@/lib/navigation/onboarding";
 
 export const WELCOME_SIGNUP_INTENT_COOKIE = "resono-welcome-signup";
 export const AUTH_NEXT_PATH_COOKIE = "resono-auth-next";
@@ -40,7 +40,7 @@ export function resolveWelcomeSignupDestination(
   fallback: string
 ): string {
   if (readWelcomeSignupIntent(request)) {
-    return WELCOME_ONBOARDING_HREF;
+    return POST_SIGNUP_HOME_PATH;
   }
 
   return fallback;

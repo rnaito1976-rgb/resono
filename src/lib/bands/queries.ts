@@ -5,6 +5,8 @@ import { getMemberById, getMembersByIds } from "@/lib/members";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
 import { getConversationIdsForMemberPairs } from "@/lib/resonance/status";
 import { calculateResonanceMatch } from "@/lib/resonance/matching";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type {
@@ -47,6 +49,79 @@ function rowToBand(row: BandRow): Band {
     createdAt: row.created_at,
   };
 }
+
+export const getBandGradientColorsMap = cache(async function getBandGradientColorsMap(
+  bandIds: string[]
+): Promise<Map<string, FrequencyColorHex[]>> {
+  const result = new Map<string, FrequencyColorHex[]>();
+  const uniqueIds = [...new Set(bandIds.filter(Boolean))];
+
+  if (!isSupabaseConfigured() || uniqueIds.length === 0) {
+    return result;
+  }
+
+  const admin = createAdminClient();
+  const reader = admin ?? createAnonClient();
+
+  try {
+    const [{ data: bandRows }, { data: memberRows }] = await Promise.all([
+      reader.from("bands").select("id, accent_color").in("id", uniqueIds),
+      reader
+        .from("band_members")
+        .select("band_id, member_id")
+        .in("band_id", uniqueIds),
+    ]);
+
+    const accentByBand = new Map(
+      (bandRows ?? []).map((row) => [
+        row.id,
+        (row.accent_color as FrequencyColorHex | null) ?? undefined,
+      ])
+    );
+
+    const memberIdsByBand = new Map<string, string[]>();
+    for (const row of memberRows ?? []) {
+      const list = memberIdsByBand.get(row.band_id) ?? [];
+      list.push(row.member_id);
+      memberIdsByBand.set(row.band_id, list);
+    }
+
+    const allMemberIds = [...new Set([...memberIdsByBand.values()].flat())];
+    const memberMap = await getMembersByIds(allMemberIds);
+    const userIds = [
+      ...new Set(
+        [...memberMap.values()]
+          .map((member) => member.userId)
+          .filter((userId): userId is string => Boolean(userId))
+      ),
+    ];
+    const colorMap = await getFrequencyColorsByUserIds(userIds);
+
+    for (const bandId of uniqueIds) {
+      const colors = (memberIdsByBand.get(bandId) ?? [])
+        .map((memberId) => memberMap.get(memberId)?.userId)
+        .filter((userId): userId is string => Boolean(userId))
+        .map((userId) => colorMap.get(userId))
+        .filter((color): color is FrequencyColorHex => Boolean(color));
+
+      const uniqueColors = [...new Set(colors)].slice(0, 5);
+
+      if (uniqueColors.length > 0) {
+        result.set(bandId, uniqueColors);
+        continue;
+      }
+
+      const accent = accentByBand.get(bandId);
+      if (accent) {
+        result.set(bandId, [accent]);
+      }
+    }
+  } catch (error) {
+    console.error("[Supabase] getBandGradientColorsMap:", error);
+  }
+
+  return result;
+});
 
 export const getMemberBandIds = cache(async (memberId: string): Promise<string[]> => {
   if (!isSupabaseConfigured()) {
@@ -418,6 +493,7 @@ export async function getBandActivityFeedForMember(
     ...new Set((rows ?? []).map((row) => row.author_member_id)),
   ];
   const authorMap = await getMembersByIds(authorIds);
+  const gradientMap = await getBandGradientColorsMap(bandIds);
 
   return (rows ?? []).map((row): BandActivityFeedItem => {
     const band = row.bands as { name: string } | null;
@@ -433,6 +509,7 @@ export async function getBandActivityFeedForMember(
       createdAt: row.created_at,
       author: authorMap.get(row.author_member_id),
       bandName: band?.name ?? "Band",
+      gradientColors: gradientMap.get(row.band_id),
     };
   });
 }

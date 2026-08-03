@@ -69,6 +69,7 @@ export type BandActivity = {
 
 export type BandActivityFeedItem = BandActivity & {
   bandName: string;
+  gradientColors?: FrequencyColorHex[];
 };
 
 export type BandCoverSong = {

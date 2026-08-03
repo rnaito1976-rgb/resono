@@ -1,4 +1,5 @@
 import type { BandActivityKind, BandTimelineKind } from "@/types/band";
+import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 import type { Member } from "@/types/member";
 
 export type MemberActivityKind =
@@ -19,6 +20,7 @@ export type MemberActivityFeedItem = {
   body?: string;
   bandId?: string;
   bandName?: string;
+  gradientColors?: FrequencyColorHex[];
   partnerMember?: Member;
   mediaUrl?: string;
   activityKind?: BandActivityKind;

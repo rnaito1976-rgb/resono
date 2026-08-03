@@ -569,6 +569,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <ProfileGrowSearchPicker
+          catalogKey="songs"
           groups={PROFILE_GROW_SONG_GROUPS}
           catalog={SONG_CATALOG}
           selected={member.music.favoriteSongs ?? []}
@@ -607,6 +608,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <ProfileGrowSearchPicker
+          catalogKey="live_houses"
           groups={PROFILE_GROW_LIVE_HOUSE_GROUPS}
           catalog={LIVE_HOUSE_CATALOG}
           selected={member.music.favoriteLiveHouses ?? []}
@@ -622,6 +624,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <ProfileGrowSearchPicker
+          catalogKey="studios"
           groups={PROFILE_GROW_STUDIO_GROUPS}
           catalog={STUDIO_CATALOG}
           selected={member.music.favoriteStudios ?? []}
@@ -637,6 +640,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <ProfileGrowSearchPicker
+          catalogKey="festivals"
           groups={PROFILE_GROW_FESTIVAL_GROUPS}
           catalog={FESTIVAL_CATALOG}
           selected={member.music.favoriteFestivals ?? []}
@@ -652,6 +656,7 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
         onClose={() => setActivePicker(null)}
       >
         <ProfileGrowSearchPicker
+          catalogKey="gear"
           groups={PROFILE_GROW_GEAR_GROUPS}
           catalog={GEAR_CATALOG}
           selected={member.music.gear ?? []}

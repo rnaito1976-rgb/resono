@@ -378,6 +378,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      community_catalog_items: {
+        Row: {
+          id: string;
+          catalog_key: string;
+          value: string;
+          value_normalized: string;
+          created_by_member_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          catalog_key: string;
+          value: string;
+          value_normalized: string;
+          created_by_member_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          catalog_key?: string;
+          value?: string;
+          value_normalized?: string;
+          created_by_member_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

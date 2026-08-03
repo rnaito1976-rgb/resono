@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { getBandGradientColorsMap } from "@/lib/bands/queries";
 import { isLiveEventNew } from "@/lib/live/time";
 import { resolveMemberJoinTime } from "@/lib/members/initial-activities";
 import {
@@ -292,6 +293,28 @@ async function synthesizeBandLiveEvents(limit: number, now = Date.now()): Promis
   return events;
 }
 
+async function attachBandGradients(events: LiveEvent[]): Promise<LiveEvent[]> {
+  const bandIds = [
+    ...new Set(
+      events
+        .map((event) => event.bandId)
+        .filter((bandId): bandId is string => Boolean(bandId))
+    ),
+  ];
+
+  if (bandIds.length === 0) {
+    return events;
+  }
+
+  const gradientMap = await getBandGradientColorsMap(bandIds);
+
+  return events.map((event) =>
+    event.bandId && gradientMap.has(event.bandId)
+      ? { ...event, gradientColors: gradientMap.get(event.bandId) }
+      : event
+  );
+}
+
 function mergeLiveEvents(stored: LiveEvent[], synthesized: LiveEvent[]): LiveEvent[] {
   const byKey = new Map<string, LiveEvent>();
 
@@ -414,13 +437,14 @@ export async function getLiveEvents(limit = LIVE_FEED_SIZE): Promise<LiveEvent[]
       stored.filter((event) => event.kind !== "new_member"),
       [...memberSynth, ...bandSynth]
     );
+    const withGradients = await attachBandGradients(merged);
 
     liveEventsCache = {
-      events: merged,
+      events: withGradients,
       expiresAt: now + LIVE_EVENTS_CACHE_TTL_MS,
     };
 
-    return sortAndLimit(merged, limit, now);
+    return sortAndLimit(withGradients, limit, now);
   } catch (error) {
     console.error("[Live] getLiveEvents:", error);
     return [];

@@ -13,6 +13,10 @@ import { getResonanceStatusForMember } from "@/lib/resonance/status";
 import { buildMusicSectionResonance } from "@/lib/music/profile-display";
 import { MemberDetail } from "@/components/MemberDetail";
 import { getAuthSession } from "@/lib/supabase/auth";
+import {
+  getBandActivityFeedForMember,
+  getBandsForMember,
+} from "@/lib/bands/queries";
 import type { ResonanceReason } from "@/lib/resonance/matching";
 import type { MusicPageView } from "@/types/music-profile";
 
@@ -36,7 +40,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
   const needsResonance =
     Boolean(viewerMemberId) && !isOwnProfile && viewerMemberId !== member.id;
 
-  const [viewer, resonanceStatus, cachedReasons] = await Promise.all([
+  const [viewer, resonanceStatus, cachedReasons, memberBands, bandActivities] =
+    await Promise.all([
     viewerMemberId && viewerMemberId !== member.id
       ? getMemberListById(viewerMemberId)
       : Promise.resolve(undefined),
@@ -46,6 +51,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
     needsResonance
       ? getResonanceReasonsFromCache(viewerMemberId!, [member.id])
       : Promise.resolve(undefined),
+    user ? getBandsForMember(member.id) : Promise.resolve([]),
+    user ? getBandActivityFeedForMember(member.id) : Promise.resolve([]),
   ]);
 
   let resonanceReason: ResonanceReason | undefined;
@@ -73,7 +80,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
         musicResonance={musicResonance}
         resonanceStatus={resonanceStatus}
         showResonateButton={Boolean(viewer && !isOwnProfile)}
-        lazyLoadBandData
+        memberBands={memberBands}
+        bandActivities={bandActivities}
         priorityPhoto
       />
     </main>

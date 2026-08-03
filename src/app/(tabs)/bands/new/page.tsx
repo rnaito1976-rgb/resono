@@ -17,7 +17,7 @@ export default async function NewBandPage() {
 
   const memberId = await getViewerMemberId();
   if (!memberId) {
-    redirect("/onboarding");
+    redirect("/welcome");
   }
 
   const mutualMembers = await getMutualResonateMembers(memberId);

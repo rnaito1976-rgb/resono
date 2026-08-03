@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BandGradientThumbnail } from "@/components/bands/BandGradientThumbnail";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { getProfilePhotoSrc } from "@/lib/images/profilePhoto";
 import type { MemberActivityFeedItem, MemberActivityKind } from "@/types/activity";
@@ -51,6 +52,12 @@ function ActivityListItem({ activity }: { activity: MemberActivityFeedItem }) {
     month: "short",
     day: "numeric",
   });
+  const showBandGradient =
+    Boolean(activity.bandId) &&
+    (activity.kind === "band_formed" ||
+      activity.kind === "member_joined" ||
+      activity.kind === "band_post" ||
+      activity.kind === "timeline");
 
   return (
     <article className="space-y-3 py-6 first:pt-0 last:pb-0">
@@ -69,6 +76,10 @@ function ActivityListItem({ activity }: { activity: MemberActivityFeedItem }) {
                 />
               </div>
             </ProfilePhotoRing>
+          </Link>
+        ) : showBandGradient && activity.bandId ? (
+          <Link href={`/bands/${activity.bandId}`} className="shrink-0">
+            <BandGradientThumbnail colors={activity.gradientColors} size="sm" />
           </Link>
         ) : null}
 

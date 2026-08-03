@@ -99,12 +99,10 @@ export function MemberDetailFrame({
   const resolvedMutualMembers = lazyBandData?.mutualMembers ?? mutualMembers;
   const resolvedMemberBands = lazyBandData?.memberBands ?? memberBands;
   const resolvedBandActivities = lazyBandData?.bandActivities ?? bandActivities;
-  const hasBandData =
-    resolvedMutualMembers.length > 0 ||
-    resolvedMemberBands.length > 0 ||
-    resolvedBandActivities.length > 0;
-  const shouldLazyLoadBandData =
-    lazyLoadBandData || isSheet || (lookingForIndex >= 0 && !hasBandData);
+  const hasLazyBandPayload = lazyBandData !== null;
+  const hasInitialBandData =
+    mutualMembers.length > 0 || memberBands.length > 0 || bandActivities.length > 0;
+  const shouldLazyLoadBandData = lazyLoadBandData && !hasInitialBandData;
   const containerClass = isSheet
     ? "flex h-full min-h-0 flex-col bg-background"
     : "flex flex-col bg-background";
@@ -113,6 +111,7 @@ export function MemberDetailFrame({
   const useMemberTheme = !isOwnProfile && Boolean(memberAccentColor);
 
   const scrollToIndex = useCallback((index: number) => {
+    setActiveIndex(index);
     const container = scrollRef.current;
     if (!container) return;
     container.scrollTo({
@@ -135,12 +134,19 @@ export function MemberDetailFrame({
   }, []);
 
   useEffect(() => {
-    if (!shouldLazyLoadBandData || lazyBandData || bandDataLoading || hasBandData) {
+    setLazyBandData(null);
+    setBandDataLoading(false);
+  }, [member.id]);
+
+  useEffect(() => {
+    if (!shouldLazyLoadBandData || hasLazyBandPayload || bandDataLoading) {
       return;
     }
 
     const shouldPrefetch =
-      isSheet || (lookingForIndex >= 0 && activeIndex >= Math.max(0, lookingForIndex - 1));
+      isSheet ||
+      lazyLoadBandData ||
+      (lookingForIndex >= 0 && activeIndex >= Math.max(0, lookingForIndex - 1));
 
     if (!shouldPrefetch) {
       return;
@@ -149,17 +155,26 @@ export function MemberDetailFrame({
     let cancelled = false;
     setBandDataLoading(true);
 
-    void getMemberProfileBandDataAction(member.id).then((result) => {
-      if (cancelled) {
-        return;
-      }
+    void getMemberProfileBandDataAction(member.id)
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
 
-      if (result.data) {
-        setLazyBandData(result.data);
-      }
+        if (result.data) {
+          setLazyBandData(result.data);
+          return;
+        }
 
-      setBandDataLoading(false);
-    });
+        setLazyBandData({
+          mutualMembers: [],
+          memberBands: [],
+          bandActivities: [],
+        });
+      })
+      .finally(() => {
+        setBandDataLoading(false);
+      });
 
     return () => {
       cancelled = true;
@@ -167,9 +182,9 @@ export function MemberDetailFrame({
   }, [
     activeIndex,
     bandDataLoading,
-    hasBandData,
+    hasLazyBandPayload,
     isSheet,
-    lazyBandData,
+    lazyLoadBandData,
     lookingForIndex,
     member.id,
     shouldLazyLoadBandData,
@@ -202,16 +217,14 @@ export function MemberDetailFrame({
             mutualMembers={resolvedMutualMembers}
             memberBands={resolvedMemberBands}
             bandActivities={resolvedBandActivities}
-            bandDataLoading={bandDataLoading && !hasBandData}
+            bandDataLoading={bandDataLoading && !hasLazyBandPayload}
           />
         );
       case "activity":
         return <ActivitySlide activities={memberActivities} />;
+      default:
+        return null;
     }
-  }
-
-  function shouldRenderSlide(index: number) {
-    return Math.abs(index - activeIndex) <= 1;
   }
 
   const frameContent = (
@@ -277,7 +290,7 @@ export function MemberDetailFrame({
             key={section.id}
             className="h-full min-h-0 w-full flex-shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
           >
-            {shouldRenderSlide(index) ? renderSlide(section.id) : null}
+            {renderSlide(section.id)}
           </section>
         ))}
       </div>

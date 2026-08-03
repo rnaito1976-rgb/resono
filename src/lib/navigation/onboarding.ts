@@ -1,8 +1,17 @@
+export const POST_SIGNUP_HOME_PATH = "/";
+
+/** @deprecated Legacy path — redirects to home. */
 export const WELCOME_ONBOARDING_PATH = "/onboarding";
-export const WELCOME_ONBOARDING_HREF = "/onboarding?skipPhoto=1";
+
+/** Post-signup destination (intro onboarding shows on home). */
+export const WELCOME_ONBOARDING_HREF = POST_SIGNUP_HOME_PATH;
 
 export function buildWelcomeOnboardingHref(): string {
-  return WELCOME_ONBOARDING_HREF;
+  return POST_SIGNUP_HOME_PATH;
+}
+
+export function buildPostSignupHref(): string {
+  return POST_SIGNUP_HOME_PATH;
 }
 
 export function isWelcomeOnboardingPath(path: string | null | undefined): boolean {
@@ -10,8 +19,5 @@ export function isWelcomeOnboardingPath(path: string | null | undefined): boolea
     return false;
   }
 
-  return (
-    path.startsWith(WELCOME_ONBOARDING_PATH) &&
-    (path.includes("skipPhoto=1") || path === WELCOME_ONBOARDING_PATH)
-  );
+  return path.startsWith(WELCOME_ONBOARDING_PATH);
 }

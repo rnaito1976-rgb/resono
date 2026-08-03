@@ -10,7 +10,7 @@ export default async function DiscoverPage() {
   }
 
   if (!member) {
-    redirect("/onboarding");
+    redirect("/welcome");
   }
 
   return <DiscoverConversationLoader memberId={member.id} initialMember={member} />;

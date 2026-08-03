@@ -1,8 +1,9 @@
 type SendEmailInput = {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 };
 
 export function isEmailConfigured(): boolean {
@@ -20,6 +21,8 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
     return false;
   }
 
+  const recipients = Array.isArray(input.to) ? input.to : [input.to];
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -28,10 +31,11 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
     },
     body: JSON.stringify({
       from,
-      to: [input.to],
+      to: recipients,
       subject: input.subject,
       html: input.html,
       text: input.text,
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     }),
   });
 

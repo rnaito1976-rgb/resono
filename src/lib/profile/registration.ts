@@ -55,6 +55,8 @@ export function buildMemberFromMinimalRegistration(
         ...member.portrait,
         bio: "",
         dialogueCompleted: true,
+        introOnboardingPending: true,
+        introOnboardingCompleted: false,
         profileItems: [
           musicDnaItem,
           ...(member.portrait.profileItems ?? []).filter((item) => item.kind !== "music-dna"),
