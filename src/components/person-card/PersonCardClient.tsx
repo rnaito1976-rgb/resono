@@ -8,11 +8,16 @@ import type { PersonCardData } from "@/components/person-card/types";
 
 /** Client bundle for cards loaded after initial SSR (infinite scroll). */
 function PersonCardClientComponent(props: PersonCardData) {
-  const { member, isOwnCard = false, resonanceStatus } = props;
+  const { member, isOwnCard = false, resonanceReason, resonanceStatus } = props;
   const actions = isOwnCard ? (
     <PersonCardOwnLinks />
   ) : (
-    <PersonCardFeedActions memberId={member.id} resonanceStatus={resonanceStatus} />
+    <PersonCardFeedActions
+      memberId={member.id}
+      member={member}
+      resonanceReason={resonanceReason}
+      resonanceStatus={resonanceStatus}
+    />
   );
 
   return <PersonCardContent {...props} actions={actions} />;

@@ -6,16 +6,21 @@ import { MemberThemeScope } from "@/components/frequency-color/MemberThemeScope"
 import { MemberDetailSkeleton } from "@/components/skeletons/MemberDetailSkeleton";
 import { useMemberProfile } from "@/hooks/useMemberProfile";
 import { PROFILE_SHEET_HEIGHT } from "@/lib/navigation/home-scroll";
+import type { ProfileSheetSeed } from "@/lib/profile/sheet-seed";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 
 type ProfileBottomSheetProps = {
   memberId: string | null;
+  seed?: ProfileSheetSeed;
   onClose: () => void;
 };
 
-/** ⑭ プロフィールをフルページ遷移せず Bottom Sheet で表示（200ms以内の体感遷移） */
-export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProps) {
-  const { data, isLoading, isError } = useMemberProfile(memberId);
+/** Profile in a bottom sheet without full-page navigation. */
+export function ProfileBottomSheet({ memberId, seed, onClose }: ProfileBottomSheetProps) {
+  const { data, isLoading, isError, isFetching } = useMemberProfile(memberId, {
+    light: true,
+    seed,
+  });
 
   useEffect(() => {
     if (!memberId) {
@@ -43,6 +48,8 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
     return null;
   }
 
+  const showSkeleton = isLoading && !data;
+
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end">
       <button
@@ -56,6 +63,7 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
         role="dialog"
         aria-modal="true"
         aria-label="プロフィール"
+        aria-busy={isFetching}
         className="relative mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] bg-background shadow-2xl animate-in slide-in-from-bottom duration-200"
         style={{ height: PROFILE_SHEET_HEIGHT }}
       >
@@ -63,7 +71,7 @@ export function ProfileBottomSheet({ memberId, onClose }: ProfileBottomSheetProp
           <div className="h-1 w-10 rounded-full bg-white/20" />
         </div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <MemberDetailSkeleton variant="sheet" />
         ) : isError || !data ? (
           <div className="px-6 py-16 text-center text-[14px] text-muted">

@@ -63,7 +63,8 @@ const loadMemberProfileBandData = cache(
 );
 
 export async function getMemberProfileAction(
-  memberId: string
+  memberId: string,
+  options?: { light?: boolean }
 ): Promise<{ data?: MemberProfilePayload; error?: string }> {
   const [member, user, viewerMemberId] = await Promise.all([
     getMemberById(memberId),
@@ -99,15 +100,20 @@ export async function getMemberProfileAction(
         ? getMemberListById(viewerMemberId)
         : Promise.resolve(undefined);
 
-  const bandDataPromise = loadMemberProfileBandData(
-    memberId,
-    isOwnProfile,
-    viewerMemberId
-  );
+  const isLight = options?.light === true;
 
-  const memberActivitiesPromise = isOwnProfile
-    ? getOwnMemberActivityFeed(memberId, 40, member)
-    : Promise.resolve([] as MemberActivityFeedItem[]);
+  const bandDataPromise = isLight
+    ? Promise.resolve({
+        mutualMembers: [],
+        memberBands: [],
+        bandActivities: [],
+      } satisfies MemberProfileBandPayload)
+    : loadMemberProfileBandData(memberId, isOwnProfile, viewerMemberId);
+
+  const memberActivitiesPromise =
+    !isLight && isOwnProfile
+      ? getOwnMemberActivityFeed(memberId, 40, member)
+      : Promise.resolve([] as MemberActivityFeedItem[]);
 
   const [viewer, resonanceStatus, cachedReasons, bandData, memberActivities] =
     await Promise.all([

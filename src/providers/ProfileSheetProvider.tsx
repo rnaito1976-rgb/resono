@@ -8,20 +8,21 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
-import { prefetchMemberProfile } from "@/lib/profile/prefetch";
+import { ProfileBottomSheet } from "@/components/profile/ProfileBottomSheet";
+import {
+  prefetchMemberProfile,
+  seedMemberProfileCache,
+} from "@/lib/profile/prefetch";
+import type { ProfileSheetSeed } from "@/lib/profile/sheet-seed";
 
-const ProfileBottomSheet = dynamic(
-  () =>
-    import("@/components/profile/ProfileBottomSheet").then((module) => ({
-      default: module.ProfileBottomSheet,
-    })),
-  { ssr: false }
-);
+type ProfileSheetState = {
+  memberId: string;
+  seed?: ProfileSheetSeed;
+};
 
 type ProfileSheetContextValue = {
-  openProfile: (memberId: string) => void;
+  openProfile: (memberId: string, seed?: ProfileSheetSeed) => void;
   closeProfile: () => void;
 };
 
@@ -29,18 +30,22 @@ const ProfileSheetContext = createContext<ProfileSheetContextValue | null>(null)
 
 export function ProfileSheetProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [memberId, setMemberId] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<ProfileSheetState | null>(null);
 
   const openProfile = useCallback(
-    (id: string) => {
-      void prefetchMemberProfile(queryClient, id);
-      setMemberId(id);
+    (id: string, seed?: ProfileSheetSeed) => {
+      if (seed) {
+        seedMemberProfileCache(queryClient, id, seed);
+      }
+
+      void prefetchMemberProfile(queryClient, id, { light: true });
+      setSheet({ memberId: id, seed });
     },
     [queryClient]
   );
 
   const closeProfile = useCallback(() => {
-    setMemberId(null);
+    setSheet(null);
   }, []);
 
   const value = useMemo(
@@ -51,8 +56,12 @@ export function ProfileSheetProvider({ children }: { children: ReactNode }) {
   return (
     <ProfileSheetContext.Provider value={value}>
       {children}
-      {memberId ? (
-        <ProfileBottomSheet memberId={memberId} onClose={closeProfile} />
+      {sheet ? (
+        <ProfileBottomSheet
+          memberId={sheet.memberId}
+          seed={sheet.seed}
+          onClose={closeProfile}
+        />
       ) : null}
     </ProfileSheetContext.Provider>
   );

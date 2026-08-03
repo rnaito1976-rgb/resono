@@ -18,7 +18,12 @@ export function PersonCard({
   const actions = isOwnCard ? (
     <PersonCardOwnLinks />
   ) : (
-    <PersonCardFeedActions memberId={member.id} resonanceStatus={resonanceStatus} />
+    <PersonCardFeedActions
+      memberId={member.id}
+      member={member}
+      resonanceReason={resonanceReason}
+      resonanceStatus={resonanceStatus}
+    />
   );
 
   return (

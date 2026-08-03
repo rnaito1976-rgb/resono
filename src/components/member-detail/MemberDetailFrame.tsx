@@ -150,7 +150,6 @@ export function MemberDetailFrame({
     }
 
     const shouldPrefetch =
-      isSheet ||
       lazyLoadBandData ||
       (lookingForIndex >= 0 && activeIndex >= Math.max(0, lookingForIndex - 1));
 
