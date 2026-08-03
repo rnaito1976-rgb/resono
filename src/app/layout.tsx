@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { WelcomeRegistrationGate } from "@/components/auth/WelcomeRegistrationGate";
-import { IntroOnboardingGate } from "@/components/onboarding/IntroOnboardingGate";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthUserProvider } from "@/providers/AuthUserProvider";
 import { ProfileSheetProvider } from "@/providers/ProfileSheetProvider";
-import { getIntroOnboardingVisible } from "@/lib/onboarding/intro-onboarding-state";
 import { getViewerTheme } from "@/lib/members/viewer-theme";
 import { getAuthSession } from "@/lib/supabase/auth";
 import { getSupabaseUrl } from "@/lib/supabase/env";
@@ -30,11 +28,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [supabaseUrl, viewerColor, user, introOnboardingVisible] = await Promise.all([
+  const [supabaseUrl, viewerColor, user] = await Promise.all([
     Promise.resolve(getSupabaseUrl()),
     getViewerTheme(),
     getAuthSession(),
-    getIntroOnboardingVisible(),
   ]);
 
   return (
@@ -55,10 +52,6 @@ export default async function RootLayout({
             <FrequencyColorProvider initialColor={viewerColor}>
               <ProfileSheetProvider>
                 <WelcomeRegistrationGate />
-                <IntroOnboardingGate
-                  initialVisible={introOnboardingVisible}
-                  userId={user?.id ?? null}
-                />
                 <TabBarWrapper>{children}</TabBarWrapper>
               </ProfileSheetProvider>
             </FrequencyColorProvider>

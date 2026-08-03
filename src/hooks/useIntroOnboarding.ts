@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { completeIntroOnboardingAction } from "@/lib/actions/intro-onboarding";
 import {
   INTRO_ONBOARDING_STEPS,
@@ -24,7 +24,6 @@ export function useIntroOnboarding({
   previewMode = false,
 }: UseIntroOnboardingOptions) {
   const router = useRouter();
-  const pathname = usePathname();
   const [dismissed, setDismissed] = useState(false);
   const [sessionPending, setSessionPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,10 +59,10 @@ export function useIntroOnboarding({
 
   const steps = useMemo(() => INTRO_ONBOARDING_STEPS, []);
 
-  const complete = useCallback(() => {
+  const dismiss = useCallback(() => {
     if (previewMode) {
       setDismissed(true);
-      router.replace(pathname);
+      router.replace("/", { scroll: false });
       return;
     }
 
@@ -89,15 +88,14 @@ export function useIntroOnboarding({
         writeIntroOnboardingDismissedLocally(result.userId);
       }
 
-      router.push("/discover");
       router.refresh();
     });
-  }, [pathname, previewMode, router, userId]);
+  }, [previewMode, router, userId]);
 
   return {
     visible,
     steps,
-    complete,
+    dismiss,
     isPending: previewMode ? false : isPending,
     error,
   };
