@@ -10,7 +10,6 @@ import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCar
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
-import { getIntroOnboardingVisible } from "@/lib/onboarding/intro-onboarding-state";
 import { LIVE_FEED_SIZE } from "@/types/live";
 
 export function HomePageFallback() {
@@ -34,12 +33,10 @@ export function HomePageFallback() {
 }
 
 export async function HomePageContent() {
-  const [{ user, member, frequencyColor }, liveEvents, introOnboardingVisible] =
-    await Promise.all([
-      getHomeViewer(),
-      getLiveEvents(LIVE_FEED_SIZE),
-      getIntroOnboardingVisible(),
-    ]);
+  const [{ user, member, frequencyColor }, liveEvents] = await Promise.all([
+    getHomeViewer(),
+    getLiveEvents(LIVE_FEED_SIZE),
+  ]);
 
   if (user && !member) {
     redirect("/welcome");
@@ -56,12 +53,7 @@ export async function HomePageContent() {
       <main className="mx-auto min-h-dvh max-w-mobile bg-background">
         <AppHeader initialUser={user} />
         <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
-          {user ? (
-            <IntroOnboardingCards
-              initialVisible={introOnboardingVisible}
-              userId={user.id}
-            />
-          ) : null}
+          {user ? <IntroOnboardingCards userId={user.id} /> : null}
           <HomeLiveFeed events={liveEvents} />
           {member ? <PersonCard member={member} isOwnCard priority /> : null}
           <Suspense fallback={<HomeFeedSkeleton count={2} />}>

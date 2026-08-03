@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { startResonoFromWelcomeAction } from "@/lib/actions/onboarding";
-import { markIntroOnboardingSessionPending } from "@/lib/onboarding/intro-onboarding";
 import { readValidWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-registration";
 import { clearWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-storage";
 
@@ -36,7 +35,6 @@ export function WelcomeStartResonoButton({
       }
 
       clearWelcomeOnboardingAnswers();
-      markIntroOnboardingSessionPending();
       router.replace("redirectTo" in result && result.redirectTo ? result.redirectTo : "/");
       router.refresh();
     });

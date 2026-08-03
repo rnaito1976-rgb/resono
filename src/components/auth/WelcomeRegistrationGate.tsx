@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { startResonoFromWelcomeAction, needsProfileRegistrationAction } from "@/lib/actions/onboarding";
-import { markIntroOnboardingSessionPending } from "@/lib/onboarding/intro-onboarding";
 import { readValidWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-registration";
 import { clearWelcomeOnboardingAnswers } from "@/lib/welcome/onboarding-storage";
 import { createClient } from "@/lib/supabase/client";
@@ -71,7 +70,6 @@ export function WelcomeRegistrationGate() {
 
         clearWelcomeOnboardingAnswers();
         sessionStorage.removeItem(WELCOME_SIGNUP_INTENT_KEY);
-        markIntroOnboardingSessionPending();
         router.replace("redirectTo" in result && result.redirectTo ? result.redirectTo : "/");
         router.refresh();
       } finally {

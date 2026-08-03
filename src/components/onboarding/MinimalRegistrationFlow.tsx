@@ -13,7 +13,6 @@ import {
   saveFrequencyColorAction,
 } from "@/lib/actions/onboarding";
 import { NO_PHOTO_URL, hasCustomPhotoUrl } from "@/lib/onboarding/status";
-import { markIntroOnboardingSessionPending } from "@/lib/onboarding/intro-onboarding";
 import { PLAYING_PART_OPTIONS, SUGGESTED_ARTISTS } from "@/lib/resonance/dialogue";
 import { isValidFrequencyColor } from "@/lib/frequency-color/palette";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
@@ -145,7 +144,6 @@ export function MinimalRegistrationFlow({
   }
 
   function goHome() {
-    markIntroOnboardingSessionPending();
     router.replace("/");
     router.refresh();
   }
