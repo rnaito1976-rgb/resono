@@ -11,7 +11,7 @@ export const SUPPORT_COPY = {
   usageCards: [
     {
       title: "AI機能",
-      body: "AIによるプロフィール生成など、RESONOのAI機能を支えます。",
+      body: "プロフィール生成など、RESONOのAI機能を支えます。",
     },
     {
       title: "サービス運営",
@@ -19,11 +19,11 @@ export const SUPPORT_COPY = {
     },
     {
       title: "新機能の開発",
-      body: "バンド機能やライブ機能など、RESONOのこれからの開発に使われます。",
+      body: "バンド機能や今後の新機能の開発に使われます。",
     },
   ],
   amountHeading: "応援金",
-  amountHint: "プランを選んでください",
+  amountHint: "金額を選んでください",
   cta: "RESONOを応援する",
   preparing: "現在準備中です",
   preparingDetail:

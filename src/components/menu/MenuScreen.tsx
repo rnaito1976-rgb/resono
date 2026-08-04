@@ -4,10 +4,19 @@ import { useTransition } from "react";
 import { MenuGroup } from "@/components/menu/MenuGroup";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { SUPPORT_COPY } from "@/lib/support/copy";
 import { createClient } from "@/lib/supabase/client";
 
 function MenuSectionGap() {
   return <div className="h-8" aria-hidden />;
+}
+
+function MenuDivider() {
+  return (
+    <div className="py-5" aria-hidden>
+      <div className="h-px bg-border/70" />
+    </div>
+  );
 }
 
 function MenuLogoutRow() {
@@ -38,9 +47,22 @@ export function MenuScreen() {
       <MenuGroup>
         <MenuRow href="/menu/about" label="About Resono" />
         <MenuRow href="/menu/feedback" label="Feedback" />
+        {isLoggedIn ? (
+          <MenuRow href="/menu/notifications" label="Notification" />
+        ) : null}
       </MenuGroup>
 
-      <MenuSectionGap />
+      <MenuDivider />
+
+      <MenuGroup>
+        <MenuRow
+          href="/support"
+          label={SUPPORT_COPY.menuLabel}
+          accent
+        />
+      </MenuGroup>
+
+      <MenuDivider />
 
       <MenuGroup>
         <MenuRow href="/menu/privacy" label="Privacy Policy" />
@@ -51,11 +73,6 @@ export function MenuScreen() {
         <>
           <MenuSectionGap />
           <MenuGroup>
-            <MenuRow href="/menu/notifications" label="Notification" />
-          </MenuGroup>
-          <MenuSectionGap />
-          <MenuGroup>
-            <MenuRow href="/support" label="RESONOを応援する" />
             <MenuLogoutRow />
           </MenuGroup>
         </>

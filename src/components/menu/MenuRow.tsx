@@ -6,6 +6,7 @@ type MenuRowProps = {
   label: string;
   onClick?: () => void;
   destructive?: boolean;
+  accent?: boolean;
   className?: string;
 };
 
@@ -14,11 +15,12 @@ export function MenuRow({
   label,
   onClick,
   destructive = false,
+  accent = false,
   className,
 }: MenuRowProps) {
   const rowClass = cn(
     "flex w-full items-center px-1 py-[13px] text-left transition-colors active:opacity-70",
-    destructive ? "text-red-400" : "text-foreground",
+    destructive ? "text-red-400" : accent ? "text-primary" : "text-foreground",
     className
   );
 

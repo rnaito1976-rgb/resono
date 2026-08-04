@@ -1,10 +1,12 @@
-export const SUPPORT_AMOUNTS = [480, 980] as const;
+export const SUPPORT_AMOUNTS = [500, 1000, 3000, 5000] as const;
 
 export type SupportAmount = (typeof SUPPORT_AMOUNTS)[number];
 
 const STRIPE_SUPPORT_ENV_KEYS: Record<SupportAmount, string> = {
-  480: "NEXT_PUBLIC_STRIPE_SUPPORT_480",
-  980: "NEXT_PUBLIC_STRIPE_SUPPORT_980",
+  500: "NEXT_PUBLIC_STRIPE_SUPPORT_500",
+  1000: "NEXT_PUBLIC_STRIPE_SUPPORT_1000",
+  3000: "NEXT_PUBLIC_STRIPE_SUPPORT_3000",
+  5000: "NEXT_PUBLIC_STRIPE_SUPPORT_5000",
 };
 
 export function getStripeSupportUrl(amount: SupportAmount): string | null {
