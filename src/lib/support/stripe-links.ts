@@ -1,0 +1,22 @@
+export const SUPPORT_AMOUNTS = [480, 980] as const;
+
+export type SupportAmount = (typeof SUPPORT_AMOUNTS)[number];
+
+const STRIPE_SUPPORT_ENV_KEYS: Record<SupportAmount, string> = {
+  480: "NEXT_PUBLIC_STRIPE_SUPPORT_480",
+  980: "NEXT_PUBLIC_STRIPE_SUPPORT_980",
+};
+
+export function getStripeSupportUrl(amount: SupportAmount): string | null {
+  const key = STRIPE_SUPPORT_ENV_KEYS[amount];
+  const url = process.env[key]?.trim();
+  return url || null;
+}
+
+export function hasAnySupportCheckout(): boolean {
+  return SUPPORT_AMOUNTS.some((amount) => Boolean(getStripeSupportUrl(amount)));
+}
+
+export function formatSupportAmount(amount: number): string {
+  return `${amount.toLocaleString("ja-JP")}円`;
+}

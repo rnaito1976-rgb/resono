@@ -1,5 +1,5 @@
-import { SupportPageContent } from "@/components/menu/SupportPageContent";
+import { redirect } from "next/navigation";
 
-export default function MenuSupportPage() {
-  return <SupportPageContent />;
+export default function MenuSupportRedirectPage() {
+  redirect("/support");
 }

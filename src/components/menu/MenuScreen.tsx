@@ -55,6 +55,7 @@ export function MenuScreen() {
           </MenuGroup>
           <MenuSectionGap />
           <MenuGroup>
+            <MenuRow href="/support" label="RESONOを応援する" />
             <MenuLogoutRow />
           </MenuGroup>
         </>

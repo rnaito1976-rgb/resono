@@ -24,20 +24,6 @@ export const MENU_FEEDBACK = {
   submit: "送信する",
 } as const;
 
-export const MENU_SUPPORT = {
-  intro:
-    "Resonoはユーザーのフィードバックと応援によって少しずつ育っています。",
-  usageIntro: "いただいた応援は",
-  usageItems: [
-    { label: "AI利用料" },
-    { label: "サーバー運営" },
-    { label: "新機能開発" },
-  ] as const,
-  usageFooter: "に大切に使わせていただきます。",
-  coffeeButton: "コーヒー1杯分で応援する",
-  coffeeToast: "応援ありがとうございます！決済機能は近日公開予定です。",
-} as const;
-
 export const MENU_PRIVACY = {
   title: "Privacy Policy",
   subtitle:
