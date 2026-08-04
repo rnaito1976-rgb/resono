@@ -5,6 +5,7 @@ import { MenuGroup } from "@/components/menu/MenuGroup";
 import { MenuRow } from "@/components/menu/MenuRow";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { SUPPORT_COPY } from "@/lib/support/copy";
+import { MENU_DELETE_ACCOUNT } from "@/lib/menu/copy";
 import { createClient } from "@/lib/supabase/client";
 
 function MenuSectionGap() {
@@ -74,6 +75,11 @@ export function MenuScreen() {
           <MenuSectionGap />
           <MenuGroup>
             <MenuLogoutRow />
+            <MenuRow
+              href="/menu/delete-account"
+              label={MENU_DELETE_ACCOUNT.menuLabel}
+              destructive
+            />
           </MenuGroup>
         </>
       ) : null}

@@ -24,6 +24,24 @@ export const MENU_FEEDBACK = {
   submit: "送信する",
 } as const;
 
+export const MENU_DELETE_ACCOUNT = {
+  menuLabel: "退会",
+  title: "退会",
+  intro: [
+    "RESONOを退会すると、アカウントとプロフィールを削除します。",
+    "この操作は取り消せません。",
+  ],
+  removedItems: [
+    "プロフィールと公開情報",
+    "メッセージと会話履歴",
+    "バンドへの参加情報",
+    "通知設定",
+  ],
+  confirmLabel: "内容を理解しました",
+  submit: "退会する",
+  submitting: "退会処理中…",
+} as const;
+
 export const MENU_PRIVACY = {
   title: "Privacy Policy",
   subtitle:
