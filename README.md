@@ -50,7 +50,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 RESEND_API_KEY=re_...
 EMAIL_FROM=Resono <hello@notify.resono.band>
 # メール内リンク（省略時は本番 URL）
-EMAIL_SITE_URL=https://resono-fwdi.vercel.app
+EMAIL_SITE_URL=https://resono.band
 ```
 
 ### 4. ダミーデータ投入
@@ -83,13 +83,14 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
 1. **Authentication → Providers → Email** を有効化
 2. **Authentication → Providers → Google** を有効化（Google Cloud OAuth クライアント ID / Secret）
 3. **Authentication → URL Configuration** に以下を追加:
-   - Site URL: `http://localhost:3000`（本番は Vercel URL）
+   - Site URL: `http://localhost:3000`（本番は `https://resono.band`）
    - Redirect URLs:
      - `http://localhost:3000/auth/callback`
-     - `https://resono-fwdi.vercel.app/auth/callback`
+     - `https://resono.band/auth/callback`
+     - `https://www.resono.band/auth/callback`（www を使う場合）
      - プレビュー URL を使う場合は `https://*.vercel.app/auth/callback` も追加
 4. **メール確認（Send Email Hook 推奨）**:
-   - Supabase SMTP が不安定な場合、**Resend API + Send Email Hook** を使います（本番 URL: `https://resono-fwdi.vercel.app/api/auth/send-email`）。
+   - Supabase SMTP が不安定な場合、**Resend API + Send Email Hook** を使います（本番 URL: `https://resono.band/api/auth/send-email`）。
    - Vercel に以下を設定:
      - `RESEND_API_KEY` = `re_...`
      - `EMAIL_FROM` = `Resono <hello@notify.resono.band>`
@@ -97,7 +98,7 @@ Vercel Dashboard → **Settings → Environment Variables** に上記を追加�
    - Supabase Dashboard:
      1. **Authentication → Hooks → Send Email** を有効化
      2. Type: **HTTPS**
-     3. URL: `https://resono-fwdi.vercel.app/api/auth/send-email`
+     3. URL: `https://resono.band/api/auth/send-email`
      4. **Generate Secret** して Vercel の `SEND_EMAIL_HOOK_SECRET` に貼り付け
      5. **Email Provider** は ON のまま
    - Hook 有効時は SMTP ではなく Resono が Resend API で確認メールを送信します。
@@ -125,7 +126,8 @@ npm run auth:confirm -- user@example.com
 5. 環境変数を更新して Redeploy:
    - `EMAIL_FROM` = `Resono <hello@notify.resono.band>`
    - `RESEND_API_KEY` = 既存のキー
-   - （任意）`EMAIL_SITE_URL` = `https://resono-fwdi.vercel.app`
+   - （任意）`EMAIL_SITE_URL` = `https://resono.band`
+   - （推奨）`NEXT_PUBLIC_SITE_URL` = `https://resono.band`
 6. 確認:
 
 ```bash

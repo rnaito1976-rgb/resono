@@ -14,7 +14,7 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
 
-const PRODUCTION_SITE_URL = "https://resono-fwdi.vercel.app";
+const PRODUCTION_SITE_URL = "https://resono.band";
 
 function normalizeSiteUrl(url: string): string {
   return url.replace(/\/$/, "");
@@ -70,7 +70,7 @@ export function getSiteUrl(): string {
   }
 
   if (process.env.VERCEL_ENV === "production") {
-    return "https://resono-fwdi.vercel.app";
+    return PRODUCTION_SITE_URL;
   }
 
   const vercelUrl = process.env.VERCEL_URL?.trim();
