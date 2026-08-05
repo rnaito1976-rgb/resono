@@ -8,7 +8,9 @@ import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCards";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
+import { BRAND_CATCH_COPY_INLINE } from "@/lib/branding/copy";
 import { getHomeViewer } from "@/lib/home/viewer";
+import { HOME_H1, HOME_LEAD } from "@/lib/seo/site";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
 import { getRecruitmentApplicantsByPart } from "@/lib/recruitment/applications";
@@ -59,7 +61,16 @@ export async function HomePageContent() {
       ) : null}
       <main className="mx-auto min-h-dvh max-w-mobile bg-background">
         <AppHeader initialUser={user} />
-        <div className="flex flex-col gap-14 px-5 pb-20 pt-6">
+        <div className="space-y-2 px-5 pb-4 pt-2">
+          <h1 className="text-[22px] font-light leading-snug tracking-tight text-white/90">
+            {HOME_H1}
+          </h1>
+          <p className="text-[15px] leading-relaxed text-white/55">{HOME_LEAD}</p>
+          <p className="text-[14px] leading-relaxed text-white/40">
+            {BRAND_CATCH_COPY_INLINE}
+          </p>
+        </div>
+        <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
           {user ? <IntroOnboardingCards userId={user.id} /> : null}
           <HomeLiveFeed events={liveEvents} />
           {member ? (
