@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { formatAuthFailureReason } from "@/lib/auth/errors";
+import { createNoIndexMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = createNoIndexMetadata("ログイン");
 type LoginPageProps = {
   searchParams: Promise<{ error?: string; reason?: string; next?: string; from?: string }>;
 };

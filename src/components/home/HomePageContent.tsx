@@ -7,6 +7,7 @@ import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCards";
+import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
@@ -76,6 +77,7 @@ export async function HomePageContent() {
               showSectionHeader={Boolean(member)}
             />
           </Suspense>
+          <SeoFooterLinks />
         </div>
       </main>
     </>

@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { MemberEditForm } from "@/components/MemberEditForm";
 import { getMemberById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
+import { createNoIndexMetadata } from "@/lib/seo/metadata";
 import { getAuthUser } from "@/lib/supabase/auth";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = createNoIndexMetadata("プロフィール編集");
 
 type MemberEditPageProps = {
   params: Promise<{ id: string }>;

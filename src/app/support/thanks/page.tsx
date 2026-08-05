@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { Button } from "@/components/ui/button";
+import { createNoIndexMetadata } from "@/lib/seo/metadata";
 import { SUPPORT_COPY } from "@/lib/support/copy";
 
-export const metadata: Metadata = {
-  title: "ありがとう | Resono",
-};
+export const metadata: Metadata = createNoIndexMetadata("ありがとう");
 
 export default function SupportThanksPage() {
   return (

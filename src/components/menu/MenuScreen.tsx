@@ -46,7 +46,7 @@ export function MenuScreen() {
   return (
     <div>
       <MenuGroup>
-        <MenuRow href="/menu/about" label="About Resono" />
+        <MenuRow href="/about" label="About Resono" />
         <MenuRow href="/menu/feedback" label="Feedback" />
         {isLoggedIn ? (
           <MenuRow href="/menu/notifications" label="Notification" />

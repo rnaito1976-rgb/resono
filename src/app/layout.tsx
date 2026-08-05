@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { WelcomeRegistrationGate } from "@/components/auth/WelcomeRegistrationGate";
@@ -10,7 +10,7 @@ import { getViewerTheme } from "@/lib/members/viewer-theme";
 import { getAllCommunityCatalogItemsGrouped } from "@/lib/catalog/queries";
 import { getAuthSession } from "@/lib/supabase/auth";
 import { getSupabaseUrl } from "@/lib/supabase/env";
-import { BRAND_DESCRIPTION } from "@/lib/branding/copy";
+import { createPageMetadata, getMetadataBase } from "@/lib/seo/metadata";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,8 +20,18 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Resono",
-  description: BRAND_DESCRIPTION,
+  ...createPageMetadata(),
+  metadataBase: getMetadataBase(),
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#04110B",
 };
 
 export default async function RootLayout({

@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getMemberById, getMemberListById } from "@/lib/members";
 import { isMemberOwnedByUser } from "@/lib/members/ownership";
 import { resolveCurrentMemberId } from "@/lib/members/resolve";
@@ -14,6 +16,13 @@ import { buildMusicSectionResonance } from "@/lib/music/profile-display";
 import { MemberDetail } from "@/components/MemberDetail";
 import { getAuthSession } from "@/lib/supabase/auth";
 import {
+  buildMemberMetadata,
+  buildMemberSeoDescription,
+  buildMemberSeoTitle,
+  isMemberIndexable,
+} from "@/lib/seo/member";
+import { getSiteUrl } from "@/lib/supabase/env";
+import {
   getBandActivityFeedForMember,
   getBandsForMember,
 } from "@/lib/bands/queries";
@@ -28,6 +37,19 @@ import type { MusicPageView } from "@/types/music-profile";
 type MemberPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: MemberPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const member = await getMemberById(id);
+
+  if (!member) {
+    return {
+      title: "プロフィールが見つかりません｜RESONO",
+    };
+  }
+
+  return buildMemberMetadata(member);
+}
 
 export default async function MemberPage({ params }: MemberPageProps) {
   const { id } = await params;
@@ -86,8 +108,21 @@ export default async function MemberPage({ params }: MemberPageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-mobile bg-background">
-      <MemberDetail
+    <>
+      {isMemberIndexable(member) ? (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "ProfilePage",
+            name: buildMemberSeoTitle(member),
+            description: buildMemberSeoDescription(member),
+            url: `${getSiteUrl().replace(/\/$/, "")}/member/${member.id}`,
+            inLanguage: "ja-JP",
+          }}
+        />
+      ) : null}
+      <main className="mx-auto max-w-mobile bg-background">
+        <MemberDetail
         member={member}
         isOwnProfile={isOwnProfile}
         resonanceReason={resonanceReason}
@@ -101,6 +136,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
         recruitmentApplicants={recruitmentApplicants}
         priorityPhoto
       />
-    </main>
+      </main>
+    </>
   );
 }

@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { SupportAmountPicker } from "@/components/support/SupportAmountPicker";
 import { SupportUsageCards } from "@/components/support/SupportUsageCards";
+import { createPageMetadata } from "@/lib/seo/metadata";
 import { SUPPORT_COPY } from "@/lib/support/copy";
 
-export const metadata: Metadata = {
-  title: "RESONOを応援する | Resono",
-  description: "RESONOの開発を応援する",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "RESONOを応援する",
+  description:
+    "RESONOの開発を応援する。あなたの応援が、AI機能やサービス運営、新機能の開発につながります。",
+  path: "/support",
+});
 
 export default function SupportPage() {
   return (
