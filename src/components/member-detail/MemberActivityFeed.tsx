@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BandGradientThumbnail } from "@/components/bands/BandGradientThumbnail";
+import { ActivityMediaBlock } from "@/components/media/ActivityMediaBlock";
+import { LinkifiedText } from "@/components/media/LinkifiedText";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { getProfilePhotoSrc } from "@/lib/images/profilePhoto";
 import type { MemberActivityFeedItem, MemberActivityKind } from "@/types/activity";
@@ -94,7 +96,10 @@ function ActivityListItem({ activity }: { activity: MemberActivityFeedItem }) {
           <h3 className="mt-2 text-[17px] font-medium tracking-tight">{activity.title}</h3>
 
           {activity.body ? (
-            <p className="mt-1.5 text-[15px] leading-relaxed text-white/60">{activity.body}</p>
+            <LinkifiedText
+              text={activity.body}
+              className="mt-1.5 text-[15px] leading-relaxed text-white/60"
+            />
           ) : null}
 
           {activity.bandId ? (
@@ -119,29 +124,16 @@ function ActivityListItem({ activity }: { activity: MemberActivityFeedItem }) {
           ) : null}
 
           {activity.mediaUrl && activity.activityKind === "photo" ? (
-            <div className="relative mt-4 aspect-[4/3] overflow-hidden rounded-[20px]">
-              <Image
-                src={activity.mediaUrl}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="320px"
-                loading="lazy"
-              />
-            </div>
+            <ActivityMediaBlock url={activity.mediaUrl} kind="photo" sizes="320px" />
           ) : null}
 
           {activity.mediaUrl && activity.activityKind === "video" ? (
-            <div className="relative mt-4 aspect-square overflow-hidden rounded-[20px] bg-black/30">
-              <Image
-                src={activity.mediaUrl}
-                alt={activity.title}
-                fill
-                className="object-cover"
-                sizes="320px"
-                loading="lazy"
-              />
-            </div>
+            <ActivityMediaBlock
+              url={activity.mediaUrl}
+              title={activity.title}
+              kind="video"
+              sizes="320px"
+            />
           ) : null}
         </div>
       </div>

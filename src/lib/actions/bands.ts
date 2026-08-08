@@ -12,6 +12,7 @@ import {
 } from "@/lib/music/band-cover-songs";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isHttpUrl } from "@/lib/media/external-links";
 import type { BandActivityKind } from "@/types/band";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
 
@@ -330,8 +331,10 @@ export async function createBandActivityAction(input: {
       error:
         input.kind === "photo"
           ? "写真を投稿するには、画像URLを入力してください。"
-          : "動画を投稿するには、動画URLを入力してください。",
+          : "YouTubeなどの動画URLを入力してください。",
     };
+  } else if (input.kind === "video" && !isHttpUrl(mediaUrl)) {
+    return { error: "https:// で始まるURLを入力してください。" };
   }
 
   const payload = {

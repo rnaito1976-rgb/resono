@@ -24,6 +24,9 @@ import { CoverSongCard } from "@/components/member-detail/music/CoverSongCard";
 import { AddBandMembersPanel } from "@/components/bands/AddBandMembersPanel";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
+import { ActivityMediaBlock } from "@/components/media/ActivityMediaBlock";
+import { LinkifiedText } from "@/components/media/LinkifiedText";
+import { classifyMediaUrl, isHttpUrl, parseYouTubeVideoId } from "@/lib/media/external-links";
 import { Button } from "@/components/ui/button";
 
 const TABS: { id: BandModuleId; label: string }[] = [
@@ -386,6 +389,8 @@ function SetListTab({
   );
 }
 
+type ActivityPostKind = "text" | "photo" | "video" | "link";
+
 function ActivityTab({
   bandId,
   activities,
@@ -395,13 +400,17 @@ function ActivityTab({
 }) {
   const [body, setBody] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
-  const [kind, setKind] = useState<"text" | "photo" | "video">("text");
+  const [kind, setKind] = useState<ActivityPostKind>("text");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const canSubmit =
-    kind === "text" ? body.trim().length > 0 : mediaUrl.trim().length > 0;
+    kind === "text"
+      ? body.trim().length > 0
+      : kind === "link"
+        ? mediaUrl.trim().length > 0
+        : mediaUrl.trim().length > 0;
 
   function handleSubmit() {
     setError(null);
@@ -411,12 +420,55 @@ function ActivityTab({
       return;
     }
 
+    if (kind === "link") {
+      const url = mediaUrl.trim();
+      if (!url) {
+        setError("リンクURLを入力してください。");
+        return;
+      }
+      if (!isHttpUrl(url)) {
+        setError("https:// で始まるURLを入力してください。");
+        return;
+      }
+
+      const caption = body.trim();
+      const isYouTube = Boolean(parseYouTubeVideoId(url));
+
+      startTransition(async () => {
+        const result = await createBandActivityAction({
+          bandId,
+          kind: isYouTube ? "video" : "text",
+          body: isYouTube
+            ? caption || undefined
+            : caption
+              ? `${caption}\n${url}`
+              : url,
+          title: isYouTube ? caption || "Video" : undefined,
+          mediaUrl: isYouTube ? url : undefined,
+        });
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
+        setBody("");
+        setMediaUrl("");
+        dispatchBandsChange();
+        router.refresh();
+      });
+      return;
+    }
+
     if (kind !== "text" && !mediaUrl.trim()) {
       setError(
         kind === "photo"
           ? "写真を投稿するには、画像URLを入力してください。"
-          : "動画を投稿するには、動画URLを入力してください。"
+          : "YouTubeなどの動画URLを入力してください。"
       );
+      return;
+    }
+
+    if (kind === "video" && !isHttpUrl(mediaUrl.trim())) {
+      setError("https:// で始まるURLを入力してください。");
       return;
     }
 
@@ -443,8 +495,15 @@ function ActivityTab({
     <div className="space-y-10">
       <section className="space-y-5">
         <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Activity</p>
-        <div className="flex gap-2">
-          {(["text", "photo", "video"] as const).map((value) => (
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ["text", "テキスト"],
+              ["photo", "写真"],
+              ["video", "動画"],
+              ["link", "リンク"],
+            ] as const
+          ).map(([value, label]) => (
             <button
               key={value}
               type="button"
@@ -455,31 +514,55 @@ function ActivityTab({
                   : "border border-border text-white/55"
               }`}
             >
-              {value === "text" ? "テキスト" : value === "photo" ? "写真" : "動画"}
+              {label}
             </button>
           ))}
         </div>
-        <textarea
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          placeholder={
-            kind === "text"
-              ? "初スタジオでした！"
-              : kind === "photo"
-                ? "キャプション（任意）"
-                : "動画タイトル"
-          }
-          rows={4}
-          className="w-full resize-none rounded-[22px] border border-border bg-black/20 px-4 py-4 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30"
-        />
-        {kind !== "text" ? (
-          <input
-            value={mediaUrl}
-            onChange={(event) => setMediaUrl(event.target.value)}
-            placeholder={kind === "photo" ? "画像URL（必須）" : "動画URL（必須）"}
-            className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
-          />
-        ) : null}
+        {kind === "link" ? (
+          <>
+            <input
+              value={mediaUrl}
+              onChange={(event) => setMediaUrl(event.target.value)}
+              placeholder="https://youtube.com/watch?v=... など"
+              className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
+            />
+            <textarea
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder="コメント（任意）"
+              rows={3}
+              className="w-full resize-none rounded-[22px] border border-border bg-black/20 px-4 py-4 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30"
+            />
+          </>
+        ) : (
+          <>
+            <textarea
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              placeholder={
+                kind === "text"
+                  ? "初スタジオでした！"
+                  : kind === "photo"
+                    ? "キャプション（任意）"
+                    : "動画タイトル（任意）"
+              }
+              rows={4}
+              className="w-full resize-none rounded-[22px] border border-border bg-black/20 px-4 py-4 text-[16px] leading-relaxed text-white outline-none placeholder:text-white/30"
+            />
+            {kind !== "text" ? (
+              <input
+                value={mediaUrl}
+                onChange={(event) => setMediaUrl(event.target.value)}
+                placeholder={
+                  kind === "photo"
+                    ? "画像URL（必須）"
+                    : "YouTube URL（例: https://youtube.com/watch?v=...）"
+                }
+                className="h-12 w-full rounded-full border border-border bg-black/20 px-4 text-[14px] text-white outline-none placeholder:text-white/30"
+              />
+            ) : null}
+          </>
+        )}
         {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
         <Button disabled={isPending || !canSubmit} onClick={handleSubmit} className="w-full">
           {isPending ? "投稿中..." : "記録を残す"}
@@ -493,21 +576,24 @@ function ActivityTab({
               {new Date(activity.createdAt).toLocaleDateString("ja-JP")}
             </p>
             {activity.body ? (
-              <p className="text-[18px] leading-relaxed text-white/85">{activity.body}</p>
+              <LinkifiedText
+                text={activity.body}
+                className="text-[18px] leading-relaxed text-white/85"
+              />
             ) : null}
-            {activity.title ? (
+            {activity.title && activity.title !== activity.body ? (
               <p className="text-[15px] text-white/60">{activity.title}</p>
             ) : null}
             {activity.mediaUrl && activity.kind === "photo" ? (
-              <div className="relative mt-4 aspect-[4/3] overflow-hidden rounded-[24px]">
-                <Image
-                  src={activity.mediaUrl}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="390px"
-                />
-              </div>
+              <ActivityMediaBlock url={activity.mediaUrl} kind="photo" sizes="390px" />
+            ) : null}
+            {activity.mediaUrl && activity.kind === "video" ? (
+              <ActivityMediaBlock
+                url={activity.mediaUrl}
+                title={activity.title ?? activity.body ?? "Video"}
+                kind="video"
+                sizes="390px"
+              />
             ) : null}
           </article>
         ))}
@@ -520,38 +606,54 @@ function VideosTab({ videos }: { videos: BandDetail["activities"] }) {
   if (videos.length === 0) {
     return (
       <p className="text-[15px] leading-relaxed text-white/45">
-        まだ動画がありません。Activityから追加できます。
+        まだ動画がありません。ActivityからYouTubeリンクを追加できます。
       </p>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {videos.map((video) => (
-        <article key={video.id} className="overflow-hidden rounded-[20px] bg-subtle">
-          <div className="relative aspect-square bg-black/30">
-            {video.mediaUrl ? (
-              <Image
-                src={video.mediaUrl}
-                alt={video.title ?? "Video"}
-                fill
-                className="object-cover"
-                sizes="180px"
-              />
+    <div className="grid grid-cols-1 gap-4">
+      {videos.map((video) => {
+        const url = video.mediaUrl ?? "";
+        const isYouTube = url ? classifyMediaUrl(url) === "youtube" : false;
+
+        return (
+          <article key={video.id} className="overflow-hidden rounded-[20px] bg-subtle">
+            {url ? (
+              isYouTube ? (
+                <ActivityMediaBlock
+                  url={url}
+                  title={video.title ?? video.body ?? "Video"}
+                  kind="video"
+                  sizes="390px"
+                  className=""
+                />
+              ) : (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-4 py-4 text-[14px] text-primary"
+                >
+                  動画を見る
+                </a>
+              )
             ) : (
-              <div className="flex h-full items-center justify-center text-white/30">Video</div>
+              <div className="flex aspect-video items-center justify-center bg-black/30 text-white/30">
+                Video
+              </div>
             )}
-          </div>
-          <div className="space-y-1 px-3 py-3">
-            <p className="text-[11px] text-white/40">
-              {new Date(video.createdAt).toLocaleDateString("ja-JP")}
-            </p>
-            <p className="line-clamp-2 text-[14px] leading-snug text-white/85">
-              {video.title ?? video.body ?? "Untitled"}
-            </p>
-          </div>
-        </article>
-      ))}
+            <div className="space-y-1 px-4 py-3">
+              <p className="text-[11px] text-white/40">
+                {new Date(video.createdAt).toLocaleDateString("ja-JP")}
+              </p>
+              <p className="line-clamp-2 text-[14px] leading-snug text-white/85">
+                {video.title ?? video.body ?? "Untitled"}
+              </p>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }

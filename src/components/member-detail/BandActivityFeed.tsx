@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BandGradientThumbnail } from "@/components/bands/BandGradientThumbnail";
+import { ActivityMediaBlock } from "@/components/media/ActivityMediaBlock";
+import { LinkifiedText } from "@/components/media/LinkifiedText";
 import type { BandActivityFeedItem } from "@/types/band";
 
 type BandActivityFeedProps = {
@@ -48,34 +50,24 @@ export function BandActivityFeed({
                 </p>
               </div>
               {activity.body ? (
-                <p className="mt-3 text-[16px] leading-relaxed text-white/85">{activity.body}</p>
+                <LinkifiedText
+                  text={activity.body}
+                  className="mt-3 text-[16px] leading-relaxed text-white/85"
+                />
               ) : null}
               {activity.title ? (
                 <p className="mt-2 text-[15px] text-white/60">{activity.title}</p>
               ) : null}
               {activity.mediaUrl && activity.kind === "photo" ? (
-                <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-[20px]">
-                  <Image
-                    src={activity.mediaUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="320px"
-                    loading="lazy"
-                  />
-                </div>
+                <ActivityMediaBlock url={activity.mediaUrl} kind="photo" sizes="320px" />
               ) : null}
               {activity.mediaUrl && activity.kind === "video" ? (
-                <div className="relative mt-3 aspect-square overflow-hidden rounded-[20px] bg-black/30">
-                  <Image
-                    src={activity.mediaUrl}
-                    alt={activity.title ?? "Video"}
-                    fill
-                    className="object-cover"
-                    sizes="320px"
-                    loading="lazy"
-                  />
-                </div>
+                <ActivityMediaBlock
+                  url={activity.mediaUrl}
+                  title={activity.title ?? activity.body ?? "Video"}
+                  kind="video"
+                  sizes="320px"
+                />
               ) : null}
             </div>
           </div>
