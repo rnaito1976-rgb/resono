@@ -10,7 +10,6 @@ import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCards";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
-import { BRAND_CATCH_COPY_INLINE } from "@/lib/branding/copy";
 import { getHomeViewer } from "@/lib/home/viewer";
 import { getTodayMembers } from "@/lib/members";
 import { HOME_H1, HOME_LEAD } from "@/lib/seo/site";
@@ -64,9 +63,6 @@ export async function HomePageContent() {
               {HOME_H1}
             </h1>
             <p className="text-[15px] leading-relaxed text-white/55">{HOME_LEAD}</p>
-            <p className="text-[14px] leading-relaxed text-white/40">
-              {BRAND_CATCH_COPY_INLINE}
-            </p>
             <HomeHeroCta isLoggedIn={Boolean(user)} />
           </div>
           <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
