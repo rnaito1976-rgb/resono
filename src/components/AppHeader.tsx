@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { AuthHeaderActions } from "@/components/auth/AuthHeaderActions";
+import { HomeHeaderViewToggle } from "@/components/home/HomeHeaderViewToggle";
 import { HomeLogoLink } from "@/components/navigation/HomeLogoLink";
 
 type AppHeaderProps = {
@@ -16,7 +17,8 @@ export function AppHeader({ initialUser = null }: AppHeaderProps) {
           </p>
         </HomeLogoLink>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <HomeHeaderViewToggle />
           <AuthHeaderActions initialUser={initialUser} />
         </div>
       </div>

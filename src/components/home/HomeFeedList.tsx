@@ -2,9 +2,11 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { MemberBrowseList } from "@/components/members/MemberBrowseList";
+import { MemberListRow } from "@/components/members/MemberListRow";
 import { useMembersViewModeOptional } from "@/components/members/MembersViewProvider";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
+import { PersonCardClient } from "@/components/person-card/PersonCardClient";
+import { RecruitmentApplicationsPrefetch } from "@/components/recruitment/RecruitmentApplicationsPrefetch";
 import {
   dedupeFeedItems,
   FEED_PAGE_SIZE,
@@ -106,7 +108,7 @@ async function fetchFeedPage(
 
 export function HomeFeedList({
   viewerId,
-  viewerMemberId: _viewerMemberId,
+  viewerMemberId,
   showSectionHeader = false,
   initialFeedPage,
   initialAppliedByTarget = {},
@@ -213,15 +215,12 @@ export function HomeFeedList({
     }
 
     const observer = new IntersectionObserver(handleObserver, {
-      // Prefetch well before the user reaches the end.
       rootMargin: "1200px 0px",
     });
     observer.observe(node);
 
     return () => observer.disconnect();
   }, [handleObserver, hasNextPage]);
-
-  const feedMembers = feedItems.map((item) => item.member);
 
   if (isLoading) {
     return <HomeFeedSkeleton count={showSectionHeader ? 2 : 3} />;
@@ -235,27 +234,67 @@ export function HomeFeedList({
     );
   }
 
+  const cardFeed = feedItems.map(({ member, recommendation, reason, resonanceStatus }, index) => (
+    <PersonCardClient
+      key={member.id}
+      member={member}
+      recommendation={recommendation}
+      resonanceReason={reason}
+      resonanceStatus={resonanceStatus}
+      priority={!showSectionHeader && index === 0}
+      initialAppliedParts={initialAppliedByTarget[member.id] ?? undefined}
+    />
+  ));
+
+  const listFeed = (
+    <ul className="space-y-2">
+      {feedItems.map(({ member }) => (
+        <li key={member.id}>
+          <MemberListRow member={member} />
+        </li>
+      ))}
+    </ul>
+  );
+
+  const feedContent = viewMode === "card" ? (
+    <div className="flex flex-col gap-14">{cardFeed}</div>
+  ) : (
+    listFeed
+  );
+
+  const prefetch =
+    viewMode === "card" ? (
+      <RecruitmentApplicationsPrefetch
+        members={feedItems.map((item) => item.member)}
+        viewerMemberId={viewerMemberId}
+      />
+    ) : null;
+
   if (showSectionHeader) {
     return (
-      <section className="space-y-4">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-            Discover
-          </p>
-          <h2 className="mt-2 text-[24px] font-light tracking-tight text-foreground">
-            音楽的に気になる人
-          </h2>
-        </div>
-        <MemberBrowseList members={feedMembers} viewMode={viewMode} />
+      <>
+        {prefetch}
+        <section className="space-y-8">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+              Discover
+            </p>
+            <h2 className="mt-2 text-[24px] font-light tracking-tight text-foreground">
+              音楽的に気になる人
+            </h2>
+          </div>
+          {feedContent}
+        </section>
         {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
         <div ref={loadMoreRef} aria-hidden className="h-8" />
-      </section>
+      </>
     );
   }
 
   return (
     <>
-      <MemberBrowseList members={feedMembers} viewMode={viewMode} />
+      {prefetch}
+      {feedContent}
       {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
       <div ref={loadMoreRef} aria-hidden className="h-8" />
     </>

@@ -1,6 +1,7 @@
 "use client";
 
-import { MemberBrowseList } from "@/components/members/MemberBrowseList";
+import { MemberListCard } from "@/components/members/MemberListCard";
+import { MemberListRow } from "@/components/members/MemberListRow";
 import { useMembersViewModeOptional } from "@/components/members/MembersViewProvider";
 import type { Member } from "@/types/member";
 
@@ -34,7 +35,27 @@ export function HomeNewMembersSection({
         ) : null}
       </div>
 
-      <MemberBrowseList members={members} viewMode={viewMode} />
+      {viewMode === "card" ? (
+        <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">
+          <div className="flex w-max gap-3 px-5 pb-1">
+            {members.map((member) => (
+              <MemberListCard
+                key={member.id}
+                member={member}
+                className="w-[min(88vw,300px)] shrink-0"
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {members.map((member) => (
+            <li key={member.id}>
+              <MemberListRow member={member} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

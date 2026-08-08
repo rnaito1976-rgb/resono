@@ -4,8 +4,8 @@ export type MemberPresenceKind = "recruiting" | "seeking_friends" | "open_to_ban
 
 export const MEMBER_PRESENCE_LABELS: Record<MemberPresenceKind, string> = {
   recruiting: "メンバー募集中",
-  seeking_friends: "音楽仲間を探している",
-  open_to_band: "いい人がいたらバンドしたい",
+  seeking_friends: "活動中",
+  open_to_band: "これから始める",
 };
 
 export function getMemberPresenceKind(member: Member): MemberPresenceKind {

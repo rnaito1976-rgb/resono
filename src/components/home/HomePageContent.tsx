@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { HomeFeedSection } from "@/components/home/HomeFeedSection";
 import { HomeHeroCta } from "@/components/home/HomeHeroCta";
 import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
-import { HomeMembersBrowseProvider, HomeMembersViewToggleBar } from "@/components/home/HomeMembersBrowseShell";
+import { HomeMembersBrowseProvider } from "@/components/home/HomeMembersBrowseShell";
 import { HomeNewMembersSection } from "@/components/home/HomeNewMembersSection";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
@@ -74,24 +74,21 @@ export async function HomePageContent() {
         <link rel="preload" as="image" href={lcpImageHref} fetchPriority="high" />
       ) : null}
       <main className="mx-auto min-h-dvh max-w-mobile bg-background">
-        <AppHeader initialUser={user} />
-        <div className="space-y-2 px-5 pb-4 pt-2">
-          <h1 className="text-[22px] font-light leading-snug tracking-tight text-white/90">
-            {HOME_H1}
-          </h1>
-          <p className="text-[15px] leading-relaxed text-white/55">{HOME_LEAD}</p>
-          <p className="text-[14px] leading-relaxed text-white/40">
-            {BRAND_CATCH_COPY_INLINE}
-          </p>
-          <HomeHeroCta isLoggedIn={Boolean(user)} />
-        </div>
         <HomeMembersBrowseProvider>
+          <AppHeader initialUser={user} />
+          <div className="space-y-2 px-5 pb-4 pt-2">
+            <h1 className="text-[22px] font-light leading-snug tracking-tight text-white/90">
+              {HOME_H1}
+            </h1>
+            <p className="text-[15px] leading-relaxed text-white/55">{HOME_LEAD}</p>
+            <p className="text-[14px] leading-relaxed text-white/40">
+              {BRAND_CATCH_COPY_INLINE}
+            </p>
+            <HomeHeroCta isLoggedIn={Boolean(user)} />
+          </div>
           <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
             {user ? <IntroOnboardingCards userId={user.id} /> : null}
-            <section className="space-y-4">
-              <HomeMembersViewToggleBar />
-              <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
-            </section>
+            <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
             {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
             {member ? (
               <PersonCard
