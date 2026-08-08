@@ -37,6 +37,12 @@ export function collectMemberCoverSongEntries(member: Member): CoverSongEntry[] 
     }
   }
 
+  for (const song of member.music.coveredSongs ?? []) {
+    if (hasCoverSongContent(song)) {
+      push(song.artist, song.title);
+    }
+  }
+
   for (const line of member.lookingFor.setList ?? []) {
     const parsed = parseArtistSongLine(line);
     push(parsed.artist ?? "", parsed.title);

@@ -22,6 +22,8 @@ export type MemberMusicProfile = {
   instruments: string[];
   listeningMood: string;
   coverSongs?: CoverSong[];
+  /** Tracks the member has covered or performed before. */
+  coveredSongs?: CoverSong[];
   dreamBands?: string[];
   playingStyle?: string[];
   musicDna?: MusicDnaBar[];

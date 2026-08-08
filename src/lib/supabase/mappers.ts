@@ -217,6 +217,7 @@ function normalizeMusic(raw: unknown): MemberMusicProfile {
       : [],
     listeningMood: typeof value.listeningMood === "string" ? value.listeningMood : "",
     coverSongs: Array.isArray(value.coverSongs) ? value.coverSongs : undefined,
+    coveredSongs: Array.isArray(value.coveredSongs) ? value.coveredSongs : undefined,
     dreamBands: Array.isArray(value.dreamBands)
       ? value.dreamBands.filter((item): item is string => typeof item === "string")
       : undefined,

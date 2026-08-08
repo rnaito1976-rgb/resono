@@ -299,6 +299,7 @@ export function prepareMemberForSave(member: Member): Member {
     music: {
       ...member.music,
       coverSongs: sanitizeCoverSongs(member.music.coverSongs),
+      coveredSongs: sanitizeCoverSongs(member.music.coveredSongs),
     },
   };
 

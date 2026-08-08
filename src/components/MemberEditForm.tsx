@@ -419,6 +419,16 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
             />
           </FormSection>
 
+          <FormSection title="Covered Before">
+            <p className="text-[14px] leading-relaxed text-white/55">コピーしたことのある曲</p>
+            <CoverSongsEditor
+              memberId={member.id}
+              idPrefix="covered"
+              value={member.music.coveredSongs}
+              onChange={(coveredSongs) => updateNested("music", "coveredSongs", coveredSongs)}
+            />
+          </FormSection>
+
           <FormSection title="Places & Gear">
             <FormField label="Favorite Live Houses" hint="タップして選択">
               <FormTagPickerTrigger

@@ -14,25 +14,27 @@ type CoverSongsEditorProps = {
   memberId: string;
   value: CoverSong[] | undefined;
   onChange: (songs: CoverSong[] | undefined) => void;
+  idPrefix?: string;
 };
 
 export function CoverSongsEditor({
   memberId,
   value,
   onChange,
+  idPrefix = "cover",
 }: CoverSongsEditorProps) {
-  const songsRef = useRef(getCoverSongsForEditor(value, memberId));
+  const songsRef = useRef(getCoverSongsForEditor(value, memberId, idPrefix));
   const [lines, setLines] = useState(() => coverSongsToEditLines(value));
 
   function commit(nextLines: string[], nextSongs = songsRef.current) {
     const songs = [...nextSongs];
 
     while (songs.length < nextLines.length) {
-      songs.push(createEmptyCoverSong(memberId));
+      songs.push(createEmptyCoverSong(memberId, undefined, idPrefix));
     }
 
-    const committed = editLinesToCoverSongs(nextLines, memberId, songs);
-    songsRef.current = getCoverSongsForEditor(committed, memberId);
+    const committed = editLinesToCoverSongs(nextLines, memberId, songs, idPrefix);
+    songsRef.current = getCoverSongsForEditor(committed, memberId, idPrefix);
     onChange(committed);
   }
 
@@ -47,7 +49,7 @@ export function CoverSongsEditor({
 
   function handleAddRow() {
     const nextLines = [...lines, ""];
-    const nextSongs = [...songsRef.current, createEmptyCoverSong(memberId)];
+    const nextSongs = [...songsRef.current, createEmptyCoverSong(memberId, undefined, idPrefix)];
 
     songsRef.current = nextSongs;
     setLines(nextLines);
@@ -59,7 +61,7 @@ export function CoverSongsEditor({
 
     if (nextLines.length === 0) {
       nextLines = [""];
-      nextSongs = [createEmptyCoverSong(memberId, 0)];
+      nextSongs = [createEmptyCoverSong(memberId, 0, idPrefix)];
     }
 
     songsRef.current = nextSongs;

@@ -1,11 +1,15 @@
 import { formatArtistSongLine, parseArtistSongLine } from "@/lib/form";
 import type { CoverSong } from "@/types/music-profile";
 
-export function createEmptyCoverSong(memberId: string, seed?: number | string): CoverSong {
+export function createEmptyCoverSong(
+  memberId: string,
+  seed?: number | string,
+  idPrefix = "cover"
+): CoverSong {
   const suffix = seed ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
   return {
-    id: `cover-${memberId}-${suffix}`,
+    id: `${idPrefix}-${memberId}-${suffix}`,
     title: "",
     artist: "",
   };
@@ -13,13 +17,14 @@ export function createEmptyCoverSong(memberId: string, seed?: number | string): 
 
 export function getCoverSongsForEditor(
   songs: CoverSong[] | undefined,
-  memberId: string
+  memberId: string,
+  idPrefix = "cover"
 ): CoverSong[] {
   if (songs && songs.length > 0) {
     return songs;
   }
 
-  return [createEmptyCoverSong(memberId, 0)];
+  return [createEmptyCoverSong(memberId, 0, idPrefix)];
 }
 
 export function formatCoverSongForEdit(song: CoverSong): string {
@@ -47,11 +52,12 @@ export function coverSongsToEditLines(songs: CoverSong[] | undefined): string[] 
 export function editLinesToCoverSongs(
   lines: string[],
   memberId: string,
-  existingSongs: CoverSong[] = []
+  existingSongs: CoverSong[] = [],
+  idPrefix = "cover"
 ): CoverSong[] | undefined {
   const songs = lines
     .map((line, index) => {
-      const existing = existingSongs[index] ?? createEmptyCoverSong(memberId, index);
+      const existing = existingSongs[index] ?? createEmptyCoverSong(memberId, index, idPrefix);
       return parseCoverSongFromEdit(line, existing);
     })
     .filter(hasCoverSongContent);

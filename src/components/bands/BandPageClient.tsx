@@ -311,7 +311,7 @@ function SetListTab({
             プロフィールから追加
           </p>
           <p className="text-[14px] leading-relaxed text-white/45">
-            プロフィールに登録したコピー曲や Set List から選べます。
+            プロフィールに登録したコピー曲（やりたい曲・経験あり）や Set List から選べます。
           </p>
           <div className="flex flex-wrap gap-2">
             {profileCoverSongs.map((song) => {

@@ -77,6 +77,21 @@ export function MusicSlide({
       </MusicPageSection>
 
       <MusicPageSection
+        title="Covered Before"
+        description="コピーしたことのある曲"
+      >
+        {member.music.coveredSongs && member.music.coveredSongs.length > 0 ? (
+          <div className="space-y-6">
+            {member.music.coveredSongs.map((song) => (
+              <CoverSongCard key={song.id} song={song} />
+            ))}
+          </div>
+        ) : (
+          <MusicEmptyHint>まだコピーしたことのある曲が登録されていません。</MusicEmptyHint>
+        )}
+      </MusicPageSection>
+
+      <MusicPageSection
         title="Dream Bands"
         description="コピーしたいバンド"
         resonancePoints={resonance?.dreamBands}
