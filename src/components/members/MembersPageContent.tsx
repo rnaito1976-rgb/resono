@@ -2,30 +2,20 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { MemberListCard } from "@/components/members/MemberListCard";
+import { MembersFilterSheet } from "@/components/members/MembersFilterSheet";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
+import { Button } from "@/components/ui/button";
+import { getActivityStyleLabel } from "@/lib/music/activity-style";
 import {
-  ACTIVITY_STYLE_OPTIONS,
-  getActivityStyleLabel,
-  getMemberActivityStyles,
-  type ActivityStyleId,
-} from "@/lib/music/activity-style";
-import {
-  collectArtistFilters,
-  memberMatchesArtist,
-} from "@/lib/members/music-hints";
+  EMPTY_MEMBERS_FILTER,
+  hasMembersFilter,
+  memberMatchesMembersFilter,
+  type MembersFilterState,
+} from "@/lib/members/filters";
 import { MEMBERS_SEO } from "@/lib/seo/about-copy";
 import type { Member } from "@/types/member";
-
-const FEATURED_ARTISTS = [
-  "Radiohead",
-  "ELLEGARDEN",
-  "King Gnu",
-  "羊文学",
-  "サカナクション",
-] as const;
 
 type MembersPageContentProps = {
   members: Member[];
@@ -33,61 +23,26 @@ type MembersPageContentProps = {
   spotlightTitle?: string;
 };
 
-function memberMatchesPart(member: Member, part: string) {
-  return (
-    member.music.instruments.includes(part) || member.lookingFor.parts.includes(part)
-  );
-}
-
-function memberMatchesActivityStyle(member: Member, styleId: ActivityStyleId) {
-  return getMemberActivityStyles(member.music).includes(styleId);
-}
-
 export function MembersPageContent({
   members,
   spotlightMembers = [],
   spotlightTitle = "今日登録した人",
 }: MembersPageContentProps) {
-  const [selectedPart, setSelectedPart] = useState<string | null>(null);
-  const [selectedActivityStyle, setSelectedActivityStyle] =
-    useState<ActivityStyleId | null>(null);
-  const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
-
-  const artistFilters = useMemo(() => {
-    const fromMembers = collectArtistFilters(members, 8);
-    const merged = [...FEATURED_ARTISTS, ...fromMembers];
-    return [...new Set(merged)].slice(0, 12);
-  }, [members]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filter, setFilter] = useState<MembersFilterState>(EMPTY_MEMBERS_FILTER);
 
   const filteredMembers = useMemo(() => {
-    return members.filter((member) => {
-      if (selectedPart && !memberMatchesPart(member, selectedPart)) {
-        return false;
-      }
+    if (!hasMembersFilter(filter)) {
+      return members;
+    }
 
-      if (
-        selectedActivityStyle &&
-        !memberMatchesActivityStyle(member, selectedActivityStyle)
-      ) {
-        return false;
-      }
+    return members.filter((member) => memberMatchesMembersFilter(member, filter));
+  }, [members, filter]);
 
-      if (selectedArtist && !memberMatchesArtist(member, selectedArtist)) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [members, selectedPart, selectedActivityStyle, selectedArtist]);
-
-  const hasActiveFilter = Boolean(
-    selectedPart || selectedActivityStyle || selectedArtist
-  );
+  const hasActiveFilter = hasMembersFilter(filter);
 
   function clearFilters() {
-    setSelectedPart(null);
-    setSelectedActivityStyle(null);
-    setSelectedArtist(null);
+    setFilter(EMPTY_MEMBERS_FILTER);
   }
 
   return (
@@ -128,70 +83,6 @@ export function MembersPageContent({
         ) : null}
 
         <section className="space-y-4">
-          <h2 className="text-[18px] font-medium tracking-tight text-foreground">
-            好きなアーティストから探す
-          </h2>
-          <ul className="flex flex-wrap gap-2.5">
-            {artistFilters.map((artist) => (
-              <li key={artist}>
-                <SelectableChip
-                  label={artist}
-                  selected={selectedArtist === artist}
-                  onToggle={() =>
-                    setSelectedArtist((current) =>
-                      current === artist ? null : artist
-                    )
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="text-[18px] font-medium tracking-tight text-foreground">
-            {MEMBERS_SEO.partsHeading}
-          </h2>
-          <ul className="flex flex-wrap gap-2.5">
-            {MEMBERS_SEO.parts.map((part) => (
-              <li key={part}>
-                <SelectableChip
-                  label={part}
-                  selected={selectedPart === part}
-                  onToggle={() =>
-                    setSelectedPart((current) => (current === part ? null : part))
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="text-[18px] font-medium tracking-tight text-foreground">
-            活動スタイルから探す
-          </h2>
-          <p className="text-[14px] leading-relaxed text-white/45">
-            どんなバンド活動をしたいかで絞り込めます。
-          </p>
-          <ul className="flex flex-wrap gap-2.5">
-            {ACTIVITY_STYLE_OPTIONS.map((option) => (
-              <li key={option.id}>
-                <SelectableChip
-                  label={option.label}
-                  selected={selectedActivityStyle === option.id}
-                  onToggle={() =>
-                    setSelectedActivityStyle((current) =>
-                      current === option.id ? null : option.id
-                    )
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="space-y-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-[18px] font-medium tracking-tight text-foreground">
               音楽仲間・メンバー募集
@@ -207,19 +98,23 @@ export function MembersPageContent({
             ) : null}
           </div>
 
-          {selectedArtist ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setFilterOpen(true)}
+          >
+            メンバーを探す
+          </Button>
+
+          {filter.part ? (
             <p className="text-[14px] text-white/50">
-              {selectedArtist} が好きな人を表示しています
+              {filter.part} のメンバーを表示しています
             </p>
           ) : null}
-          {selectedPart ? (
+          {filter.activityStyle ? (
             <p className="text-[14px] text-white/50">
-              {selectedPart} のメンバーを表示しています
-            </p>
-          ) : null}
-          {selectedActivityStyle ? (
-            <p className="text-[14px] text-white/50">
-              {getActivityStyleLabel(selectedActivityStyle)} のメンバーを表示しています
+              {getActivityStyleLabel(filter.activityStyle)} のメンバーを表示しています
             </p>
           ) : null}
 
@@ -270,6 +165,13 @@ export function MembersPageContent({
 
         <SeoFooterLinks />
       </div>
+
+      <MembersFilterSheet
+        open={filterOpen}
+        value={filter}
+        onClose={() => setFilterOpen(false)}
+        onApply={setFilter}
+      />
     </main>
   );
 }
