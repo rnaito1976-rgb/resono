@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { shouldExcludeUserFromAnalytics } from "@/lib/analytics/exclusion";
 import { FrequencyColorProvider } from "@/components/frequency-color/FrequencyColorProvider";
 import { WelcomeRegistrationGate } from "@/components/auth/WelcomeRegistrationGate";
 import { TabBarWrapper } from "@/components/navigation/TabBarWrapper";
@@ -60,7 +61,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} min-h-dvh bg-background font-sans text-foreground antialiased`}
       >
-        <GoogleAnalytics />
+        <GoogleAnalytics excludeTracking={shouldExcludeUserFromAnalytics(user)} />
         <QueryProvider initialCommunityCatalog={communityCatalog}>
           <AuthUserProvider initialUser={user}>
             <FrequencyColorProvider initialColor={viewerColor}>
