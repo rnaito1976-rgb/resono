@@ -37,7 +37,7 @@ export function AboutExperienceFlow() {
         {STEPS.map((step, index) => (
           <li
             key={step.title}
-            className="rounded-[22px] border border-border/80 bg-subtle/60 px-5 py-5"
+            className="rounded-[22px] bg-subtle/60 px-5 py-5"
           >
             <div className="flex items-start gap-4">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-[13px] font-medium text-primary">
