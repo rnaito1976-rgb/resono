@@ -248,9 +248,9 @@ export function HomeFeedList({
 
   const listFeed = (
     <ul className="space-y-2">
-      {feedItems.map(({ member }) => (
+      {feedItems.map(({ member, reason }) => (
         <li key={member.id}>
-          <MemberListRow member={member} />
+          <MemberListRow member={member} resonanceScore={reason?.score} />
         </li>
       ))}
     </ul>

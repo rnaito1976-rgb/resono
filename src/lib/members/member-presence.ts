@@ -1,3 +1,4 @@
+import { getMemberActivityStyles } from "@/lib/music/activity-style";
 import type { Member } from "@/types/member";
 
 export type MemberPresenceKind = "recruiting" | "seeking_friends" | "open_to_band";
@@ -16,7 +17,7 @@ export function getMemberPresenceKind(member: Member): MemberPresenceKind {
   if (
     member.lookingFor.bandVision?.trim() ||
     member.lookingFor.commitment?.trim() ||
-    member.music.activityStyle
+    getMemberActivityStyles(member.music).length > 0
   ) {
     return "seeking_friends";
   }

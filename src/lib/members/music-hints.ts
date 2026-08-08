@@ -1,4 +1,7 @@
-import { getActivityStyleLabel } from "@/lib/music/activity-style";
+import {
+  getMemberActivityStyles,
+  getActivityStyleLabels,
+} from "@/lib/music/activity-style";
 import { getPlayingParts } from "@/lib/resonance/dialogue";
 import type { Member } from "@/types/member";
 
@@ -26,14 +29,14 @@ function uniqueNonEmpty(items: string[]): string[] {
 
 /** Compact music identity lines for cards (artists, genres, styles). */
 export function buildMemberMusicHints(member: Member, maxItems = 4): string[] {
-  const activityStyle = getActivityStyleLabel(member.music.activityStyle);
   const playingStyle = member.music.playingStyle?.[0];
+  const activityStyleLabels = getActivityStyleLabels(getMemberActivityStyles(member.music));
 
   return uniqueNonEmpty([
     ...member.music.favoriteArtists.slice(0, 2),
     ...(member.music.genres ?? []).slice(0, 2),
     ...(playingStyle ? [playingStyle] : []),
-    ...(activityStyle ? [activityStyle] : []),
+    ...activityStyleLabels,
   ]).slice(0, maxItems);
 }
 

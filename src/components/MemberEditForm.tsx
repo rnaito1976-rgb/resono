@@ -379,9 +379,13 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormSection title="Music">
             <FormField label="活動スタイル" hint="任意 · どんなバンド活動をしたいか">
               <ActivityStylePicker
-                value={member.music.activityStyle}
-                onChange={(activityStyle) =>
-                  updateNested("music", "activityStyle", activityStyle)
+                value={member.music.activityStyles ?? []}
+                onChange={(activityStyles) =>
+                  updateNested(
+                    "music",
+                    "activityStyles",
+                    activityStyles.length > 0 ? activityStyles : undefined
+                  )
                 }
               />
             </FormField>

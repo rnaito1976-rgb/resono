@@ -7,17 +7,15 @@ import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
 import { HomeMembersBrowseProvider } from "@/components/home/HomeMembersBrowseShell";
 import { HomeNewMembersSection } from "@/components/home/HomeNewMembersSection";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
-import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
 import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCards";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
 import { BRAND_CATCH_COPY_INLINE } from "@/lib/branding/copy";
 import { getHomeViewer } from "@/lib/home/viewer";
-import { getRecentMembers, getTodayMembers } from "@/lib/members";
+import { getTodayMembers } from "@/lib/members";
 import { HOME_H1, HOME_LEAD } from "@/lib/seo/site";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
-import { getRecruitmentApplicantsByPart } from "@/lib/recruitment/applications";
 import { LIVE_FEED_SIZE } from "@/types/live";
 
 export function HomePageFallback() {
@@ -33,7 +31,6 @@ export function HomePageFallback() {
             <div className="h-[88px] w-[220px] shrink-0 animate-pulse rounded-[20px] bg-white/[0.04]" />
           </div>
         </div>
-        <div className="aspect-square w-full animate-pulse rounded-[28px] bg-white/[0.04]" />
         <HomeFeedSkeleton count={2} />
       </div>
     </main>
@@ -41,29 +38,15 @@ export function HomePageFallback() {
 }
 
 export async function HomePageContent() {
-  const [{ user, member, frequencyColor }, liveEvents, todayMembers, recentMembers] =
-    await Promise.all([
-      getHomeViewer(),
-      getLiveEvents(LIVE_FEED_SIZE),
-      getTodayMembers(6),
-      getRecentMembers(6),
-    ]);
+  const [{ user, member, frequencyColor }, liveEvents, todayMembers] = await Promise.all([
+    getHomeViewer(),
+    getLiveEvents(LIVE_FEED_SIZE),
+    getTodayMembers(6),
+  ]);
 
   if (user && !member) {
     redirect("/welcome");
   }
-
-  const newMembers =
-    todayMembers.length > 0
-      ? todayMembers
-      : recentMembers.filter((item) => item.id !== member?.id).slice(0, 4);
-  const newMembersTitle =
-    todayMembers.length > 0 ? "今日登録した人" : "最近参加した人";
-
-  const ownRecruitmentApplicants =
-    member?.lookingFor?.parts?.some(Boolean)
-      ? await getRecruitmentApplicantsByPart(member.id)
-      : [];
 
   const lcpImageHref = getHomeLcpImageHref(member, undefined);
 
@@ -88,16 +71,10 @@ export async function HomePageContent() {
           </div>
           <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
             {user ? <IntroOnboardingCards userId={user.id} /> : null}
-            <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
-            {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
-            {member ? (
-              <PersonCard
-                member={member}
-                isOwnCard
-                priority
-                initialRecruitmentApplicants={ownRecruitmentApplicants}
-              />
+            {todayMembers.length > 0 ? (
+              <HomeNewMembersSection members={todayMembers} title="今日登録した人" />
             ) : null}
+            {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
             <Suspense fallback={<HomeFeedSkeleton count={2} />}>
               <HomeFeedSection
                 member={member}

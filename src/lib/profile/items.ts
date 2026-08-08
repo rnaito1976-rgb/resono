@@ -1,7 +1,7 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import { formatArtistSongLine, parseArtistSongLine } from "@/lib/form";
 import { sanitizeCoverSongs } from "@/lib/music/cover-songs";
-import { normalizeActivityStyle } from "@/lib/music/activity-style";
+import { normalizeActivityStyles } from "@/lib/music/activity-style";
 import type { Member } from "@/types/member";
 import type {
   LegacyProfileCard,
@@ -295,11 +295,18 @@ export function syncProfileItemsFromMemberFields(member: Member): Member {
 
 /** 保存前: 項目 ↔ メンバーフィールドを双方向同期 + AIコメント再生成 */
 export function prepareMemberForSave(member: Member): Member {
+  const normalizedActivityStyles = normalizeActivityStyles(
+    member.music.activityStyles,
+    member.music.activityStyle
+  );
+  const { activityStyle: _legacyActivityStyle, ...musicWithoutLegacyStyle } = member.music;
+
   const normalizedMember: Member = {
     ...member,
     music: {
-      ...member.music,
-      activityStyle: normalizeActivityStyle(member.music.activityStyle),
+      ...musicWithoutLegacyStyle,
+      activityStyles:
+        normalizedActivityStyles.length > 0 ? normalizedActivityStyles : undefined,
       coverSongs: sanitizeCoverSongs(member.music.coverSongs),
       coveredSongs: sanitizeCoverSongs(member.music.coveredSongs),
     },

@@ -23,8 +23,10 @@ export type MemberMusicProfile = {
   favoriteArtists: string[];
   instruments: string[];
   listeningMood: string;
-  /** Stable id: original | cover | both */
-  activityStyle?: ActivityStyleId;
+  /** Stable ids: original | cover (multi-select) */
+  activityStyles?: ActivityStyleId[];
+  /** @deprecated migrated to activityStyles */
+  activityStyle?: ActivityStyleId | "both";
   coverSongs?: CoverSong[];
   /** Tracks the member has covered or performed before. */
   coveredSongs?: CoverSong[];

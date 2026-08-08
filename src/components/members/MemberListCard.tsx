@@ -7,7 +7,7 @@ import {
   buildMemberMusicHints,
   buildMemberPlayingStyleLine,
 } from "@/lib/members/music-hints";
-import { getActivityStyleLabel } from "@/lib/music/activity-style";
+import { formatActivityStyleLabels } from "@/lib/music/activity-style";
 import { cn } from "@/lib/utils";
 import type { Member } from "@/types/member";
 
@@ -99,7 +99,7 @@ function MemberListGridCard({ member, className }: MemberListCardProps) {
   const meta = buildMemberCardMeta(member);
   const subtitle = meta.length > 0 ? meta.join(" · ") : null;
   const artistLine = buildMemberArtistLine(member);
-  const activityStyle = getActivityStyleLabel(member.music.activityStyle);
+  const activityStyleLine = formatActivityStyleLabels(member.music);
   const playingStyle = buildMemberPlayingStyleLine(member);
 
   return (
@@ -128,8 +128,8 @@ function MemberListGridCard({ member, className }: MemberListCardProps) {
             <p className="text-[12px] leading-relaxed text-white/60">{artistLine}</p>
           ) : null}
 
-          {activityStyle ? (
-            <p className="text-[12px] leading-relaxed text-white/45">{activityStyle}</p>
+          {activityStyleLine ? (
+            <p className="text-[12px] leading-relaxed text-white/45">{activityStyleLine}</p>
           ) : null}
 
           {playingStyle ? (

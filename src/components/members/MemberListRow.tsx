@@ -5,7 +5,7 @@ import {
   buildMemberPartsLocationLine,
   buildMemberPlayingStyleLine,
 } from "@/lib/members/music-hints";
-import { getActivityStyleLabel } from "@/lib/music/activity-style";
+import { formatActivityStyleLabels } from "@/lib/music/activity-style";
 import { cn } from "@/lib/utils";
 import type { Member } from "@/types/member";
 
@@ -14,13 +14,15 @@ const LIST_ROW_AVATAR_PX = 32;
 type MemberListRowProps = {
   member: Member;
   className?: string;
+  resonanceScore?: number;
 };
 
-export function MemberListRow({ member, className }: MemberListRowProps) {
+export function MemberListRow({ member, className, resonanceScore }: MemberListRowProps) {
   const partsLine = buildMemberPartsLocationLine(member);
   const artistLine = buildMemberArtistLine(member);
-  const activityStyle = getActivityStyleLabel(member.music.activityStyle);
+  const activityStyleLine = formatActivityStyleLabels(member.music);
   const playingStyle = buildMemberPlayingStyleLine(member);
+  const displayScore = resonanceScore ?? member.resonanceRate;
 
   return (
     <Link
@@ -45,17 +47,19 @@ export function MemberListRow({ member, className }: MemberListRowProps) {
           <p className="text-[13px] leading-relaxed text-white/60">{artistLine}</p>
         ) : null}
 
-        {activityStyle ? (
-          <p className="text-[13px] leading-relaxed text-white/45">{activityStyle}</p>
+        {activityStyleLine ? (
+          <p className="text-[13px] leading-relaxed text-white/45">{activityStyleLine}</p>
         ) : null}
 
         {playingStyle ? (
           <p className="text-[13px] leading-relaxed text-white/45">{playingStyle}</p>
         ) : null}
 
-        <p className="pt-0.5 text-[12px] tabular-nums text-primary/85">
-          共鳴度 {member.resonanceRate}%
-        </p>
+        {displayScore > 0 ? (
+          <p className="pt-0.5 text-[12px] tabular-nums text-primary/85">
+            共鳴度 {displayScore}%
+          </p>
+        ) : null}
       </div>
     </Link>
   );

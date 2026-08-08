@@ -9,6 +9,7 @@ import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
 import {
   ACTIVITY_STYLE_OPTIONS,
   getActivityStyleLabel,
+  getMemberActivityStyles,
   type ActivityStyleId,
 } from "@/lib/music/activity-style";
 import {
@@ -39,7 +40,7 @@ function memberMatchesPart(member: Member, part: string) {
 }
 
 function memberMatchesActivityStyle(member: Member, styleId: ActivityStyleId) {
-  return member.music.activityStyle === styleId;
+  return getMemberActivityStyles(member.music).includes(styleId);
 }
 
 export function MembersPageContent({

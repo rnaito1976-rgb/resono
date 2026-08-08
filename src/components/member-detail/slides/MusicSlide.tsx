@@ -8,7 +8,7 @@ import {
 } from "@/components/member-detail/music/MusicPageSection";
 import { MusicTagGrid } from "@/components/member-detail/music/MusicTagGrid";
 import { buildMusicPageView } from "@/lib/music/profile-display";
-import { getActivityStyleLabel } from "@/lib/music/activity-style";
+import { getActivityStyleLabels, getMemberActivityStyles } from "@/lib/music/activity-style";
 import type { Member } from "@/types/member";
 import type { MusicPageView } from "@/types/music-profile";
 
@@ -28,7 +28,7 @@ export function MusicSlide({
     sectionResonance: musicResonance,
   });
   const resonance = view.sectionResonance;
-  const activityStyleLabel = getActivityStyleLabel(member.music.activityStyle);
+  const activityStyleLabels = getActivityStyleLabels(getMemberActivityStyles(member.music));
 
   return (
     <div className="flex h-full flex-col space-y-10 px-6 pb-10 pt-4">
@@ -54,8 +54,8 @@ export function MusicSlide({
         title="Activity Style"
         description="どんなバンド活動をしたいか"
       >
-        {activityStyleLabel ? (
-          <MusicTagGrid items={[activityStyleLabel]} />
+        {activityStyleLabels.length > 0 ? (
+          <MusicTagGrid items={activityStyleLabels} />
         ) : (
           <MusicEmptyHint>まだ活動スタイルが登録されていません。</MusicEmptyHint>
         )}
