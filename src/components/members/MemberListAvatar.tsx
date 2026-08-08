@@ -26,42 +26,45 @@ export function MemberListAvatar({
   const color = member.frequencyColor as FrequencyColorHex | undefined;
   const showPhoto = hasProfilePhoto(member.photo);
   const initial = getMemberInitial(member.name);
+  const initialSize = Math.max(12, Math.round(size * 0.32));
 
   return (
-    <ProfilePhotoRing
-      color={color}
-      className="h-14 w-14 shrink-0 rounded-full"
-    >
-      <div className="relative h-14 w-14 overflow-hidden rounded-full">
-        {showPhoto ? (
-          <Image
-            src={getProfilePhotoSrc(member.photo, size * 2)}
-            alt=""
-            fill
-            className="object-cover"
-            sizes={getProfilePhotoSizes("thumb")}
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={
-              color
-                ? { backgroundColor: withAlpha(color, 0.14) }
-                : { backgroundColor: "rgba(255,255,255,0.06)" }
-            }
-          >
-            <span
-              className="text-[18px] font-medium tracking-tight"
-              style={color ? { color: withAlpha(color, 0.92) } : undefined}
-              aria-hidden
+    <div className="shrink-0" style={{ width: size, height: size }}>
+      <ProfilePhotoRing color={color} className="h-full w-full rounded-full">
+        <div className="relative h-full w-full overflow-hidden rounded-full">
+          {showPhoto ? (
+            <Image
+              src={getProfilePhotoSrc(member.photo, size * 2)}
+              alt=""
+              fill
+              className="object-cover"
+              sizes={getProfilePhotoSizes("thumb")}
+              loading="lazy"
+            />
+          ) : (
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={
+                color
+                  ? { backgroundColor: withAlpha(color, 0.14) }
+                  : { backgroundColor: "rgba(255,255,255,0.06)" }
+              }
             >
-              {initial}
-            </span>
-          </div>
-        )}
-      </div>
-    </ProfilePhotoRing>
+              <span
+                className="font-medium tracking-tight"
+                style={{
+                  fontSize: initialSize,
+                  ...(color ? { color: withAlpha(color, 0.92) } : {}),
+                }}
+                aria-hidden
+              >
+                {initial}
+              </span>
+            </div>
+          )}
+        </div>
+      </ProfilePhotoRing>
+    </div>
   );
 }
 

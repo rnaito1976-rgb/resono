@@ -53,6 +53,30 @@ export function buildMemberCardMeta(member: Member): string[] {
   return lines;
 }
 
+/** Compact "Part / Area" line for list-style layouts. */
+export function buildMemberPartsLocationLine(member: Member): string | null {
+  const parts = getPlayingParts(member);
+  const location = member.portrait.location?.trim();
+  const segments = [...parts, ...(location ? [location] : [])];
+
+  return segments.length > 0 ? segments.join(" / ") : null;
+}
+
+/** Favorite artists joined for scan-friendly list rows. */
+export function buildMemberArtistLine(member: Member, max = 2): string | null {
+  const artists = member.music.favoriteArtists
+    .map((artist) => artist.trim())
+    .filter(Boolean)
+    .slice(0, max);
+
+  return artists.length > 0 ? artists.join(" / ") : null;
+}
+
+export function buildMemberPlayingStyleLine(member: Member): string | null {
+  const style = member.music.playingStyle?.[0]?.trim();
+  return style || null;
+}
+
 export function memberMatchesArtist(member: Member, artist: string): boolean {
   const needle = artist.trim().toLowerCase();
   if (!needle) {
