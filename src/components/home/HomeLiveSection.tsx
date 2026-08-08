@@ -4,5 +4,8 @@ import { LIVE_FEED_SIZE } from "@/types/live";
 
 export async function HomeLiveSection() {
   const events = await getLiveEvents(LIVE_FEED_SIZE);
+  if (events.length === 0) {
+    return null;
+  }
   return <HomeLiveFeed events={events} />;
 }

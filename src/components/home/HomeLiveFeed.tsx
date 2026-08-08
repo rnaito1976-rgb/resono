@@ -82,6 +82,10 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
     }
   }, [events]);
 
+  if (events.length === 0) {
+    return null;
+  }
+
   return (
     <section className="space-y-4">
       <div>
@@ -93,23 +97,17 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
         </h2>
       </div>
 
-      {events.length === 0 ? (
-        <p className="text-[14px] leading-relaxed text-white/40">
-          直近48時間の動きはまだありません
-        </p>
-      ) : (
-        <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">
-          <div className="flex w-max gap-3 px-5 pb-1">
-            {events.map((event) => (
-              <LiveEventCard
-                key={event.id}
-                event={event}
-                animateIn={animateIds.has(event.id)}
-              />
-            ))}
-          </div>
+      <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">
+        <div className="flex w-max gap-3 px-5 pb-1">
+          {events.map((event) => (
+            <LiveEventCard
+              key={event.id}
+              event={event}
+              animateIn={animateIds.has(event.id)}
+            />
+          ))}
         </div>
-      )}
+      </div>
     </section>
   );
 }
