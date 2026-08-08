@@ -1,6 +1,7 @@
 import type { Member } from "@/types/member";
 import type { MemberResonanceSignals } from "@/types/resonance-signals";
 import type { CoverSong } from "@/types/music-profile";
+import { getMemberActivityStyles } from "@/lib/music/activity-style";
 
 function toStringArray(values: unknown): string[] {
   if (!Array.isArray(values)) {
@@ -50,6 +51,14 @@ export function partsMatch(left: string, right: string): boolean {
 
 function matchParts(needles: string[], haystack: string[]): string[] {
   return needles.filter((needle) => haystack.some((item) => partsMatch(needle, item)));
+}
+
+function eitherHasStringData(...groups: unknown[]): boolean {
+  return groups.some((group) => toStringArray(group).length > 0);
+}
+
+function eitherHasText(...values: Array<string | undefined>): boolean {
+  return values.some((value) => Boolean(value?.trim()));
 }
 
 function overlapFactor(left: string[], right: string[], cap = 3): number {
@@ -146,14 +155,15 @@ function textSoftOverlap(a: string, b: string): number {
  */
 const WEIGHTS = {
   // ★★★★★
-  favoriteArtists: 16,
+  favoriteArtists: 18,
   wantToCover: 14,
   lookingFor: 14,
   playingParts: 11,
   // ★★★★☆
-  genres: 9,
+  genres: 10,
   bandStyle: 8,
-  coverOriginal: 7,
+  playingStyle: 7,
+  activityStyle: 6,
   schedule: 6,
   // ★★★☆☆
   studios: 4,
@@ -164,7 +174,103 @@ const WEIGHTS = {
   internalSignals: 8,
 } as const;
 
-const WEIGHT_TOTAL = Object.values(WEIGHTS).reduce((sum, value) => sum + value, 0);
+const SCORE_BASE = 56;
+const SCORE_SPREAD = 38;
+const SCORE_MIN = 55;
+const SCORE_MAX = 95;
+
+function scoreFavoriteArtists(viewer: Member, target: Member): number {
+  const left = toStringArray(viewer.music.favoriteArtists);
+  const right = toStringArray(target.music.favoriteArtists);
+  if (!left.length || !right.length) {
+    return 0;
+  }
+
+  const shared = intersection(left, right);
+  const matchCount = shared.length;
+  if (matchCount === 0) {
+    return 0;
+  }
+
+  const comparisonBase = Math.min(3, Math.min(left.length, right.length));
+  const coverage = Math.min(1, matchCount / comparisonBase);
+  const depthBonus =
+    matchCount >= 3 ? 0.28 : matchCount >= 2 ? 0.18 : 0.08;
+
+  return Math.min(1, coverage * 0.85 + depthBonus);
+}
+
+function scoreGenres(viewer: Member, target: Member): number {
+  const left = toStringArray(viewer.music.genres);
+  const right = toStringArray(target.music.genres);
+  if (!left.length || !right.length) {
+    return 0;
+  }
+
+  const exactMatches = intersection(left, right);
+  if (exactMatches.length > 0) {
+    return Math.min(
+      1,
+      overlapFactor(left, right, 3) * 0.75 + Math.min(exactMatches.length, 2) * 0.12
+    );
+  }
+
+  let bestSoft = 0;
+  for (const leftGenre of left) {
+    for (const rightGenre of right) {
+      bestSoft = Math.max(bestSoft, textSoftOverlap(leftGenre, rightGenre));
+    }
+  }
+
+  return Math.min(0.74, bestSoft * 0.74 + 0.1);
+}
+
+function scorePlayingStyleCompat(viewer: Member, target: Member): number {
+  const left = uniqueStrings([
+    ...toStringArray(viewer.music.playingStyle),
+    ...getMusicFocus(viewer),
+  ]);
+  const right = uniqueStrings([
+    ...toStringArray(target.music.playingStyle),
+    ...getMusicFocus(target),
+  ]);
+
+  if (!left.length || !right.length) {
+    return 0;
+  }
+
+  const exact = overlapFactor(left, right, 2);
+  if (exact > 0) {
+    return Math.min(1, exact * 0.85 + 0.08);
+  }
+
+  let bestSoft = 0;
+  for (const leftStyle of left) {
+    for (const rightStyle of right) {
+      bestSoft = Math.max(bestSoft, textSoftOverlap(leftStyle, rightStyle));
+    }
+  }
+
+  return Math.min(0.72, bestSoft * 0.72 + 0.08);
+}
+
+function scoreActivityStyle(viewer: Member, target: Member): number {
+  const left = getMemberActivityStyles(viewer.music);
+  const right = getMemberActivityStyles(target.music);
+  if (!left.length || !right.length) {
+    return 0;
+  }
+
+  const leftSet = new Set(left);
+  const shared = right.filter((style) => leftSet.has(style));
+
+  if (shared.length > 0) {
+    return Math.min(1, 0.55 + shared.length * 0.22);
+  }
+
+  // 活動スタイルが違っても、一緒に音を出す可能性は残す
+  return 0.42;
+}
 
 function scoreLookingForFit(viewer: Member, target: Member): {
   score: number;
@@ -297,24 +403,17 @@ function scoreInternalSignals(viewer: Member, target: Member): number {
 }
 
 function collectFactorScores(viewer: Member, target: Member) {
-  const artists = overlapFactor(
-    toStringArray(viewer.music.favoriteArtists),
-    toStringArray(target.music.favoriteArtists),
-    3
-  );
+  const artists = scoreFavoriteArtists(viewer, target);
   const cover = scoreWantToCover(viewer, target);
   const looking = scoreLookingForFit(viewer, target);
   const parts = scorePartsComplement(viewer, target);
-  const genres = overlapFactor(
-    toStringArray(viewer.music.genres),
-    toStringArray(target.music.genres),
-    3
-  );
+  const genres = scoreGenres(viewer, target);
   const bandStyle = Math.max(
     overlapFactor(getBandStyleTokens(viewer), getBandStyleTokens(target), 3),
     textSoftOverlap(viewer.lookingFor.bandVision, target.lookingFor.bandVision)
   );
-  const coverOriginal = overlapFactor(getMusicFocus(viewer), getMusicFocus(target), 2);
+  const playingStyle = scorePlayingStyleCompat(viewer, target);
+  const activityStyle = scoreActivityStyle(viewer, target);
   const schedule = Math.max(
     overlapFactor(getScheduleTokens(viewer), getScheduleTokens(target), 2),
     textSoftOverlap(viewer.lookingFor.commitment, target.lookingFor.commitment)
@@ -348,7 +447,8 @@ function collectFactorScores(viewer: Member, target: Member) {
     parts,
     genres,
     bandStyle,
-    coverOriginal,
+    playingStyle,
+    activityStyle,
     schedule,
     studios,
     liveHouses,
@@ -364,26 +464,122 @@ export function calculateResonanceMatch(viewer: Member, target: Member): number 
   }
 
   const factors = collectFactorScores(viewer, target);
-  const weighted =
-    factors.artists * WEIGHTS.favoriteArtists +
-    factors.cover.score * WEIGHTS.wantToCover +
-    factors.looking.score * WEIGHTS.lookingFor +
-    factors.parts * WEIGHTS.playingParts +
-    factors.genres * WEIGHTS.genres +
-    factors.bandStyle * WEIGHTS.bandStyle +
-    factors.coverOriginal * WEIGHTS.coverOriginal +
-    factors.schedule * WEIGHTS.schedule +
-    factors.studios * WEIGHTS.studios +
-    factors.liveHouses * WEIGHTS.liveHouses +
-    factors.festivals * WEIGHTS.festivals +
-    factors.gear * WEIGHTS.gear +
-    factors.internal * WEIGHTS.internalSignals;
+  const weightedEntries = [
+    {
+      score: factors.artists,
+      weight: WEIGHTS.favoriteArtists,
+      applicable: eitherHasStringData(
+        viewer.music.favoriteArtists,
+        target.music.favoriteArtists
+      ),
+    },
+    {
+      score: factors.cover.score,
+      weight: WEIGHTS.wantToCover,
+      applicable:
+        eitherHasStringData(viewer.music.dreamBands, target.music.dreamBands) ||
+        eitherHasStringData(getCoverTitles(viewer), getCoverTitles(target)),
+    },
+    {
+      score: factors.looking.score,
+      weight: WEIGHTS.lookingFor,
+      applicable: eitherHasStringData(viewer.lookingFor.parts, target.lookingFor.parts),
+    },
+    {
+      score: factors.parts,
+      weight: WEIGHTS.playingParts,
+      applicable: eitherHasStringData(viewer.music.instruments, target.music.instruments),
+    },
+    {
+      score: factors.genres,
+      weight: WEIGHTS.genres,
+      applicable: eitherHasStringData(viewer.music.genres, target.music.genres),
+    },
+    {
+      score: factors.bandStyle,
+      weight: WEIGHTS.bandStyle,
+      applicable:
+        eitherHasText(viewer.lookingFor.bandVision, target.lookingFor.bandVision) ||
+        eitherHasStringData(getBandStyleTokens(viewer), getBandStyleTokens(target)),
+    },
+    {
+      score: factors.playingStyle,
+      weight: WEIGHTS.playingStyle,
+      applicable:
+        eitherHasStringData(viewer.music.playingStyle, target.music.playingStyle) ||
+        eitherHasStringData(getMusicFocus(viewer), getMusicFocus(target)),
+    },
+    {
+      score: factors.activityStyle,
+      weight: WEIGHTS.activityStyle,
+      applicable:
+        getMemberActivityStyles(viewer.music).length > 0 &&
+        getMemberActivityStyles(target.music).length > 0,
+    },
+    {
+      score: factors.schedule,
+      weight: WEIGHTS.schedule,
+      applicable:
+        eitherHasText(viewer.lookingFor.commitment, target.lookingFor.commitment) ||
+        eitherHasStringData(getScheduleTokens(viewer), getScheduleTokens(target)),
+    },
+    {
+      score: factors.studios,
+      weight: WEIGHTS.studios,
+      applicable: eitherHasStringData(
+        viewer.music.favoriteStudios,
+        target.music.favoriteStudios
+      ),
+    },
+    {
+      score: factors.liveHouses,
+      weight: WEIGHTS.liveHouses,
+      applicable: eitherHasStringData(
+        viewer.music.favoriteLiveHouses,
+        target.music.favoriteLiveHouses
+      ),
+    },
+    {
+      score: factors.festivals,
+      weight: WEIGHTS.festivals,
+      applicable: eitherHasStringData(
+        viewer.music.favoriteFestivals,
+        target.music.favoriteFestivals
+      ),
+    },
+    {
+      score: factors.gear,
+      weight: WEIGHTS.gear,
+      applicable: eitherHasStringData(viewer.music.gear, target.music.gear),
+    },
+    {
+      score: factors.internal,
+      weight: WEIGHTS.internalSignals,
+      applicable:
+        eitherHasStringData(getSignals(viewer).musicFocus, getSignals(target).musicFocus) ||
+        eitherHasStringData(getSignals(viewer).bandValues, getSignals(target).bandValues) ||
+        eitherHasStringData(getSignals(viewer).idealMember, getSignals(target).idealMember) ||
+        eitherHasStringData(getSignals(viewer).conversation, getSignals(target).conversation) ||
+        eitherHasStringData(getSignals(viewer).notes, getSignals(target).notes),
+    },
+  ];
 
-  const ratio = weighted / WEIGHT_TOTAL;
-  // ベースを置きつつ、バンド適合の重みで押し上げる
-  const score = 32 + ratio * 67;
+  let weightedSum = 0;
+  let applicableWeight = 0;
 
-  return Math.min(99, Math.max(38, Math.round(score)));
+  for (const entry of weightedEntries) {
+    if (!entry.applicable) {
+      continue;
+    }
+
+    weightedSum += entry.score * entry.weight;
+    applicableWeight += entry.weight;
+  }
+
+  const ratio = applicableWeight > 0 ? weightedSum / applicableWeight : 0;
+  const score = SCORE_BASE + ratio * SCORE_SPREAD;
+
+  return Math.min(SCORE_MAX, Math.max(SCORE_MIN, Math.round(score)));
 }
 
 export type ResonanceReason = {
@@ -394,7 +590,7 @@ export type ResonanceReason = {
   version?: number;
 };
 
-export const RESONANCE_ALGORITHM_VERSION = 2;
+export const RESONANCE_ALGORITHM_VERSION = 3;
 
 export function isCurrentResonanceReason(
   reason: ResonanceReason | undefined

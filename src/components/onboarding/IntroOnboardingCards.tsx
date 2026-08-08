@@ -1,12 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { X } from "lucide-react";
 import { useIntroOnboarding } from "@/hooks/useIntroOnboarding";
-import {
-  INTRO_ONBOARDING_CTA,
-  INTRO_ONBOARDING_MESSAGE,
-} from "@/lib/onboarding/intro-onboarding";
+import { INTRO_ONBOARDING_MESSAGE } from "@/lib/onboarding/intro-onboarding";
 
 type IntroOnboardingCardsProps = {
   userId: string;
@@ -30,16 +26,10 @@ export function IntroOnboardingCards({ userId }: IntroOnboardingCardsProps) {
         <X className="h-3.5 w-3.5" strokeWidth={2} />
       </button>
 
-      <div className="space-y-3 pr-8">
+      <div className="pr-8">
         <p className="text-[14px] leading-[1.65] text-white/75">
           {INTRO_ONBOARDING_MESSAGE}
         </p>
-        <Link
-          href="/discover"
-          className="inline-block text-[13px] text-primary transition-quiet active:opacity-80"
-        >
-          {INTRO_ONBOARDING_CTA}
-        </Link>
       </div>
     </article>
   );
