@@ -1,7 +1,7 @@
 export const INTRO_ONBOARDING_MESSAGE =
-  "互いに共鳴するとメッセージ・バンド機能が使えるようになります。";
+  "気になる人に共鳴を送ると、メッセージやBand機能が使えるようになります。";
 
-export const INTRO_ONBOARDING_CTA = "共鳴する仲間を探そう";
+export const INTRO_ONBOARDING_CTA = "音楽的に気になる人を探す";
 
 const LOCAL_STORAGE_PREFIX = "resono:intro-onboarding:dismissed:";
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AboutExperienceFlow } from "@/components/about/AboutExperienceFlow";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
@@ -44,6 +45,8 @@ export default function AboutPage() {
       />
 
       <article className="space-y-10 px-5 pb-16">
+        <AboutExperienceFlow />
+
         {ABOUT_SEO.sections.map((section) => (
           <section key={section.id} className="space-y-4">
             <h2 className="text-[20px] font-medium tracking-tight text-foreground">
@@ -64,16 +67,16 @@ export default function AboutPage() {
 
         <section className="rounded-[22px] border border-border/80 bg-subtle/60 px-5 py-6">
           <h2 className="text-[18px] font-medium tracking-tight text-foreground">
-            バンドメンバーを探す
+            音楽仲間を探す
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-white/60">
-            公開中のメンバー募集一覧から、音楽仲間を見つけられます。
+            好きなアーティストや活動スタイルから、気になる人を見つけられます。
           </p>
           <Link
             href="/members"
             className="mt-4 inline-flex text-[15px] text-primary transition-colors hover:text-primary/80"
           >
-            バンドメンバー募集を見る
+            メンバー一覧を見る
           </Link>
         </section>
 

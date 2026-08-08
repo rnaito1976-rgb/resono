@@ -19,6 +19,7 @@ import {
 } from "@/components/FormField";
 import { FormPickerSheet } from "@/components/form/FormPickerSheet";
 import { CoverSongsEditor } from "@/components/form/CoverSongsEditor";
+import { ActivityStylePicker } from "@/components/form/ActivityStylePicker";
 import { FormTagPickerTrigger } from "@/components/form/FormTagPickerTrigger";
 import { FrequencyColorSwatchGrid } from "@/components/frequency-color/FrequencyColorSwatchGrid";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
@@ -376,6 +377,14 @@ export function MemberEditForm({ member: initialMember }: MemberEditFormProps) {
           <FormGroupHeading label="Music" />
 
           <FormSection title="Music">
+            <FormField label="活動スタイル" hint="任意 · どんなバンド活動をしたいか">
+              <ActivityStylePicker
+                value={member.music.activityStyle}
+                onChange={(activityStyle) =>
+                  updateNested("music", "activityStyle", activityStyle)
+                }
+              />
+            </FormField>
             <FormField label="好きなアーティスト" hint="タップして選択">
               <FormTagPickerTrigger
                 selected={member.music.favoriteArtists ?? []}

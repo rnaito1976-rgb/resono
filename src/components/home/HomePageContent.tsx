@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { HomeFeedSection } from "@/components/home/HomeFeedSection";
+import { HomeHeroCta } from "@/components/home/HomeHeroCta";
 import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
+import { HomeNewMembersSection } from "@/components/home/HomeNewMembersSection";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
@@ -10,6 +12,7 @@ import { IntroOnboardingCards } from "@/components/onboarding/IntroOnboardingCar
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
 import { BRAND_CATCH_COPY_INLINE } from "@/lib/branding/copy";
 import { getHomeViewer } from "@/lib/home/viewer";
+import { getRecentMembers, getTodayMembers } from "@/lib/members";
 import { HOME_H1, HOME_LEAD } from "@/lib/seo/site";
 import { getHomeLcpImageHref } from "@/lib/images/lcp";
 import { getLiveEvents } from "@/lib/live/events";
@@ -37,14 +40,24 @@ export function HomePageFallback() {
 }
 
 export async function HomePageContent() {
-  const [{ user, member, frequencyColor }, liveEvents] = await Promise.all([
-    getHomeViewer(),
-    getLiveEvents(LIVE_FEED_SIZE),
-  ]);
+  const [{ user, member, frequencyColor }, liveEvents, todayMembers, recentMembers] =
+    await Promise.all([
+      getHomeViewer(),
+      getLiveEvents(LIVE_FEED_SIZE),
+      getTodayMembers(6),
+      getRecentMembers(6),
+    ]);
 
   if (user && !member) {
     redirect("/welcome");
   }
+
+  const newMembers =
+    todayMembers.length > 0
+      ? todayMembers
+      : recentMembers.filter((item) => item.id !== member?.id).slice(0, 4);
+  const newMembersTitle =
+    todayMembers.length > 0 ? "今日登録した人" : "最近参加した人";
 
   const ownRecruitmentApplicants =
     member?.lookingFor?.parts?.some(Boolean)
@@ -69,10 +82,12 @@ export async function HomePageContent() {
           <p className="text-[14px] leading-relaxed text-white/40">
             {BRAND_CATCH_COPY_INLINE}
           </p>
+          <HomeHeroCta isLoggedIn={Boolean(user)} />
         </div>
         <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
           {user ? <IntroOnboardingCards userId={user.id} /> : null}
-          <HomeLiveFeed events={liveEvents} />
+          <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
+          {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
           {member ? (
             <PersonCard
               member={member}

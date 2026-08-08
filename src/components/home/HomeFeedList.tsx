@@ -257,10 +257,10 @@ export function HomeFeedList({
         <section className="space-y-8">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-              For You
+              Discover
             </p>
             <h2 className="mt-2 text-[24px] font-light tracking-tight text-foreground">
-              あなたへのおすすめ
+              音楽的に気になる人
             </h2>
           </div>
           <div className="flex flex-col gap-14">{cards}</div>

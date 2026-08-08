@@ -223,6 +223,41 @@ export async function getRecentMembers(limit: number): Promise<Member[]> {
   }
 }
 
+function getStartOfTodayJstIso(): string {
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60_000;
+  const jst = new Date(utcMs + 9 * 60 * 60_000);
+  jst.setHours(0, 0, 0, 0);
+  return new Date(jst.getTime() - 9 * 60 * 60_000).toISOString();
+}
+
+export async function getTodayMembers(limit: number): Promise<Member[]> {
+  if (!isSupabaseConfigured()) {
+    return fallbackMembers.slice(0, limit);
+  }
+
+  try {
+    const supabase = createAnonClient();
+    const { data, error } = await supabase
+      .from("members")
+      .select(MEMBER_LIST_COLUMNS)
+      .not("user_id", "is", null)
+      .gte("created_at", getStartOfTodayJstIso())
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("[Supabase] getTodayMembers:", error.message);
+      return [];
+    }
+
+    return attachFrequencyColors((data ?? []).map(rowToMemberList));
+  } catch (error) {
+    console.error("[Supabase] getTodayMembers:", error);
+    return [];
+  }
+}
+
 export async function updateMember(
   member: Member
 ): Promise<{ success: boolean; error?: string }> {

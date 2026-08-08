@@ -1,3 +1,5 @@
+import type { ActivityStyleId } from "@/lib/music/activity-style";
+
 /** Manual or linked cover track the member wants to play in a band. */
 export type CoverSong = {
   id: string;
@@ -21,6 +23,8 @@ export type MemberMusicProfile = {
   favoriteArtists: string[];
   instruments: string[];
   listeningMood: string;
+  /** Stable id: original | cover | both */
+  activityStyle?: ActivityStyleId;
   coverSongs?: CoverSong[];
   /** Tracks the member has covered or performed before. */
   coveredSongs?: CoverSong[];

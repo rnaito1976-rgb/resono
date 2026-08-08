@@ -9,7 +9,7 @@ export function PersonCardOwnLinks() {
   return (
     <>
       <Link href="/discover" className={linkClass}>
-        Discover a Story
+        ストーリーを育てる
       </Link>
       <Link href="/me" className={linkClass}>
         プロフィール

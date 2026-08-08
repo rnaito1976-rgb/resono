@@ -86,10 +86,10 @@ export function HomeLiveFeed({ events }: HomeLiveFeedProps) {
     <section className="space-y-4">
       <div>
         <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-          Live
+          Activity
         </p>
         <h2 className="mt-2 text-[22px] font-light tracking-tight text-white">
-          Latest Activity
+          最近の動き
         </h2>
       </div>
 

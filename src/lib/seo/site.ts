@@ -1,15 +1,14 @@
 export const SITE_NAME = "RESONO";
 export const SITE_NAME_ALT = "レゾノ";
 
-export const DEFAULT_TITLE =
-  "RESONO｜バンドメンバー募集・音楽仲間を探せるサービス";
+export const DEFAULT_TITLE = "RESONO｜好きな音楽から、バンド仲間を見つける";
 
 export const DEFAULT_DESCRIPTION =
-  "RESONOは、好きな音楽や演奏スタイルから、バンドメンバーや音楽仲間を探せるサービスです。「この人とバンドやったら楽しそう」と思える出会いを見つけよう。";
+  "好きな音楽や演奏スタイルから、一緒にバンドをやりたい人を見つけられるサービス。共鳴度で「音楽的に合いそう」な人が分かる。";
 
-export const HOME_H1 = "バンドメンバーを探そう。";
+export const HOME_H1 = "この人とバンドやったら、楽しそう。";
 
 export const HOME_LEAD =
-  "RESONOは、好きな音楽や演奏スタイルから、一緒にバンドをやりたい人を探せるサービスです。";
+  "好きな音楽や演奏スタイルから、一緒に音を出したい人を見つけよう。";
 
 export const TITLE_SUFFIX = "RESONO";

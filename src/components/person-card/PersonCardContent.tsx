@@ -2,6 +2,9 @@ import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import { ProfilePhotoPlaceholder } from "@/components/profile/ProfilePhotoPlaceholder";
 import { ResonanceReasonBullets } from "@/components/ResonanceReasonBullets";
+import { MemberPresenceBadge } from "@/components/person-card/MemberPresenceBadge";
+import { PersonCardMusicSnapshot } from "@/components/person-card/PersonCardMusicSnapshot";
+import { buildMemberMusicHints } from "@/lib/members/music-hints";
 import {
   getProfilePhotoSizes,
   getProfilePhotoSrc,
@@ -53,6 +56,7 @@ export function PersonCardContent({
   const recruitmentLabel = recommendation?.recruitmentLabel
     ? getRecruitmentMatchLabelText(recommendation.recruitmentLabel)
     : undefined;
+  const musicHints = buildMemberMusicHints(member);
   const shouldPrioritize = priority && !isAmbient;
   const photoSrc = isOwnCard
     ? getProfilePhotoSrc(member.photo, HOME_LCP_IMAGE_WIDTH)
@@ -116,6 +120,16 @@ export function PersonCardContent({
       </ProfilePhotoRing>
 
       <div className="space-y-6 px-6 pb-8 pt-6">
+        {recruitmentLabel ? (
+          <span className="inline-flex rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary">
+            {recruitmentLabel}
+          </span>
+        ) : (
+          <MemberPresenceBadge member={member} />
+        )}
+
+        <PersonCardMusicSnapshot member={member} />
+
         {openParts.length > 0 ? (
           <div className="space-y-2.5">
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/50">
@@ -134,14 +148,26 @@ export function PersonCardContent({
         ) : null}
 
         {!isOwnCard && resonanceReason ? (
-          <ResonanceReasonBullets reason={resonanceReason} compact />
+          <div className="space-y-3">
+            {!isOwnCard && score != null && musicHints.length > 0 ? (
+              <div className="rounded-[18px] border border-border/70 bg-white/[0.02] px-4 py-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/40">
+                  音楽的な相性
+                </p>
+                <p className="mt-2 text-[14px] leading-relaxed text-white/75">
+                  {musicHints.join(" · ")}
+                </p>
+              </div>
+            ) : null}
+            <ResonanceReasonBullets reason={resonanceReason} compact />
+          </div>
         ) : null}
 
-        <TagList items={member.tags} />
-
-        <blockquote className="border-l border-border pl-4 text-[15px] leading-relaxed text-white/75">
+        <blockquote className="line-clamp-3 border-l border-border pl-4 text-[15px] leading-relaxed text-white/75">
           {member.aiComment}
         </blockquote>
+
+        {member.tags.length > 0 ? <TagList items={member.tags.slice(0, 4)} /> : null}
 
         {!isAmbient && actions ? (
           <div className="space-y-3">{actions}</div>

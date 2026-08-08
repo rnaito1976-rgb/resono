@@ -1,6 +1,7 @@
 import { applyProfileAiComment } from "@/lib/profile/ai-comment";
 import { formatArtistSongLine, parseArtistSongLine } from "@/lib/form";
 import { sanitizeCoverSongs } from "@/lib/music/cover-songs";
+import { normalizeActivityStyle } from "@/lib/music/activity-style";
 import type { Member } from "@/types/member";
 import type {
   LegacyProfileCard,
@@ -298,6 +299,7 @@ export function prepareMemberForSave(member: Member): Member {
     ...member,
     music: {
       ...member.music,
+      activityStyle: normalizeActivityStyle(member.music.activityStyle),
       coverSongs: sanitizeCoverSongs(member.music.coverSongs),
       coveredSongs: sanitizeCoverSongs(member.music.coveredSongs),
     },

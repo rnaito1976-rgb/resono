@@ -22,11 +22,11 @@ export type LiveEvent = {
 };
 
 export const LIVE_EVENT_KIND_LABELS: Record<LiveEventKind, string> = {
-  new_member: "New Member",
-  new_band: "New Band",
-  band_formed: "Band Formed",
-  new_video: "New Video",
-  looking_for_updated: "Looking For Updated",
+  new_member: "新メンバー",
+  new_band: "新しいBand",
+  band_formed: "Band結成",
+  new_video: "演奏動画",
+  looking_for_updated: "募集更新",
 };
 
 /** Home Live strip always shows this many cards (latest first). */

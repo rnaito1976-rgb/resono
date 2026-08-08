@@ -7,6 +7,7 @@ import {
 } from "@/lib/members/defaults";
 import { normalizeProfileItems } from "@/lib/profile/items";
 import type { MemberActivityMilestone } from "@/lib/members/initial-activities";
+import { normalizeActivityStyle } from "@/lib/music/activity-style";
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 type MemberInsert = Database["public"]["Tables"]["members"]["Insert"];
@@ -216,6 +217,7 @@ function normalizeMusic(raw: unknown): MemberMusicProfile {
       ? value.instruments.filter((item): item is string => typeof item === "string")
       : [],
     listeningMood: typeof value.listeningMood === "string" ? value.listeningMood : "",
+    activityStyle: normalizeActivityStyle(value.activityStyle),
     coverSongs: Array.isArray(value.coverSongs) ? value.coverSongs : undefined,
     coveredSongs: Array.isArray(value.coveredSongs) ? value.coveredSongs : undefined,
     dreamBands: Array.isArray(value.dreamBands)
