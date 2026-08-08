@@ -56,17 +56,6 @@ export function MembersPageContent({
       />
 
       <div className="space-y-10 px-5 pb-16">
-        <section className="space-y-4">
-          {MEMBERS_SEO.intro.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="text-[16px] leading-[1.85] text-white/70"
-            >
-              {paragraph}
-            </p>
-          ))}
-        </section>
-
         {spotlightMembers.length > 0 ? (
           <section className="space-y-4">
             <h2 className="text-[18px] font-medium tracking-tight text-foreground">
