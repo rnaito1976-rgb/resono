@@ -3,15 +3,20 @@ import type { ResonanceReason } from "@/lib/resonance/matching";
 type ResonanceReasonBulletsProps = {
   reason: ResonanceReason;
   compact?: boolean;
+  limit?: number;
 };
 
 export function ResonanceReasonBullets({
   reason,
   compact = false,
+  limit,
 }: ResonanceReasonBulletsProps) {
   if (reason.commonPoints.length === 0) {
     return null;
   }
+
+  const points =
+    limit != null ? reason.commonPoints.slice(0, limit) : reason.commonPoints;
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
@@ -19,7 +24,7 @@ export function ResonanceReasonBullets({
         共鳴ポイント
       </p>
       <ul className="space-y-1.5">
-        {reason.commonPoints.map((point) => (
+        {points.map((point) => (
           <li
             key={point}
             className={`flex items-start gap-2 leading-relaxed text-white/80 ${

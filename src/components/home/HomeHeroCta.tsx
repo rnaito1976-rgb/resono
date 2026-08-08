@@ -8,28 +8,7 @@ type HomeHeroCtaProps = {
 
 export function HomeHeroCta({ isLoggedIn }: HomeHeroCtaProps) {
   if (isLoggedIn) {
-    return (
-      <div className="flex flex-wrap gap-2.5 pt-1">
-        <Link
-          href="/discover"
-          className={cn(
-            buttonVariants({ size: "default" }),
-            "h-11 rounded-full px-5 text-[14px]"
-          )}
-        >
-          気になる人を探す
-        </Link>
-        <Link
-          href="/members"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "default" }),
-            "h-11 rounded-full px-5 text-[14px]"
-          )}
-        >
-          メンバー一覧
-        </Link>
-      </div>
-    );
+    return null;
   }
 
   return (

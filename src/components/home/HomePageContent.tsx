@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { HomeFeedSection } from "@/components/home/HomeFeedSection";
 import { HomeHeroCta } from "@/components/home/HomeHeroCta";
 import { HomeLiveFeed } from "@/components/home/HomeLiveFeed";
+import { HomeMembersBrowseProvider, HomeMembersViewToggleBar } from "@/components/home/HomeMembersBrowseShell";
 import { HomeNewMembersSection } from "@/components/home/HomeNewMembersSection";
 import { HomeThemeSync } from "@/components/home/HomeThemeSync";
 import { PersonCard } from "@/components/person-card/PersonCard";
@@ -84,27 +85,32 @@ export async function HomePageContent() {
           </p>
           <HomeHeroCta isLoggedIn={Boolean(user)} />
         </div>
-        <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
-          {user ? <IntroOnboardingCards userId={user.id} /> : null}
-          <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
-          {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
-          {member ? (
-            <PersonCard
-              member={member}
-              isOwnCard
-              priority
-              initialRecruitmentApplicants={ownRecruitmentApplicants}
-            />
-          ) : null}
-          <Suspense fallback={<HomeFeedSkeleton count={2} />}>
-            <HomeFeedSection
-              member={member}
-              userId={user?.id}
-              showSectionHeader={Boolean(member)}
-            />
-          </Suspense>
-          <SeoFooterLinks />
-        </div>
+        <HomeMembersBrowseProvider>
+          <div className="flex flex-col gap-14 px-5 pb-20 pt-2">
+            {user ? <IntroOnboardingCards userId={user.id} /> : null}
+            <section className="space-y-4">
+              <HomeMembersViewToggleBar />
+              <HomeNewMembersSection members={newMembers} title={newMembersTitle} />
+            </section>
+            {liveEvents.length > 0 ? <HomeLiveFeed events={liveEvents} /> : null}
+            {member ? (
+              <PersonCard
+                member={member}
+                isOwnCard
+                priority
+                initialRecruitmentApplicants={ownRecruitmentApplicants}
+              />
+            ) : null}
+            <Suspense fallback={<HomeFeedSkeleton count={2} />}>
+              <HomeFeedSection
+                member={member}
+                userId={user?.id}
+                showSectionHeader={Boolean(member)}
+              />
+            </Suspense>
+            <SeoFooterLinks />
+          </div>
+        </HomeMembersBrowseProvider>
       </main>
     </>
   );

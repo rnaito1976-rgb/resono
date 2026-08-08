@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SelectableChip } from "@/components/onboarding/SelectableChip";
 import { AppPageHeader } from "@/components/navigation/AppPageHeader";
 import { MemberListCard } from "@/components/members/MemberListCard";
-import { MemberListRow } from "@/components/members/MemberListRow";
-import { MembersViewToggle } from "@/components/members/MembersViewToggle";
 import { SeoFooterLinks } from "@/components/seo/SeoFooterLinks";
 import {
   ACTIVITY_STYLE_OPTIONS,
@@ -17,11 +15,6 @@ import {
   collectArtistFilters,
   memberMatchesArtist,
 } from "@/lib/members/music-hints";
-import {
-  readMembersViewMode,
-  writeMembersViewMode,
-  type MembersViewMode,
-} from "@/lib/members/view-mode";
 import { MEMBERS_SEO } from "@/lib/seo/about-copy";
 import type { Member } from "@/types/member";
 
@@ -58,19 +51,6 @@ export function MembersPageContent({
   const [selectedActivityStyle, setSelectedActivityStyle] =
     useState<ActivityStyleId | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<MembersViewMode>("card");
-
-  useEffect(() => {
-    const stored = readMembersViewMode();
-    if (stored) {
-      setViewMode(stored);
-    }
-  }, []);
-
-  function handleViewModeChange(mode: MembersViewMode) {
-    setViewMode(mode);
-    writeMembersViewMode(mode);
-  }
 
   const artistFilters = useMemo(() => {
     const fromMembers = collectArtistFilters(members, 8);
@@ -211,22 +191,19 @@ export function MembersPageContent({
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-[18px] font-medium tracking-tight text-foreground">
               音楽仲間・メンバー募集
             </h2>
-            <div className="flex shrink-0 items-center gap-2.5">
-              <MembersViewToggle value={viewMode} onChange={handleViewModeChange} />
-              {hasActiveFilter ? (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="text-[13px] text-white/45 transition-colors hover:text-primary"
-                >
-                  絞り込み解除
-                </button>
-              ) : null}
-            </div>
+            {hasActiveFilter ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="shrink-0 text-[13px] text-white/45 transition-colors hover:text-primary"
+              >
+                絞り込み解除
+              </button>
+            ) : null}
           </div>
 
           {selectedArtist ? (
@@ -246,23 +223,13 @@ export function MembersPageContent({
           ) : null}
 
           {filteredMembers.length > 0 ? (
-            viewMode === "card" ? (
-              <ul className="grid grid-cols-2 gap-3">
-                {filteredMembers.map((member) => (
-                  <li key={member.id} className="min-w-0">
-                    <MemberListCard member={member} layout="grid" />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="space-y-2">
-                {filteredMembers.map((member) => (
-                  <li key={member.id}>
-                    <MemberListRow member={member} />
-                  </li>
-                ))}
-              </ul>
-            )
+            <ul className="space-y-3">
+              {filteredMembers.map((member) => (
+                <li key={member.id}>
+                  <MemberListCard member={member} />
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="rounded-[18px] border border-border/80 bg-subtle/60 px-5 py-4 text-[15px] text-white/55">
               {hasActiveFilter

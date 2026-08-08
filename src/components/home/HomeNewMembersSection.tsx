@@ -1,4 +1,7 @@
-import { MemberListCard } from "@/components/members/MemberListCard";
+"use client";
+
+import { MemberBrowseList } from "@/components/members/MemberBrowseList";
+import { useMembersViewModeOptional } from "@/components/members/MembersViewProvider";
 import type { Member } from "@/types/member";
 
 type HomeNewMembersSectionProps = {
@@ -12,6 +15,9 @@ export function HomeNewMembersSection({
   title = "今日登録した人",
   description,
 }: HomeNewMembersSectionProps) {
+  const viewContext = useMembersViewModeOptional();
+  const viewMode = viewContext?.viewMode ?? "card";
+
   if (members.length === 0) {
     return null;
   }
@@ -28,17 +34,7 @@ export function HomeNewMembersSection({
         ) : null}
       </div>
 
-      <div className="-mx-5 overflow-x-auto overscroll-x-contain scrollbar-hide">
-        <div className="flex w-max gap-3 px-5 pb-1">
-          {members.map((member) => (
-            <MemberListCard
-              key={member.id}
-              member={member}
-              className="w-[min(88vw,300px)] shrink-0"
-            />
-          ))}
-        </div>
-      </div>
+      <MemberBrowseList members={members} viewMode={viewMode} />
     </section>
   );
 }

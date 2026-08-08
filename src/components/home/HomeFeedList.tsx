@@ -2,9 +2,9 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { MemberBrowseList } from "@/components/members/MemberBrowseList";
+import { useMembersViewModeOptional } from "@/components/members/MembersViewProvider";
 import { HomeFeedSkeleton } from "@/components/skeletons/HomeFeedSkeleton";
-import { PersonCardClient } from "@/components/person-card/PersonCardClient";
-import { RecruitmentApplicationsPrefetch } from "@/components/recruitment/RecruitmentApplicationsPrefetch";
 import {
   dedupeFeedItems,
   FEED_PAGE_SIZE,
@@ -106,11 +106,13 @@ async function fetchFeedPage(
 
 export function HomeFeedList({
   viewerId,
-  viewerMemberId,
+  viewerMemberId: _viewerMemberId,
   showSectionHeader = false,
   initialFeedPage,
   initialAppliedByTarget = {},
 }: HomeFeedListProps) {
+  const viewContext = useMembersViewModeOptional();
+  const viewMode = viewContext?.viewMode ?? "card";
   const queryClient = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const cachedFirstPage = useRef(initialFeedPage ?? readFeedCache(viewerId));
@@ -219,6 +221,8 @@ export function HomeFeedList({
     return () => observer.disconnect();
   }, [handleObserver, hasNextPage]);
 
+  const feedMembers = feedItems.map((item) => item.member);
+
   if (isLoading) {
     return <HomeFeedSkeleton count={showSectionHeader ? 2 : 3} />;
   }
@@ -231,50 +235,27 @@ export function HomeFeedList({
     );
   }
 
-  const cards = feedItems.map(({ member, recommendation, reason, resonanceStatus }, index) => (
-    <PersonCardClient
-      key={member.id}
-      member={member}
-      recommendation={recommendation}
-      resonanceReason={reason}
-      resonanceStatus={resonanceStatus}
-      priority={!showSectionHeader && index === 0}
-      initialAppliedParts={initialAppliedByTarget[member.id] ?? undefined}
-    />
-  ));
-
-  const prefetch = (
-    <RecruitmentApplicationsPrefetch
-      members={feedItems.map((item) => item.member)}
-      viewerMemberId={viewerMemberId}
-    />
-  );
-
   if (showSectionHeader) {
     return (
-      <>
-        {prefetch}
-        <section className="space-y-8">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
-              Discover
-            </p>
-            <h2 className="mt-2 text-[24px] font-light tracking-tight text-foreground">
-              音楽的に気になる人
-            </h2>
-          </div>
-          <div className="flex flex-col gap-14">{cards}</div>
-        </section>
+      <section className="space-y-4">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+            Discover
+          </p>
+          <h2 className="mt-2 text-[24px] font-light tracking-tight text-foreground">
+            音楽的に気になる人
+          </h2>
+        </div>
+        <MemberBrowseList members={feedMembers} viewMode={viewMode} />
         {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
         <div ref={loadMoreRef} aria-hidden className="h-8" />
-      </>
+      </section>
     );
   }
 
   return (
     <>
-      {prefetch}
-      <div className="flex flex-col gap-14">{cards}</div>
+      <MemberBrowseList members={feedMembers} viewMode={viewMode} />
       {isFetchingNextPage ? <HomeFeedSkeleton count={1} /> : null}
       <div ref={loadMoreRef} aria-hidden className="h-8" />
     </>

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { ProfilePhotoRing } from "@/components/frequency-color/ProfilePhotoRing";
 import type { FrequencyColorHex } from "@/lib/frequency-color/types";
-import { withAlpha } from "@/lib/frequency-color/utils";
 import { getProfilePhotoSrc, getProfilePhotoSizes } from "@/lib/images/profilePhoto";
 import { hasProfilePhoto } from "@/lib/onboarding/status";
 import type { Member } from "@/types/member";
@@ -43,19 +42,11 @@ export function MemberListAvatar({
             />
           ) : (
             <div
-              className="flex h-full w-full items-center justify-center"
-              style={
-                color
-                  ? { backgroundColor: withAlpha(color, 0.14) }
-                  : { backgroundColor: "rgba(255,255,255,0.06)" }
-              }
+              className="flex h-full w-full items-center justify-center bg-black"
             >
               <span
-                className="font-medium tracking-tight"
-                style={{
-                  fontSize: initialSize,
-                  ...(color ? { color: withAlpha(color, 0.92) } : {}),
-                }}
+                className="font-medium tracking-tight text-white"
+                style={{ fontSize: initialSize }}
                 aria-hidden
               >
                 {initial}
